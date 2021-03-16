@@ -26,7 +26,6 @@ theta_LS = normalize(reg.coef_.reshape(1, -1))[0]
 X_hat = np.dot(Z, theta_LS)
 reg2 = LinearRegression(fit_intercept=False).fit(X_hat.reshape(-1, 1), y)
 beta_LS = reg2.coef_
-
 print('est beta based on 2SLS: %.3f' %beta_LS)
 
 ## solve by SIR+LS
