@@ -4,7 +4,7 @@
 import numpy as np
 from sklearn.preprocessing import normalize
 from sim_data import sim
-n, p = 1000, 10
+n, p = 1000, 100
 
 beta_LS, beta_LS_SIR = [], []
 n_sim = 50
@@ -12,7 +12,7 @@ for i in range(n_sim):
 	theta0 = np.random.randn(p)
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	beta0 = 1.
-	Z, X, y = sim(n, p, theta0, beta0, case='exp', feat='cate')
+	Z, X, y = sim(n, p, theta0, beta0, case='linear', feat='normal')
 	## normalize Z, X, y
 	Z, X, y = Z - Z.mean(), X - X.mean(), y - y.mean()
 	LD_Z, cor_ZX, cor_ZY = np.dot(Z.T, Z), np.dot(Z.T, X), np.dot(Z.T, y)
