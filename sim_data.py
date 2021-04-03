@@ -19,7 +19,7 @@ def sim(n, p, theta0, beta0, case='linear', feat='normal', range=1., prob=.3):
 
 	# simulate X and Y
 	if case == 'linear':
-		X = np.dot(Z, theta0) + U + eps
+		X = np.dot(Z, theta0) + U**2 + eps
 		y = beta0 * X + U + gamma
 
 	elif case == 'exp':
@@ -28,14 +28,14 @@ def sim(n, p, theta0, beta0, case='linear', feat='normal', range=1., prob=.3):
 
 	elif case == 'cubic':
 		X = (np.dot(Z, theta0) + U + eps)**3
-		y = beta0*np.sign(X)*(abs(X)**(1./3)) + U + gamma
+		y = beta0*np.sign(X)*(abs(X)**(1./3)) + U**2 + gamma
 
 	elif case == 'inverse':
-		X = 1. / (np.dot(Z, theta0) + U + eps)
+		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
 		y = beta0 * 1. / X + U + gamma
 	
 	elif case == 'sigmoid':
-		X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U - eps ))
+		X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U**2 - eps ))
 		y = beta0 * np.log( X / (1 - X) ) + U + gamma
 
 	else:
