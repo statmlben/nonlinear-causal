@@ -33,14 +33,19 @@ class SIR_LS(object):
 	----------
 
 	"""
-	def __init__(self, theta=None, beta=None, sir=None, n_directions=1):
+	def __init__(self, theta=None, beta=None, sir=None, n_directions=1, n_slices='auto'):
 		self.theta = theta
 		self.beta = beta
 		self.n_directions = n_directions
+		self.n_slices = n_slices
 		self.sir = None
 
 	def fit(self, Z, X, cor_ZY):
-		self.sir = SlicedInverseRegression(n_directions=self.n_directions)
+		if self.n_slices == 'auto':
+			n_slices = int(len(Z) / 50)
+			self.sir = SlicedInverseRegression(n_directions=self.n_directions, n_slices=n_slices)
+		else:
+			self.sir = SlicedInverseRegression(n_directions=self.n_directions, n_slices=n_slices)
 		self.sir.fit(Z, X)
 		self.theta = self.sir.directions_
 		X_sir = self.sir.transform(Z)

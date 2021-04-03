@@ -4,41 +4,57 @@
 import numpy as np
 from sklearn.preprocessing import normalize
 from sim_data import sim
-n, p = 1000, 100
+from sklearn.preprocessing import StandardScaler
+from scipy import stats
+n, p = 1000, 10
 
-beta_LS, beta_LS_SIR = [], []
-n_sim = 50
+beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
+n_sim = 500
 for i in range(n_sim):
-	theta0 = np.random.randn(p)
+	# theta0 = np.random.randn(p)
+	theta0 = np.ones(p)
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	beta0 = 1.
-	Z, X, y = sim(n, p, theta0, beta0, case='linear', feat='normal')
+	Z, X, y = sim(n, p, theta0, beta0, case='inverse', feat='cate', range=.06)
 	## normalize Z, X, y
-	Z, X, y = Z - Z.mean(), X - X.mean(), y - y.mean()
+	center = StandardScaler(with_std=False)
+	Z, X, y = center.fit_transform(Z), X - X.mean(), y - y.mean()
 	LD_Z, cor_ZX, cor_ZY = np.dot(Z.T, Z), np.dot(Z.T, X), np.dot(Z.T, y)
 
+	# np.cov( np.dot(Z, theta0), X )
 	print('True beta: %.3f' %beta0)
 
 	## solve by 2sls
 	from nonlinear_causal import _2sls
 	LS = _2sls._2SLS()
 	LS.fit(LD_Z, cor_ZX, cor_ZY)
-	print('est beta based on 2SLS: %.3f' %LS.beta)
+	print('est beta based on OLS: %.3f' %LS.beta)
+
+	## solve by RT-2SLS
+	from sklearn.preprocessing import power_transform, quantile_transform
+	RT_X = power_transform(X.reshape(-1,1)).flatten()
+	# RT_X = quantile_transform(X.reshape(-1,1), n_quantiles=n/10, output_distribution='normal')
+	RT_cor_ZX = np.dot(Z.T, RT_X)
+	RT_LS = _2sls._2SLS()
+	RT_LS.fit(LD_Z, RT_cor_ZX, cor_ZY)
+	print('est beta based on RT-OLS: %.3f' %RT_LS.beta)
 
 	## solve by SIR+LS
 	from nonlinear_causal import _2sls
 	echo = _2sls.SIR_LS()
 	echo.fit(Z, X, cor_ZY)
-	print('est beta based on SIR+LS: %.3f' %echo.beta)
+	print('est beta based on 2SIR: %.3f' %echo.beta)
 
 	beta_LS.append(abs(LS.beta))
+	beta_RT_LS.append(abs(RT_LS.beta))
 	beta_LS_SIR.append(abs(echo.beta[0]))
 
-d = {'abs_beta': beta_LS+beta_LS_SIR, 
-	 'method': ['LS']*n_sim+['SIR+LS']*n_sim}
+d = {'abs_beta': beta_LS+beta_RT_LS+beta_LS_SIR, 
+	 'method': ['2SLS']*n_sim+['RT-2SLS']*n_sim+['2SIR']*n_sim}
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+plt.rcParams["figure.figsize"] = (16,9)
 
 sns.set_theme(style="whitegrid")
 ax = sns.boxplot(x="method", y="abs_beta", data=d)
