@@ -26,7 +26,7 @@ class _2SLS(object):
 			self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
 
 
-class SIR_LS(object):
+class _2SIR(object):
 	"""Sliced inverse regression + least sqaure
 
 	Parameters
