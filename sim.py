@@ -25,8 +25,8 @@ for i in range(n_sim):
 	print('True beta: %.3f' %beta0)
 
 	## solve by 2sls
-	from nonlinear_causal import _2sls
-	LS = _2sls._2SLS()
+	from nonlinear_causal import _2SMethod
+	LS = _2SMethod._2SLS()
 	LS.fit(LD_Z, cor_ZX, cor_ZY)
 	print('est beta based on OLS: %.3f' %LS.beta)
 
@@ -35,13 +35,13 @@ for i in range(n_sim):
 	RT_X = power_transform(X.reshape(-1,1)).flatten()
 	# RT_X = quantile_transform(X.reshape(-1,1), n_quantiles=n/10, output_distribution='normal')
 	RT_cor_ZX = np.dot(Z.T, RT_X)
-	RT_LS = _2sls._2SLS()
+	RT_LS = _2SMethod._2SLS()
 	RT_LS.fit(LD_Z, RT_cor_ZX, cor_ZY)
 	print('est beta based on RT-OLS: %.3f' %RT_LS.beta)
 
 	## solve by SIR+LS
-	from nonlinear_causal import _2sls
-	echo = _2sls.SIR_LS()
+	from nonlinear_causal import _2SMethod
+	echo = _2SMethod._2SIR()
 	echo.fit(Z, X, cor_ZY)
 	print('est beta based on 2SIR: %.3f' %echo.beta)
 
@@ -87,8 +87,8 @@ for i in range(n_sim):
 		print('True beta: %.3f' %beta0)
 
 		## solve by 2sls
-		from nonlinear_causal import _2sls
-		LS = _2sls._2SLS()
+		from nonlinear_causal import _2SMethod
+		LS = _2SMethod._2SLS()
 		LS.fit(LD_Z, cor_ZX, cor_ZY)
 		print('est beta based on OLS: %.3f' %LS.beta)
 
@@ -97,13 +97,13 @@ for i in range(n_sim):
 		RT_X = power_transform(X.reshape(-1,1)).flatten()
 		# RT_X = quantile_transform(X.reshape(-1,1), n_quantiles=n/10, output_distribution='normal')
 		RT_cor_ZX = np.dot(Z.T, RT_X)
-		RT_LS = _2sls._2SLS()
+		RT_LS = _2SMethod._2SLS()
 		RT_LS.fit(LD_Z, RT_cor_ZX, cor_ZY)
 		print('est beta based on RT-OLS: %.3f' %RT_LS.beta)
 
 		## solve by SIR+LS
-		from nonlinear_causal import _2sls
-		echo = _2sls.SIR_LS()
+		from nonlinear_causal import _2SMethod
+		echo = _2SMethod._2SIR()
 		echo.fit(Z, X, cor_ZY)
 		print('est beta based on 2SIR: %.3f' %echo.beta)
 
