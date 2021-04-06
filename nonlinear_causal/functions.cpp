@@ -707,9 +707,3 @@ List runElnet(arma::vec& lambda, double shrink, const std::string fileName,
 					  Named("fbeta") = fbeta, 
 					  Named("sd")= sd);
 }
-
-BOOST_PYTHON_MODULE(hello)
-{
-    using namespace boost::python;
-    def("runElnet", runElnet);
-}

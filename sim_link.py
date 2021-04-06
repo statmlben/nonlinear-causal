@@ -18,7 +18,7 @@ for i in range(n_sim):
 	theta0 = np.ones(p)
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	beta0 = 1.
-	Z, X, y, phi = sim(n, p, theta0, beta0, case='cubic', feat='normal', range=.01, return_phi=True)
+	Z, X, y, phi = sim(n, p, theta0, beta0, case='cubic', feat='normal', range=1., return_phi=True)
 	## normalize Z, X, y
 	center = StandardScaler(with_std=False)
 	Z, X, y = center.fit_transform(Z), X - X.mean(), y - y.mean()
@@ -27,8 +27,8 @@ for i in range(n_sim):
 	## solve by SIR+LS
 	from nonlinear_causal import _2SMethod
 	echo = _2SMethod._2SIR()
-	cond_mean = KernelRidge(kernel='rbf', alpha=.001, gamma=1.)
-	# cond_mean = KNeighborsRegressor(n_neighbors=10)
+	# cond_mean = KernelRidge(kernel='rbf', alpha=.001, gamma=.1)
+	cond_mean = KNeighborsRegressor(n_neighbors=5)
 	echo.fit(Z, X, cor_ZY)
 	print('est beta based on 2SIR: %.3f' %echo.beta)
 	pred_phi = echo.link(X=X[:,None]).flatten()
@@ -37,7 +37,6 @@ for i in range(n_sim):
 	# beta_LS.append(abs(LS.beta))
 	# beta_RT_LS.append(abs(RT_LS.beta))
 	# beta_LS_SIR.append(abs(echo.beta[0]))
-
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -48,5 +47,5 @@ d = {'x': list(X)*3, 'phi':list(pred_phi)+list(phi)+list(cond_mean),
 # ax = sns.regplot(x=X, y=pred_phi,
 # 				scatter_kws={"s": 20},
 # 				order=2, ci=None)
-sns.scatterplot(data=d, x="x", y="phi", hue="type", s=10)
+sns.scatterplot(data=d, x="x", y="phi", hue="type", s=10, alpha=.6)
 plt.show()

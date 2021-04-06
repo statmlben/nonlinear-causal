@@ -74,5 +74,3 @@ class _2SIR(object):
 		else:
 			print('You must fit a link function before evaluate it!')
 
-
-
