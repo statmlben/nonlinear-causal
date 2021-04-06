@@ -3,7 +3,7 @@ from scipy.special import lambertw
 from sklearn.preprocessing import OneHotEncoder
 from random import choices
 
-def sim(n, p, theta0, beta0, case='linear', feat='normal', range=1., prob=.3):
+def sim(n, p, theta0, beta0, case='linear', feat='normal', range=1., prob=.3, return_phi=False):
 	if feat == 'normal':
 		Z = np.random.randn(n, p)
 	elif feat == 'uniform':
@@ -20,27 +20,35 @@ def sim(n, p, theta0, beta0, case='linear', feat='normal', range=1., prob=.3):
 	# simulate X and Y
 	if case == 'linear':
 		X = np.dot(Z, theta0) + U**2 + eps
-		y = beta0 * X + U + gamma
+		phi = X
+		y = beta0 * phi + U + gamma
 
 	elif case == 'exp':
 		X = np.exp( np.dot(Z, theta0) + U**2 + eps )
-		y = beta0 * np.log(X) + U + gamma
+		phi = np.log(X)
+		y = beta0 * phi + U + gamma
 
 	elif case == 'cubic':
 		X = (np.dot(Z, theta0) + U + eps)**3
-		y = beta0*np.sign(X)*(abs(X)**(1./3)) + U**2 + gamma
+		phi = np.sign(X)*(abs(X)**(1./3))
+		y = beta0*phi + U + gamma
 
 	elif case == 'inverse':
 		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
-		y = beta0 * 1. / X + U + gamma
+		phi = 1. / X
+		y = beta0 * phi + U + gamma
 	
 	elif case == 'sigmoid':
 		X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U**2 - eps ))
-		y = beta0 * np.log( X / (1 - X) ) + U + gamma
+		phi = np.log( X / (1 - X) )
+		y = beta0 * phi + U + gamma
 
 	else:
 		print('Wrong case!')
-	return Z, X, y
+	if return_phi:
+		return Z, X, y, phi	
+	else:
+		return Z, X, y
 
 def center(X):
 	p = X.ndim

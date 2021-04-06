@@ -6,6 +6,8 @@ from sklearn.preprocessing import normalize
 from sim_data import sim
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
+from sklearn.kernel_ridge import KernelRidge
+
 n, p = 2000, 10
 
 beta_LS, beta_RT_LS, beta_LS_SIR, case_lst = [], [], [], []
