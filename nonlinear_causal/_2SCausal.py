@@ -3,6 +3,7 @@ from sklearn.base import BaseEstimator
 from sklearn.preprocessing import normalize
 from sliced import SlicedInverseRegression
 from sklearn.neighbors import KNeighborsRegressor
+from CDLoop import elastCD
 
 class _2SLS(object):
 	"""Two-stage least square
@@ -26,6 +27,36 @@ class _2SLS(object):
 		else:
 			self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
 
+class elasticSUM(object):
+	"""Elastic Net based on summary statistics
+
+	Parameters
+	----------
+	"""
+
+	def __init__(self, lam1=1., lam2=1., max_iter=1000, eps=1e-4, print_step=1):
+		self.lam1 = lam1
+		self.lam2 = lam2
+		self.beta = []
+		self.max_iter = max_iter
+		self.eps = eps
+		self.print_step = print_step
+	
+	def fit(self, X, cov):
+		"""
+		from sklearn.datasets import make_regression
+		import numpy as np
+		from CDLoop import elastCD
+
+		lam1, lam2 = 10., 10.
+		X, y = make_regression(n_features=2, random_state=0)
+		X_t = X.T.copy()
+		diag = np.array([ np.dot(X[:,j], X[:,j]) for j in range(X.shape[1])])
+		cov = np.sum(X*y[:,None], axis=0)
+		beta = elastCD(X_t, diag, cov, lam1=1., lam2=0., max_iter=1000, eps=1e-4, print_step=1)
+		"""
+		diag = np.array([ np.dot(X[:,j], X[:,j]) for j in range(X.shape[1])])
+		beta = elastCD(X.T, diag, cov, self.lam1, self.lam2, self.max_iter, self.eps, self.print_step)
 
 class _2SIR(object):
 	"""Sliced inverse regression + least sqaure
