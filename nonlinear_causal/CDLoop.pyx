@@ -2,10 +2,6 @@ import  numpy as np
 cimport numpy as np
 cimport cython
 from libc.stdio cimport printf, abs
-# from utils._cython_blas cimport _dot
-# from utils._cython_blas cimport _copy
-# from utils._cython_blas cimport _axpy
-# from utils._cython_blas cimport _nrm2
 from scipy.linalg.cython_blas cimport sdot, ddot
 from scipy.linalg.cython_blas cimport snrm2, dnrm2
 from scipy.linalg.cython_blas cimport saxpy, daxpy
@@ -40,7 +36,7 @@ cdef void _axpy(int n, double alpha, double[::1] x, double[::1] y):
 def elastCD(double[:,::1] X, double[::1] diag, double[::1] cor, double lam1, double lam2, int max_iter, double eps, int print_step):
 	cdef int d = X.shape[0]
 	cdef int n = X.shape[1]
-	cdef double diff = 1
+	cdef double diff = 1.0
 	cdef double[::1] beta = np.zeros(d)
 	cdef double[::1] beta_old = np.zeros(d)
 	cdef double[::1] y_hat = np.zeros(n)
@@ -64,6 +60,7 @@ def elastCD(double[:,::1] X, double[::1] diag, double[::1] cor, double lam1, dou
 			delta_beta[j] = beta[j] - beta_old[j]
 			_axpy(n, delta_beta[j], X[j], y_hat)
 		diff = _nrm2(d, delta_beta) / (_nrm2(d, beta_old) + 1e-8)
+		# diff = max(abs(delta_beta))
 		if print_step==1:
 			printf('ite %d: coordinate descent with diff: %10.3f. \n', ite, diff)
 		# printf('ite %d', ite,' coordinate descent with diff: %10.3f.', diff)

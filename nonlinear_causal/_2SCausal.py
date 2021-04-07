@@ -41,22 +41,22 @@ class elasticSUM(object):
 		self.max_iter = max_iter
 		self.eps = eps
 		self.print_step = print_step
+		self.fit_flag = False
 	
 	def fit(self, X, cov):
 		"""
-		from sklearn.datasets import make_regression
-		import numpy as np
-		from CDLoop import elastCD
+		fit the linear coeff based on feature and summary statistics.
 
-		lam1, lam2 = 10., 10.
-		X, y = make_regression(n_features=2, random_state=0)
-		X_t = X.T.copy()
-		diag = np.array([ np.dot(X[:,j], X[:,j]) for j in range(X.shape[1])])
-		cov = np.sum(X*y[:,None], axis=0)
-		beta = elastCD(X_t, diag, cov, lam1=1., lam2=0., max_iter=1000, eps=1e-4, print_step=1)
+		Parameters
+		----------
 		"""
 		diag = np.array([ np.dot(X[:,j], X[:,j]) for j in range(X.shape[1])])
-		beta = elastCD(X.T, diag, cov, self.lam1, self.lam2, self.max_iter, self.eps, self.print_step)
+		X_t = X.T.copy()
+		self.beta = elastCD(X_t, diag, cov, self.lam1, self.lam2, self.max_iter, self.eps, self.print_step)
+		self.fit_flag = True
+
+	def predict(self, X):
+		return np.dot(X, self.beta)
 
 class _2SIR(object):
 	"""Sliced inverse regression + least sqaure
@@ -65,7 +65,7 @@ class _2SIR(object):
 	----------
 
 	"""
-	def __init__(self, theta=None, beta=None, sir=None, n_directions=1, n_slices='auto', data_in_slice=50, cond_mean=KNeighborsRegressor(n_neighbors=10), fit_link=True):
+	def __init__(self, theta=None, beta=None, sir=None, n_directions=1, n_slices='auto', data_in_slice=50, cond_mean=KNeighborsRegressor(n_neighbors=10), fit_link=True, sparse_reg=elasticSUM()):
 		self.theta = theta
 		self.beta = beta
 		self.n_directions = n_directions
@@ -74,28 +74,51 @@ class _2SIR(object):
 		self.fit_link = fit_link
 		self.cond_mean = cond_mean
 		self.sir = None
+		self.X_sir = None
 		self.rho = None
+		self.sparse_reg = sparse_reg
 
-	def fit(self, Z, X, cor_ZY):
+	def fit_sir(self, Z, X):
 		if self.n_slices == 'auto':
 			n_slices = int(len(Z) / self.data_in_slice)
 		else:
 			n_slices = self.n_slices
 		self.sir = SlicedInverseRegression(n_directions=self.n_directions, n_slices=n_slices)
 		self.sir.fit(Z, X)
+		self.X_sir = self.sir.transform(Z)
 		self.theta = self.sir.directions_
-		X_sir = self.sir.transform(Z)
-		LD_X_sir = np.dot(X_sir.T, X_sir)
-		if LD_X_sir.ndim == 0:
-			self.beta = np.dot(self.theta, cor_ZY) / LD_X_sir
+
+	def fit_reg(self, Z, cor_ZY):
+		if self.sparse_reg == None:
+			LD_X_sir = np.dot(self.X_sir.T, self.X_sir)
+			if LD_X_sir.ndim == 0:
+				self.beta = np.dot(self.theta, cor_ZY) / LD_X_sir
+			else:
+				self.beta = np.linalg.inv(LD_X_sir).dot(np.dot(self.theta, cor_ZY))
+		elif self.sparse_reg.fit_flag:
+			self.beta = self.sparse_reg.beta[-1]
 		else:
-			self.beta = np.linalg.inv(LD_X_sir).dot(np.dot(self.theta, cor_ZY))
+			Z_aug = np.hstack((Z, self.X_sir))
+			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
+			self.sparse_reg.fit(Z_aug, cov_aug)
+			self.beta = self.sparse_reg.beta[-1]
+
+	def fit_air(self, Z, X):
+		self.cond_mean.fit(X=X[:,None], y=self.X_sir)
+		pred_mean = self.cond_mean.predict(X=X[:,None])
+		LD_Z_sum = np.sum(Z[:, :, np.newaxis] * Z[:, np.newaxis, :], axis=0)
+		cross_mean_Z = np.sum(Z * pred_mean, axis=0)
+		self.rho = (self.theta.dot(LD_Z_sum) * self.theta).sum(axis=1) / np.dot( self.theta, cross_mean_Z )
+
+	def fit(self, Z, X, cor_ZY):
+		## Stage 1: estimate theta based on SIR
+		self.fit_sir(Z, X)
+		## Stage 2: estimate beta via sparse regression
+		self.fit_reg(Z, cor_ZY)
+		## Estimate link function
 		if self.fit_link:
-			self.cond_mean.fit(X=X[:,None], y=X_sir)
-			pred_mean = self.cond_mean.predict(X=X[:,None])
-			LD_Z_sum = np.sum(Z[:, :, np.newaxis] * Z[:, np.newaxis, :], axis=0)
-			cross_mean_Z = np.sum(Z * pred_mean, axis=0)
-			self.rho = (self.theta.dot(LD_Z_sum) * self.theta).sum(axis=1) / np.dot( self.theta, cross_mean_Z )
+			self.fit_air(Z, X)
+
 	def link(self, X):
 		if self.fit_link:
 			if self.beta > 0:
