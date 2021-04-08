@@ -25,18 +25,18 @@ for i in range(n_sim):
 	# n = len(X)
 	## normalize Z, X, y
 	center = StandardScaler(with_std=False)
-	Z, X, y = center.fit_transform(Z), X - X.mean(), y - y.mean()
+	Z, X, y, phi = center.fit_transform(Z), X - X.mean(), y - y.mean(), phi - phi.mean()
 	LD_Z, cor_ZX, cor_ZY = np.dot(Z.T, Z), np.dot(Z.T, X), np.dot(Z.T, y)
 
 	## solve by SIR+LS
 	from nonlinear_causal import _2SCausal
 	echo = _2SCausal._2SIR(sparse_reg=None)
-	# cond_mean = KernelRidge(kernel='rbf', alpha=.001, gamma=.1)
-	cond_mean = KNeighborsRegressor(n_neighbors=50)
+	# echo.cond_mean = KernelRidge(kernel='rbf', alpha=.001, gamma=.1)
+	echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
 	echo.fit(Z, X, cor_ZY)
 	print('est beta based on 2SIR: %.3f' %echo.beta)
 	pred_phi = echo.link(X=X[:,None]).flatten()
-	cond_mean = np.sign(echo.beta)* echo.cond_mean.predict(X=X[:,None]).flatten()
+	pred_mean = np.sign(echo.beta)* echo.cond_mean.predict(X=X[:,None]).flatten()
 
 	# beta_LS.append(abs(LS.beta))
 	# beta_RT_LS.append(abs(RT_LS.beta))
@@ -46,7 +46,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 plt.rcParams["figure.figsize"] = (12,6)
 sns.set_theme(style="whitegrid")
-d = {'x': list(X)*3, 'phi':list(pred_phi)+list(phi)+list(cond_mean), 
+d = {'x': list(X)*3, 'phi':list(pred_phi)+list(phi)+list(pred_mean), 
 		'type':['pred']*n+['true']*n+['cond_mean']*n}
 # ax = sns.regplot(x=X, y=pred_phi,
 # 				scatter_kws={"s": 20},

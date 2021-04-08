@@ -33,13 +33,11 @@ cdef void _axpy(int n, double alpha, double[::1] x, double[::1] y):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def elastCD(double[:,::1] X, double[::1] diag, double[::1] cor, double lam1, double lam2, int max_iter, double eps, int print_step):
-	cdef int d = X.shape[0]
-	cdef int n = X.shape[1]
+def elastCD(double[:,::1] LD_X, double[::1] cor, double lam1, double lam2, int max_iter, double eps, int print_step):
+	cdef int d = len(LD_X)
 	cdef double diff = 1.0
 	cdef double[::1] beta = np.zeros(d)
 	cdef double[::1] beta_old = np.zeros(d)
-	cdef double[::1] y_hat = np.zeros(n)
 	cdef double[::1] delta_beta = np.zeros(d)
 	cdef double u = 0.0
 
@@ -48,17 +46,15 @@ def elastCD(double[:,::1] X, double[::1] diag, double[::1] cor, double lam1, dou
 			break
 		_copy(d, beta, beta_old)
 		for j in xrange(d):
-			u = diag[j] * beta[j] + cor[j] - _dot(n, X[j], y_hat)
+			u = LD_X[j,j] * beta[j] + cor[j] -  _dot(d, LD_X[j], beta)
 			if abs(u) > lam1:
 				if u >= 0:
-					beta[j] = abs( u - lam1 ) / ( diag[j] + lam2 )
+					beta[j] = abs( u - lam1 ) / ( LD_X[j,j] + lam2 )
 				else:
-					beta[j] = - abs( u - lam1 ) / ( diag[j] + lam2 )
+					beta[j] = - abs( u - lam1 ) / ( LD_X[j,j] + lam2 )
 			else:
 				beta[j] = 0
-			# y = y + (beta[j] - beta_old[j]) * X[j]
 			delta_beta[j] = beta[j] - beta_old[j]
-			_axpy(n, delta_beta[j], X[j], y_hat)
 		diff = _nrm2(d, delta_beta) / (_nrm2(d, beta_old) + 1e-8)
 		# diff = max(abs(delta_beta))
 		if print_step==1:
@@ -67,3 +63,43 @@ def elastCD(double[:,::1] X, double[::1] diag, double[::1] cor, double lam1, dou
 	if ite == (max_iter-1):
 		printf('The algo did not convergence, pls increase max_iter')
 	return np.array(beta)
+
+
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.nonecheck(False)
+# @cython.cdivision(True)
+# def elastCD(double[:,::1] X, double[::1] diag, double[::1] cor, double lam1, double lam2, int max_iter, double eps, int print_step):
+# 	cdef int n = X.shape[0]
+# 	cdef int d = X.shape[1]
+# 	cdef double diff = 1.0
+# 	cdef double[::1] beta = np.zeros(d)
+# 	cdef double[::1] beta_old = np.zeros(d)
+# 	cdef double[::1] y_hat = np.zeros(n)
+# 	cdef double[::1] delta_beta = np.zeros(d)
+# 	cdef double u = 0.0
+
+# 	for ite in xrange(max_iter):
+# 		if diff < eps:
+# 			break
+# 		_copy(d, beta, beta_old)
+# 		for j in xrange(d):
+# 			u = diag[j] * beta[j] + cor[j] - _dot(n, X[j], y_hat)
+# 			if abs(u) > lam1:
+# 				if u >= 0:
+# 					beta[j] = abs( u - lam1 ) / ( diag[j] + lam2 )
+# 				else:
+# 					beta[j] = - abs( u - lam1 ) / ( diag[j] + lam2 )
+# 			else:
+# 				beta[j] = 0
+# 			# y = y + (beta[j] - beta_old[j]) * X[j]
+# 			delta_beta[j] = beta[j] - beta_old[j]
+# 			_axpy(n, delta_beta[j], X[j], y_hat)
+# 		diff = _nrm2(d, delta_beta) / (_nrm2(d, beta_old) + 1e-8)
+# 		# diff = max(abs(delta_beta))
+# 		if print_step==1:
+# 			printf('ite %d: coordinate descent with diff: %10.3f. \n', ite, diff)
+# 		# printf('ite %d', ite,' coordinate descent with diff: %10.3f.', diff)
+# 	if ite == (max_iter-1):
+# 		printf('The algo did not convergence, pls increase max_iter')
+# 	return np.array(beta)

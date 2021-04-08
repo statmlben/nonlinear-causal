@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator
 from sklearn.preprocessing import normalize
 from sliced import SlicedInverseRegression
 from sklearn.neighbors import KNeighborsRegressor
-from CDLoop import elastCD
+from nonlinear_causal.CDLoop import elastCD
 
 class _2SLS(object):
 	"""Two-stage least square
@@ -12,20 +12,32 @@ class _2SLS(object):
 	----------
 
 	"""
-	def __init__(self, theta=None, beta=None, normalize=True):
+	def __init__(self, theta=None, beta=None, normalize=True, sparse_reg=elasticSUM()):
 		self.theta = theta
 		self.beta = beta
 		self.normalize = normalize
+		self.sparse_reg = sparse_reg
+		self.X_LS = None
 
 	def fit(self, LD_Z, cor_ZX, cor_ZY):
 		self.theta = np.dot(np.linalg.inv( LD_Z ), cor_ZX)
-		if self.normalize == True:
-			self.theta = normalize(self.theta.reshape(1, -1))[0]
-		LD_X = self.theta.T.dot(LD_Z).dot(self.theta)
-		if LD_X.ndim == 0:
-			self.beta = self.theta.T.dot(cor_ZY) / LD_X
+		if self.sparse_reg == None:
+			if self.normalize == True:
+				self.theta = normalize(self.theta.reshape(1, -1))[0]
+			LD_X = self.theta.T.dot(LD_Z).dot(self.theta)
+			if LD_X.ndim == 0:
+				self.beta = self.theta.T.dot(cor_ZY) / LD_X
+			else:
+				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
+		elif self.sparse_reg.fit_flag:
+			self.beta = self.sparse_reg.beta[-1]
 		else:
-			self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
+			self.X_LS = np.dot(Z, self.theta)
+			Z_aug = np.hstack((Z, self.X_LS))
+			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
+			LD_Z_aug = np.dot(Z_aug.T, Z_aug)
+			self.sparse_reg.fit(LD_Z_aug, cov_aug)
+			self.beta = self.sparse_reg.beta[-1]
 
 class elasticSUM(object):
 	"""Elastic Net based on summary statistics
@@ -43,16 +55,15 @@ class elasticSUM(object):
 		self.print_step = print_step
 		self.fit_flag = False
 	
-	def fit(self, X, cov):
+	def fit(self, LD_X, cov):
 		"""
 		fit the linear coeff based on feature and summary statistics.
 
 		Parameters
 		----------
 		"""
-		diag = np.array([ np.dot(X[:,j], X[:,j]) for j in range(X.shape[1])])
-		X_t = X.T.copy()
-		self.beta = elastCD(X_t, diag, cov, self.lam1, self.lam2, self.max_iter, self.eps, self.print_step)
+		# X_t = X.T.copy()
+		self.beta = elastCD(LD_X, cov, self.lam1, self.lam2, self.max_iter, self.eps, self.print_step)
 		self.fit_flag = True
 
 	def predict(self, X):
@@ -100,7 +111,8 @@ class _2SIR(object):
 		else:
 			Z_aug = np.hstack((Z, self.X_sir))
 			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
-			self.sparse_reg.fit(Z_aug, cov_aug)
+			LD_Z_aug = np.dot(Z_aug.T, Z_aug)
+			self.sparse_reg.fit(LD_Z_aug, cov_aug)
 			self.beta = self.sparse_reg.beta[-1]
 
 	def fit_air(self, Z, X):
