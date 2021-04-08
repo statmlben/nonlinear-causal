@@ -4,6 +4,7 @@ from sklearn.preprocessing import normalize
 from sliced import SlicedInverseRegression
 from sklearn.neighbors import KNeighborsRegressor
 from nonlinear_causal.CDLoop import elastCD
+from scipy.stats import norm
 
 class _2SLS(object):
 	"""Two-stage least square
@@ -18,6 +19,7 @@ class _2SLS(object):
 		self.normalize = normalize
 		self.sparse_reg = sparse_reg
 		self.X_LS = None
+		self.fit_flag = False
 
 	def fit(self, LD_Z, cor_ZX, cor_ZY):
 		self.theta = np.dot(np.linalg.inv( LD_Z ), cor_ZX)
@@ -38,6 +40,20 @@ class _2SLS(object):
 			LD_Z_aug = np.dot(Z_aug.T, Z_aug)
 			self.sparse_reg.fit(LD_Z_aug, cov_aug)
 			self.beta = self.sparse_reg.beta[-1]
+		self.fit_flag = True
+	
+	def CI_beta(Z, alpha):
+		if self.fit_flag:
+			cov_Z = np.cov(Z,rowvar=False)
+			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum(axis=1)[0]
+			delta_tmp = abs(norm.ppf((1. - alpha)/2)) * np.sqrt(var_beta) / np.sqrt(len(Z))
+			beta_low = self.beta -  delta_tmp
+			beta_high = self.beta + delta_tmp
+			return [beta_low, beta_high]
+		else:
+			raise NameError('CI can only be generated after fit!')
+
+
 
 class elasticSUM(object):
 	"""Elastic Net based on summary statistics
@@ -46,13 +62,14 @@ class elasticSUM(object):
 	----------
 	"""
 
-	def __init__(self, lam1=1., lam2=1., max_iter=1000, eps=1e-4, print_step=1):
-		self.lam1 = lam1
-		self.lam2 = lam2
+	def __init__(self, lam=1., max_iter=1000, eps=1e-4, print_step=0, criterion='bic'):
+		self.lam1 = lam
+		self.lam2 = 0.
 		self.beta = []
 		self.max_iter = max_iter
 		self.eps = eps
 		self.print_step = print_step
+		self.criterion = criterion
 		self.fit_flag = False
 	
 	def fit(self, LD_X, cov):
@@ -62,9 +79,20 @@ class elasticSUM(object):
 		Parameters
 		----------
 		"""
-		# X_t = X.T.copy()
-		self.beta = elastCD(LD_X, cov, self.lam1, self.lam2, self.max_iter, self.eps, self.print_step)
-		self.fit_flag = True
+		if (type(lam1) == int or float):
+			self.beta = elastCD(LD_X, cov, self.lam1, self.lam2, self.max_iter, self.eps, self.print_step)
+			self.fit_flag = True
+		else:
+			lam_lst, beta_path, df_lst = [], [], []
+			for lam_tmp in self.lam1:
+				beta_tmp = elastCD(LD_X, cov, lam_tmp, self.lam2, self.max_iter, self.eps, self.print_step)
+				df_tmp = np.sum(np.abs(beta_tmp) > self.eps)
+				df_lst.append(df_tmp)
+				beta_path.append(beta_tmp)
+				lam_lst.append(lam_tmp)
+			lam_lst, beta_path, df_lst = np.array(lam_lst), np.array(beta_path), np.array(df_lst)
+			## compute criteria
+
 
 	def predict(self, X):
 		return np.dot(X, self.beta)
@@ -139,4 +167,16 @@ class _2SIR(object):
 				return -self.rho * self.cond_mean.predict(X=X)
 		else:
 			print('You must fit a link function before evaluate it!')
+
+	def CI_beta(Z, alpha):
+		if self.fit_flag:
+			cov_Z = np.cov(Z,rowvar=False)
+			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum(axis=1)[0]
+			delta_tmp = abs(norm.ppf((1. - alpha)/2)) * np.sqrt(var_beta) / np.sqrt(len(Z))
+			beta_low = self.beta -  delta_tmp
+			beta_high = self.beta + delta_tmp
+			return [beta_low, beta_high]
+		else:
+			raise NameError('CI can only be generated after fit!')
+
 
