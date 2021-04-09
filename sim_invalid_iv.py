@@ -28,13 +28,13 @@ for i in range(n_sim):
 
 	## solve by SIR+LS
 	from nonlinear_causal import _2SCausal
-	echo = _2SCausal._2SIR(sparse_reg=_2SCausal.elasticSUM(lam=100.))
+	echo = _2SCausal._2SIR(sparse_reg=_2SCausal.elasticSUM(lam=1.))
 	echo.fit(Z, X, cor_ZY)
 	print('est beta based on 2SIR: %.3f' %echo.beta)
 
 	## solve by 2sls
 	from nonlinear_causal import _2SCausal
-	LS = _2SCausal._2SLS(sparse_reg=_2SCausal.elasticSUM(lam=400.))
+	LS = _2SCausal._2SLS(sparse_reg=_2SCausal.elasticSUM(lam=1.))
 	LS.fit(LD_Z, cor_ZX, cor_ZY)
 	print('est beta based on OLS: %.3f' %LS.beta)
 

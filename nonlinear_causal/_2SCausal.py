@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator
 from sklearn.preprocessing import normalize
 from sliced import SlicedInverseRegression
 from sklearn.neighbors import KNeighborsRegressor
-from nonlinear_causal.CDLoop import elastCD
+from nonlinear_causal.CDLoop import elastCD, LassoCD
 from scipy.stats import norm
 
 class elasticSUM(object):
@@ -13,9 +13,9 @@ class elasticSUM(object):
 	----------
 	"""
 
-	def __init__(self, lam=10., max_iter=1000, eps=1e-4, print_step=1, criterion='bic'):
+	def __init__(self, lam=10., lam2=0., max_iter=1000, eps=1e-4, print_step=1, criterion='bic'):
 		self.lam = lam
-		self.lam2 = 0.
+		self.lam2 = lam2
 		self.beta = []
 		self.max_iter = max_iter
 		self.eps = eps
@@ -32,7 +32,6 @@ class elasticSUM(object):
 		"""
 		if (type(self.lam) == int or float):
 			self.beta = elastCD(LD_X, cov, self.lam, self.lam2, self.max_iter, self.eps, self.print_step)
-			self.fit_flag = True
 		else:
 			lam_lst, beta_path, df_lst = [], [], []
 			for lam_tmp in self.lam:
@@ -43,11 +42,10 @@ class elasticSUM(object):
 				lam_lst.append(lam_tmp)
 			lam_lst, beta_path, df_lst = np.array(lam_lst), np.array(beta_path), np.array(df_lst)
 			## compute criteria
-
+		self.fit_flag = True
 
 	def predict(self, X):
 		return np.dot(X, self.beta)
-
 
 class _2SLS(object):
 	"""Two-stage least square

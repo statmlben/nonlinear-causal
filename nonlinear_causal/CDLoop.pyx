@@ -63,8 +63,7 @@ def elastCD(double[:,::1] LD_X, double[::1] cor, double lam1, double lam2, int m
 	if ite == (max_iter-1):
 		printf('The algo did not convergence, pls increase max_iter')
 	return np.array(beta)
-
-
+	
 # @cython.boundscheck(False)
 # @cython.wraparound(False)
 # @cython.nonecheck(False)

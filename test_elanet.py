@@ -10,7 +10,7 @@ LD_X = np.dot(X.T, X)
 
 from nonlinear_causal import _2SCausal
 cov = np.sum(X*y[:,None], axis=0)
-elasnet = _2SCausal.elasticSUM(lam1=100., lam2=1.)
+elasnet = _2SCausal.elasticSUM(lam=.01)
 elasnet.fit(LD_X, cov)
 
 print(elasnet.beta)
