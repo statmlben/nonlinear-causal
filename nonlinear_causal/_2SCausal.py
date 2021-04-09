@@ -6,55 +6,6 @@ from sklearn.neighbors import KNeighborsRegressor
 from nonlinear_causal.CDLoop import elastCD
 from scipy.stats import norm
 
-class _2SLS(object):
-	"""Two-stage least square
-
-	Parameters
-	----------
-
-	"""
-	def __init__(self, theta=None, beta=None, normalize=True, sparse_reg=elasticSUM()):
-		self.theta = theta
-		self.beta = beta
-		self.normalize = normalize
-		self.sparse_reg = sparse_reg
-		self.X_LS = None
-		self.fit_flag = False
-
-	def fit(self, LD_Z, cor_ZX, cor_ZY):
-		self.theta = np.dot(np.linalg.inv( LD_Z ), cor_ZX)
-		if self.sparse_reg == None:
-			if self.normalize == True:
-				self.theta = normalize(self.theta.reshape(1, -1))[0]
-			LD_X = self.theta.T.dot(LD_Z).dot(self.theta)
-			if LD_X.ndim == 0:
-				self.beta = self.theta.T.dot(cor_ZY) / LD_X
-			else:
-				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
-		elif self.sparse_reg.fit_flag:
-			self.beta = self.sparse_reg.beta[-1]
-		else:
-			self.X_LS = np.dot(Z, self.theta)
-			Z_aug = np.hstack((Z, self.X_LS))
-			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
-			LD_Z_aug = np.dot(Z_aug.T, Z_aug)
-			self.sparse_reg.fit(LD_Z_aug, cov_aug)
-			self.beta = self.sparse_reg.beta[-1]
-		self.fit_flag = True
-	
-	def CI_beta(Z, alpha):
-		if self.fit_flag:
-			cov_Z = np.cov(Z,rowvar=False)
-			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum(axis=1)[0]
-			delta_tmp = abs(norm.ppf((1. - alpha)/2)) * np.sqrt(var_beta) / np.sqrt(len(Z))
-			beta_low = self.beta -  delta_tmp
-			beta_high = self.beta + delta_tmp
-			return [beta_low, beta_high]
-		else:
-			raise NameError('CI can only be generated after fit!')
-
-
-
 class elasticSUM(object):
 	"""Elastic Net based on summary statistics
 
@@ -62,8 +13,8 @@ class elasticSUM(object):
 	----------
 	"""
 
-	def __init__(self, lam=1., max_iter=1000, eps=1e-4, print_step=0, criterion='bic'):
-		self.lam1 = lam
+	def __init__(self, lam=10., max_iter=1000, eps=1e-4, print_step=1, criterion='bic'):
+		self.lam = lam
 		self.lam2 = 0.
 		self.beta = []
 		self.max_iter = max_iter
@@ -79,12 +30,12 @@ class elasticSUM(object):
 		Parameters
 		----------
 		"""
-		if (type(lam1) == int or float):
-			self.beta = elastCD(LD_X, cov, self.lam1, self.lam2, self.max_iter, self.eps, self.print_step)
+		if (type(self.lam) == int or float):
+			self.beta = elastCD(LD_X, cov, self.lam, self.lam2, self.max_iter, self.eps, self.print_step)
 			self.fit_flag = True
 		else:
 			lam_lst, beta_path, df_lst = [], [], []
-			for lam_tmp in self.lam1:
+			for lam_tmp in self.lam:
 				beta_tmp = elastCD(LD_X, cov, lam_tmp, self.lam2, self.max_iter, self.eps, self.print_step)
 				df_tmp = np.sum(np.abs(beta_tmp) > self.eps)
 				df_lst.append(df_tmp)
@@ -96,6 +47,64 @@ class elasticSUM(object):
 
 	def predict(self, X):
 		return np.dot(X, self.beta)
+
+
+class _2SLS(object):
+	"""Two-stage least square
+
+	Parameters
+	----------
+
+	"""
+	def __init__(self, theta=None, beta=None, normalize=True, sparse_reg=elasticSUM()):
+		self.theta = theta
+		self.beta = beta
+		self.normalize = normalize
+		self.sparse_reg = sparse_reg
+		self.fit_flag = False
+
+	def fit_theta(self, LD_Z, cor_ZX):
+		self.theta = np.dot(np.linalg.inv( LD_Z ), cor_ZX)
+		if self.normalize:
+			self.theta = normalize(self.theta.reshape(1, -1))[0]
+
+	def fit_beta(self, LD_Z, cor_ZY):
+		if self.sparse_reg == None:
+			LD_X = self.theta.T.dot(LD_Z).dot(self.theta)
+			if LD_X.ndim == 0:
+				self.beta = self.theta.T.dot(cor_ZY) / LD_X
+			else:
+				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
+		elif self.sparse_reg.fit_flag:
+			self.beta = self.sparse_reg.beta[-1]
+		else:
+			p = len(LD_Z)
+			LD_Z_aug = np.zeros((p+1,p+1))
+			LD_Z_aug[:p,:p] = LD_Z
+			cov_ZX = np.dot(self.theta, LD_Z)
+			LD_Z_aug[-1,:p] = cov_ZX
+			LD_Z_aug[:p,-1] = cov_ZX
+			LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
+			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
+			self.sparse_reg.fit(LD_Z_aug, cov_aug)
+			self.beta = self.sparse_reg.beta[-1]
+
+	def fit(self, LD_Z, cor_ZX, cor_ZY):
+		self.fit_theta(LD_Z, cor_ZX)
+		self.fit_beta(LD_Z, cor_ZY)
+		self.fit_flag = True
+	
+	def CI_beta(Z, alpha):
+		if self.fit_flag:
+			cov_Z = np.cov(Z,rowvar=False)
+			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum(axis=1)[0]
+			delta_tmp = abs(norm.ppf((1. - alpha)/2)) * np.sqrt(var_beta) / np.sqrt(len(Z))
+			beta_low = self.beta -  delta_tmp
+			beta_high = self.beta + delta_tmp
+			return [beta_low, beta_high]
+		else:
+			raise NameError('CI can only be generated after fit!')
+
 
 class _2SIR(object):
 	"""Sliced inverse regression + least sqaure

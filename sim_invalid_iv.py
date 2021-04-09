@@ -6,6 +6,7 @@ from sklearn.preprocessing import normalize
 from sim_data import sim
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
+from sklearn.model_selection import train_test_split
 n, p = 1000, 10
 
 beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
@@ -19,6 +20,7 @@ for i in range(n_sim):
 	## normalize Z, X, y
 	center = StandardScaler(with_std=False)
 	Z, X, y = center.fit_transform(Z), X - X.mean(), y - y.mean()
+	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=0.5, random_state=42)
 	LD_Z, cor_ZX, cor_ZY = np.dot(Z.T, Z), np.dot(Z.T, X), np.dot(Z.T, y)
 
 	# np.cov( np.dot(Z, theta0), X )
@@ -26,13 +28,13 @@ for i in range(n_sim):
 
 	## solve by SIR+LS
 	from nonlinear_causal import _2SCausal
-	echo = _2SCausal._2SIR(sparse_reg=_2SCausal.elasticSUM(lam1=100.))
+	echo = _2SCausal._2SIR(sparse_reg=_2SCausal.elasticSUM(lam=100.))
 	echo.fit(Z, X, cor_ZY)
 	print('est beta based on 2SIR: %.3f' %echo.beta)
 
 	## solve by 2sls
 	from nonlinear_causal import _2SCausal
-	LS = _2SMethod._2SLS()
+	LS = _2SCausal._2SLS(sparse_reg=_2SCausal.elasticSUM(lam=400.))
 	LS.fit(LD_Z, cor_ZX, cor_ZY)
 	print('est beta based on OLS: %.3f' %LS.beta)
 
