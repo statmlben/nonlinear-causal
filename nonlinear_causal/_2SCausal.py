@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator
 from sklearn.preprocessing import normalize
 from sliced import SlicedInverseRegression
 from sklearn.neighbors import KNeighborsRegressor
-from nonlinear_causal.CDLoop import elastCD, LassoCD
+from nonlinear_causal.CDLoop import elastCD
 from scipy.stats import norm
 
 class elasticSUM(object):
