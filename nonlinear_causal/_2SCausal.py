@@ -88,16 +88,25 @@ class _2SLS(object):
 			self.beta = self.sparse_reg.beta[-1]
 		self.fit_flag = True
 
+	def est_var_eps(self, n2, LD_Z2, cor_ZY2):
+		alpha = np.linalg.inv(LD_Z2).dot(cor_ZY2)
+		sigma_res_y = 1 - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
+		return sigma_res_y
+
 	def fit(self, LD_Z, cor_ZX, cor_ZY):
 		self.fit_theta(LD_Z, cor_ZX)
 		self.fit_beta(LD_Z, cor_ZY)
 	
-	def CI_beta(self, Z, alpha):
+	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cor_ZY2, level):
 		if self.fit_flag:
-			cov_Z = np.cov(Z,rowvar=False)
-			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum()
-			delta_tmp = abs(norm.ppf((1. - alpha)/2)) * np.sqrt(var_beta) / np.sqrt(len(Z))
-			beta_low = self.beta -  delta_tmp
+			var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
+			ratio = n2 / n1
+			var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
+			var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
+			# correction for variance
+			var_beta = var_beta * (1. + ratio*var_x*(self.beta**2)/var_eps )
+			delta_tmp = abs(norm.ppf((1. - level)/2)) * np.sqrt(var_beta) / np.sqrt(n2)
+			beta_low = self.beta - delta_tmp
 			beta_high = self.beta + delta_tmp
 			return [beta_low, beta_high]
 		else:
@@ -120,7 +129,6 @@ class _2SIR(object):
 		self.fit_link = fit_link
 		self.cond_mean = cond_mean
 		self.sir = None
-		self.X_sir = None
 		self.rho = None
 		self.fit_flag = False
 		self.sparse_reg = sparse_reg
@@ -132,33 +140,36 @@ class _2SIR(object):
 			n_slices = self.n_slices
 		self.sir = SlicedInverseRegression(n_directions=self.n_directions, n_slices=n_slices)
 		self.sir.fit(Z, X)
-		self.X_sir = self.sir.transform(Z)
-		self.theta = self.sir.directions_
-		self.fit_link = True
+		self.theta = self.sir.directions_.flatten()
+		if self.theta.shape[0] == 1:
+			self.theta = self.theta.flatten()
 
 	def fit_reg(self, Z, cor_ZY):
+		X_sir = self.sir.transform(Z)
+		if X_sir.shape[1] == 1:
+			X_sir = X_sir.flatten()
 		if self.sparse_reg == None:
-			LD_X_sir = np.dot(self.X_sir.T, self.X_sir)
-			if len(LD_X_sir) == 1:
-				LD_X_sir = LD_X_sir[0][0]
-				self.beta = np.dot(self.theta, cor_ZY)[0] / LD_X_sir
+			LD_X_sir = np.dot(X_sir.T, X_sir)
+			if LD_X_sir.ndim == 0:
+				self.beta = np.dot(self.theta, cor_ZY) / LD_X_sir
 			else:
 				self.beta = np.linalg.inv(LD_X_sir).dot(np.dot(self.theta, cor_ZY))
 		elif self.sparse_reg.fit_flag:
 			self.beta = self.sparse_reg.beta[-1]
 		else:
-			Z_aug = np.hstack((Z, self.X_sir))
+			Z_aug = np.hstack((Z, X_sir[:,None]))
 			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
 			LD_Z_aug = np.dot(Z_aug.T, Z_aug)
 			self.sparse_reg.fit(LD_Z_aug, cov_aug)
 			self.beta = self.sparse_reg.beta[-1]
 		if self.beta < 0.:
 			self.beta = -self.beta
-			self.theta = - self.theta
+			self.theta = -self.theta
 		self.fit_flag = True
 		
 	def fit_air(self, Z, X):
-		self.cond_mean.fit(X=X[:,None], y=self.X_sir)
+		X_sir = self.sir.transform(Z)
+		self.cond_mean.fit(X=X[:,None], y=X_sir)
 		pred_mean = self.cond_mean.predict(X=X[:,None])
 		LD_Z_sum = np.sum(Z[:, :, np.newaxis] * Z[:, np.newaxis, :], axis=0)
 		cross_mean_Z = np.sum(Z * pred_mean, axis=0)
@@ -179,15 +190,35 @@ class _2SIR(object):
 		else:
 			raise NameError('You must fit a link function before evaluate it!')
 
-	def CI_beta(self, Z, alpha):
+	def est_var_eps(self, n2, LD_Z2, cor_ZY2):
+		alpha = np.linalg.inv(LD_Z2).dot(cor_ZY2)
+		sigma_res_y = 1 - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
+		return sigma_res_y
+
+	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cor_ZY2, level=.95):
 		if self.fit_flag:
-			cov_Z = np.cov(Z,rowvar=False)
-			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum(axis=1)[0]
-			delta_tmp = abs(norm.ppf((1. - alpha)/2)) * np.sqrt(var_beta) / np.sqrt(len(Z))
-			beta_low = self.beta -  delta_tmp
+			var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
+			ratio = n2 / n1
+			var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
+			var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
+			# correction for variance
+			var_beta = var_beta * (1. + ratio*var_x*(self.beta**2)/var_eps )
+			delta_tmp = abs(norm.ppf((1. - level)/2)) * np.sqrt(var_beta) / np.sqrt(n2)
+			beta_low = self.beta - delta_tmp
 			beta_high = self.beta + delta_tmp
 			return [beta_low, beta_high]
 		else:
 			raise NameError('CI can only be generated after fit!')
+
+	# def CI_beta(self, Z, alpha):
+	# 	if self.fit_flag:
+	# 		cov_Z = np.cov(Z,rowvar=False)
+	# 		var_beta = 1. / self.theta.dot(cov_Z).dot(self.theta.T)[0][0]
+	# 		delta_tmp = abs(norm.ppf((1. - alpha)/2)) * np.sqrt(var_beta) / np.sqrt(len(Z))
+	# 		beta_low = self.beta - delta_tmp
+	# 		beta_high = self.beta + delta_tmp
+	# 		return [beta_low, beta_high]
+	# 	else:
+	# 		raise NameError('CI can only be generated after fit!')
 
 
