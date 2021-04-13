@@ -46,7 +46,7 @@ def elastCD(double[:,::1] LD_X, double[::1] cor, double lam1, double lam2, int m
 			break
 		_copy(d, beta, beta_old)
 		for j in xrange(d):
-			u = LD_X[j,j] * beta[j] + cor[j] -  _dot(d, LD_X[j], beta)
+			u = LD_X[j,j] * beta[j] + cor[j] - _dot(d, LD_X[j], beta)
 			if abs(u) > lam1:
 				if u >= 0:
 					beta[j] = abs( u - lam1 ) / ( LD_X[j,j] + lam2 )

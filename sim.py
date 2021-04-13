@@ -45,7 +45,7 @@ for i in range(n_sim):
 	# theta0 = np.random.randn(p)
 	theta0 = np.ones(p)
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-	beta0 = 100.
+	beta0 = 1.
 	Z, X, y = sim(n, p, theta0, beta0, case='linear', feat='normal', range=.01)
 	## normalize Z, X, y
 	center = StandardScaler(with_std=False)
@@ -54,7 +54,7 @@ for i in range(n_sim):
 	y = y / y_scale
 	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=0.7, random_state=42)
 	n1, n2 = len(Z1), len(Z2)
-	LD_Z, cor_ZX, cor_ZY = np.dot(Z.T, Z), np.dot(Z.T, X), np.dot(Z.T, y)
+	# LD_Z, cor_ZX, cor_ZY = np.dot(Z.T, Z), np.dot(Z.T, X), np.dot(Z.T, y)
 	LD_Z1, cor_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
 	LD_Z2, cor_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 	# np.cov( np.dot(Z, theta0), X )
