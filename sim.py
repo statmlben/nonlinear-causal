@@ -12,7 +12,7 @@
 # coverage: 2sls: 0.994; RT_2sls: 0.994; SIR: 0.992
 # CI length: 2sls: 37.032(1.886); RT_2sls: 37.028(1.886); SIR: 36.975(1.879)
 
-# withour correction
+# without correction
 ############################################################
 # simulation setting: n: 1000, p: 10, beta0: 10.000
 # est beta: 2sls: 9.731(0.608); RT_2sls: 9.729(0.607); SIR: 9.674(0.618)
