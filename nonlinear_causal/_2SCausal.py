@@ -86,16 +86,16 @@ class _2SLS(object):
 			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
 			self.sparse_reg.fit(LD_Z_aug, cov_aug)
 			self.beta = self.sparse_reg.beta[-1]
+		self.fit_flag = True
 
 	def fit(self, LD_Z, cor_ZX, cor_ZY):
 		self.fit_theta(LD_Z, cor_ZX)
 		self.fit_beta(LD_Z, cor_ZY)
-		self.fit_flag = True
 	
-	def CI_beta(Z, alpha):
+	def CI_beta(self, Z, alpha):
 		if self.fit_flag:
 			cov_Z = np.cov(Z,rowvar=False)
-			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum(axis=1)[0]
+			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum()
 			delta_tmp = abs(norm.ppf((1. - alpha)/2)) * np.sqrt(var_beta) / np.sqrt(len(Z))
 			beta_low = self.beta -  delta_tmp
 			beta_high = self.beta + delta_tmp
@@ -122,6 +122,7 @@ class _2SIR(object):
 		self.sir = None
 		self.X_sir = None
 		self.rho = None
+		self.fit_flag = False
 		self.sparse_reg = sparse_reg
 
 	def fit_sir(self, Z, X):
@@ -133,12 +134,14 @@ class _2SIR(object):
 		self.sir.fit(Z, X)
 		self.X_sir = self.sir.transform(Z)
 		self.theta = self.sir.directions_
+		self.fit_link = True
 
 	def fit_reg(self, Z, cor_ZY):
 		if self.sparse_reg == None:
 			LD_X_sir = np.dot(self.X_sir.T, self.X_sir)
-			if LD_X_sir.ndim == 0:
-				self.beta = np.dot(self.theta, cor_ZY) / LD_X_sir
+			if len(LD_X_sir) == 1:
+				LD_X_sir = LD_X_sir[0][0]
+				self.beta = np.dot(self.theta, cor_ZY)[0] / LD_X_sir
 			else:
 				self.beta = np.linalg.inv(LD_X_sir).dot(np.dot(self.theta, cor_ZY))
 		elif self.sparse_reg.fit_flag:
@@ -149,7 +152,11 @@ class _2SIR(object):
 			LD_Z_aug = np.dot(Z_aug.T, Z_aug)
 			self.sparse_reg.fit(LD_Z_aug, cov_aug)
 			self.beta = self.sparse_reg.beta[-1]
-
+		if self.beta < 0.:
+			self.beta = -self.beta
+			self.theta = - self.theta
+		self.fit_flag = True
+		
 	def fit_air(self, Z, X):
 		self.cond_mean.fit(X=X[:,None], y=self.X_sir)
 		pred_mean = self.cond_mean.predict(X=X[:,None])
@@ -168,14 +175,11 @@ class _2SIR(object):
 
 	def link(self, X):
 		if self.fit_link:
-			if self.beta > 0:
-				return self.rho * self.cond_mean.predict(X=X)
-			else:
-				return -self.rho * self.cond_mean.predict(X=X)
+			return self.rho * self.cond_mean.predict(X=X)
 		else:
-			print('You must fit a link function before evaluate it!')
+			raise NameError('You must fit a link function before evaluate it!')
 
-	def CI_beta(Z, alpha):
+	def CI_beta(self, Z, alpha):
 		if self.fit_flag:
 			cov_Z = np.cov(Z,rowvar=False)
 			var_beta = 1. / (self.theta.dot(cov_Z) * self.theta).sum(axis=1)[0]
