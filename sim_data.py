@@ -26,22 +26,22 @@ def sim(n, p, theta0, beta0, alpha0=0., case='linear', feat='normal', range=1., 
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 
 	elif case == 'exp':
-		X = np.exp( np.dot(Z, theta0) + U**2 + eps )
+		X = np.exp( np.dot(Z, theta0) + U + eps )
 		phi = np.log(X)
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 
-	elif case == 'cubic':
-		X = (np.dot(Z, theta0) + U**2 + eps)**3
+	elif case == 'cube-root':
+		X = (np.dot(Z, theta0) + U + eps)**3
 		phi = np.sign(X)*(abs(X)**(1./3))
 		y = beta0*phi + np.dot(Z, alpha0) + U + gamma
 
 	elif case == 'inverse':
-		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
+		X = 1. / (np.dot(Z, theta0) + U + eps)
 		phi = 1. / X
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 	
 	elif case == 'sigmoid':
-		X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U**2 - eps ))
+		X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U - eps ))
 		phi = np.log( X / (1 - X) )
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 

@@ -144,12 +144,9 @@ class _2SIR(object):
 		if self.theta.shape[0] == 1:
 			self.theta = self.theta.flatten()
 
-	def fit_reg(self, Z, cor_ZY):
-		X_sir = self.sir.transform(Z)
-		if X_sir.shape[1] == 1:
-			X_sir = X_sir.flatten()
+	def fit_reg(self, LD_Z, cor_ZY):
 		if self.sparse_reg == None:
-			LD_X_sir = np.dot(X_sir.T, X_sir)
+			LD_X_sir = self.theta.T.dot(LD_Z).dot(self.theta)
 			if LD_X_sir.ndim == 0:
 				self.beta = np.dot(self.theta, cor_ZY) / LD_X_sir
 			else:
@@ -157,9 +154,14 @@ class _2SIR(object):
 		elif self.sparse_reg.fit_flag:
 			self.beta = self.sparse_reg.beta[-1]
 		else:
-			Z_aug = np.hstack((Z, X_sir[:,None]))
+			p = len(LD_Z)
+			LD_Z_aug = np.zeros((p+1,p+1))
+			LD_Z_aug[:p,:p] = LD_Z
+			cov_ZX = np.dot(self.theta, LD_Z)
+			LD_Z_aug[-1,:p] = cov_ZX
+			LD_Z_aug[:p,-1] = cov_ZX
+			LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
 			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
-			LD_Z_aug = np.dot(Z_aug.T, Z_aug)
 			self.sparse_reg.fit(LD_Z_aug, cov_aug)
 			self.beta = self.sparse_reg.beta[-1]
 		if self.beta < 0.:
@@ -173,7 +175,7 @@ class _2SIR(object):
 		pred_mean = self.cond_mean.predict(X=X[:,None])
 		LD_Z_sum = np.sum(Z[:, :, np.newaxis] * Z[:, np.newaxis, :], axis=0)
 		cross_mean_Z = np.sum(Z * pred_mean, axis=0)
-		self.rho = (self.theta.dot(LD_Z_sum) * self.theta).sum(axis=1) / np.dot( self.theta, cross_mean_Z )
+		self.rho = (self.theta.dot(LD_Z_sum).dot(self.theta)) / np.dot( self.theta, cross_mean_Z )
 
 	def fit(self, Z, X, cor_ZY):
 		## Stage 1: estimate theta based on SIR
