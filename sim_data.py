@@ -55,10 +55,20 @@ def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='linear', feat='normal', 
 			phi_ior = np.log( IoR / (1 - IoR) )
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 
+	elif case == 'piecewise_linear':
+		tmp = np.dot(Z, theta0) + U**2 + eps
+		X = 1.*(tmp<=0.)*tmp + 2*tmp*(tmp>0.)
+		phi = 1.*X*(X<=0) + .5*X*(X>0)
+		if IoR is not None:
+			phi_ior = 1.*(IoR<=0.)*IoR + 2*IoR*(IoR>0.)
+		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
+	
 	else:
 		raise NameError('Sorry, no build-in case.')
+	
 	if IoR is None:
 		return Z, X, y, phi
+	
 	else:
 		return Z, X, y, phi, phi_ior - np.mean(phi)
 
@@ -73,6 +83,8 @@ def sim_phi(X, case='linear'):
 		return 1. / X
 	elif case == 'sigmoid':
 		return np.log( X / (1 - X) )
+	elif case == 'piecewise_linear':
+		return 1.*X*(X<=0) + .5*X*(X>0)
 	else:
 		raise NameError('Sorry, no build-in case.')
 

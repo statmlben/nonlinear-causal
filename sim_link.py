@@ -9,10 +9,11 @@ from scipy import stats
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import power_transform, quantile_transform
-from sklearn.preprocessing import PowerTransformer
+from sklearn.preprocessing import PowerTransformer, QuantileTransformer
 from sklearn.isotonic import IsotonicRegression
-n, p = 2000, 300
+from nonlinear_causal import _2SCausal
+
+n, p = 2000, 10
 
 beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 mse_air, mse_mean, ue_air, ue_mean = [], [], [], []
@@ -20,7 +21,7 @@ mse_RT_LS, mse_LS, ue_RT_LS, ue_LS = [], [], [], []
 
 link_plot = { 'x': [], 'phi': [], 'method': [] }
 
-# 'linear', 'log', 'cube-root', 'inverse', 'sigmoid', 
+# 'linear', 'log', 'cube-root', 'inverse', 'sigmoid', 'piecewise_linear'
 n_sim, case = 100, 'sigmoid'
 for i in range(n_sim):
 	# theta0 = np.random.randn(p)
@@ -47,7 +48,6 @@ for i in range(n_sim):
 	print('True beta: %.3f' %beta0)
 
 	## solve by SIR+LS
-	from nonlinear_causal import _2SCausal
 	echo = _2SCausal._2SIR(sparse_reg=None)		
 	# echo.cond_mean = KernelRidge(kernel='rbf', alpha=.001, gamma=.1)
 	# echo.cond_mean = KNeighborsRegressor(n_neighbors=100)
@@ -69,6 +69,7 @@ for i in range(n_sim):
 
 	## solve by RT-2SLS
 	pt = PowerTransformer()
+	# pt = QuantileTransformer()
 	RT_X1 = pt.fit_transform(X1.reshape(-1,1)).flatten()
 	# RT_cor_ZX1 = np.dot(Z1.T, RT_X1)
 	# RT_LS = _2SCausal._2SLS(sparse_reg=None)
@@ -121,10 +122,10 @@ print('UE: AIR: %.3f(%.3f); mean: %.3f(%.3f), RT-LS: %.3f(%.3f); LS: %.3f(%.3f)'
 	   np.mean(ue_RT_LS), np.std(ue_RT_LS)/np.sqrt(n_sim),
 	   np.mean(ue_LS), np.std(ue_LS)/np.sqrt(n_sim) ))
 
-import seaborn as sns
-import matplotlib.pyplot as plt
-plt.rcParams["figure.figsize"] = (10,6)
-sns.set_theme(style="whitegrid")
-sns.lineplot(data=link_plot, x="x", y="phi", hue="method",
-			style="method", alpha=.7)
-plt.show()
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+# plt.rcParams["figure.figsize"] = (10,6)
+# sns.set_theme(style="whitegrid")
+# sns.lineplot(data=link_plot, x="x", y="phi", hue="method",
+# 			style="method", alpha=.7)
+# plt.show()

@@ -113,12 +113,17 @@ class _2SLS(object):
 		else:
 			raise NameError('CI can only be generated after fit!')
 	
-	def test_effect(self, n2, LD_Z2, cor_ZY2):
+	def test_effect(self, n2, LD_Z2, cor_ZY2, if_abs=False):
 		if self.fit_flag:
 			var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
 			var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
-			Z = self.beta/np.sqrt(var_beta)
-			self.p_value = 1. - norm.cdf(Z)
+			## we only test for absolute value
+			if if_abs:
+				Z = abs(self.beta) / np.sqrt(var_beta)
+				self.p_value = 1. - norm.cdf(Z)  + norm.cdf(-Z)
+			else:
+				Z = self.beta / np.sqrt(var_beta)
+				self.p_value = 1. - norm.cdf(Z)
 		else:
 			raise NameError('Testing can only be conducted after fit!')
 
