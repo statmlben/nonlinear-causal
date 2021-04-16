@@ -111,6 +111,9 @@ class _2SLS(object):
 			return [beta_low, beta_high]
 		else:
 			raise NameError('CI can only be generated after fit!')
+	
+	# def test_effect(self, n1, n2, Z1, X1, LD_Z2, cor_ZY2, level):
+
 
 
 class _2SIR(object):
@@ -170,11 +173,11 @@ class _2SIR(object):
 		self.fit_flag = True
 		
 	def fit_air(self, Z, X):
-		X_sir = self.sir.transform(Z)
+		X_sir = self.sir.transform(Z).flatten()
 		self.cond_mean.fit(X=X[:,None], y=X_sir)
-		pred_mean = self.cond_mean.predict(X=X[:,None])
+		pred_mean = self.cond_mean.predict(X[:,None])
 		LD_Z_sum = np.sum(Z[:, :, np.newaxis] * Z[:, np.newaxis, :], axis=0)
-		cross_mean_Z = np.sum(Z * pred_mean, axis=0)
+		cross_mean_Z = np.sum(Z * pred_mean[:,None], axis=0)
 		self.rho = (self.theta.dot(LD_Z_sum).dot(self.theta)) / np.dot( self.theta, cross_mean_Z )
 
 	def fit(self, Z, X, cor_ZY):
@@ -188,7 +191,7 @@ class _2SIR(object):
 
 	def link(self, X):
 		if self.fit_link:
-			return self.rho * self.cond_mean.predict(X=X)
+			return self.rho * self.cond_mean.predict(X)
 		else:
 			raise NameError('You must fit a link function before evaluate it!')
 
