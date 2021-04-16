@@ -60,6 +60,7 @@ class _2SLS(object):
 		self.normalize = normalize
 		self.sparse_reg = sparse_reg
 		self.fit_flag = False
+		self.p_value = None
 
 	def fit_theta(self, LD_Z, cor_ZX):
 		self.theta = np.dot(np.linalg.inv( LD_Z ), cor_ZX)
@@ -112,9 +113,14 @@ class _2SLS(object):
 		else:
 			raise NameError('CI can only be generated after fit!')
 	
-	# def test_effect(self, n1, n2, Z1, X1, LD_Z2, cor_ZY2, level):
-
-
+	def test_effect(self, n2, LD_Z2, cor_ZY2):
+		if self.fit_flag:
+			var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
+			var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
+			Z = self.beta/np.sqrt(var_beta)
+			self.p_value = 1. - norm.cdf(Z)
+		else:
+			raise NameError('Testing can only be conducted after fit!')
 
 class _2SIR(object):
 	"""Sliced inverse regression + least sqaure
@@ -134,6 +140,7 @@ class _2SIR(object):
 		self.sir = None
 		self.rho = None
 		self.fit_flag = False
+		self.p_value = None
 		self.sparse_reg = sparse_reg
 
 	def fit_sir(self, Z, X):
@@ -214,6 +221,15 @@ class _2SIR(object):
 			return [beta_low, beta_high]
 		else:
 			raise NameError('CI can only be generated after fit!')
+
+	def test_effect(self, n2, LD_Z2, cor_ZY2):
+		if self.fit_flag:
+			var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
+			var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
+			Z = self.beta/np.sqrt(var_beta)
+			self.p_value = 1. - norm.cdf(Z) + norm.cdf(-Z)
+		else:
+			raise NameError('Testing can only be conducted after fit!')
 
 	# def CI_beta(self, Z, alpha):
 	# 	if self.fit_flag:

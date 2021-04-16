@@ -21,35 +21,35 @@ def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='linear', feat='normal', 
 
 	# simulate X and Y
 	if case == 'linear':
-		X = np.dot(Z, theta0) + U + eps
+		X = np.dot(Z, theta0) + U**2 + eps
 		phi = X
 		if IoR is not None:
 			phi_ior = IoR
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 
 	elif case == 'log':
-		X = np.exp( np.dot(Z, theta0) + U + eps )
+		X = np.exp( np.dot(Z, theta0) + U**2 + eps )
 		phi = np.log(X)
 		if IoR is not None:
 			phi_ior = np.log(IoR)
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 
 	elif case == 'cube-root':
-		X = (np.dot(Z, theta0) + U + eps)**3
+		X = (np.dot(Z, theta0) + U**2 + eps)**3
 		phi = np.sign(X)*(abs(X)**(1./3))
 		if IoR is not None:
 			phi_ior = np.sign(IoR)*(abs(IoR)**(1./3))
 		y = beta0*phi + np.dot(Z, alpha0) + U + gamma
 
 	elif case == 'inverse':
-		X = 1. / (np.dot(Z, theta0) + U + eps)
+		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
 		phi = 1. / X
 		if IoR is not None:
 			phi_ior = 1. / IoR
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 	
 	elif case == 'sigmoid':
-		X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U - eps ))
+		X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U**2 - eps ))
 		phi = np.log( X / (1 - X) )
 		if IoR is not None:
 			phi_ior = np.log( IoR / (1 - IoR) )
