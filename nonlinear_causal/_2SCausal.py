@@ -70,7 +70,7 @@ class _2SLS(object):
 		if self.normalize:
 			self.theta = normalize(self.theta.reshape(1, -1))[0]
 
-	def fit_beta(self, LD_Z, cor_ZY, lams=10**np.arange(-3,3,.1)):
+	def fit_beta(self, LD_Z, cor_ZY, n2=None, lams=10**np.arange(-3,3,.1)):
 		if self.reg == None:
 			LD_X = self.theta.T.dot(LD_Z).dot(self.theta)
 			if LD_X.ndim == 0:
@@ -93,19 +93,30 @@ class _2SLS(object):
 			pseudo_output = np.linalg.inv(pseudo_input).dot(cov_aug)
 			self.sparse_reg = pycasso.Solver(pseudo_input, pseudo_output, penalty=self.reg, lambdas=lams)
 			self.sparse_reg.train()
-			
-			self.sparse_reg.coef()['beta']
-			self.beta = self.sparse_reg.beta[-1]
+			## select via BIC
+			var_eps = self.est_var_eps(n2, LD_Z, cor_ZY)
+			bic = self.bic(n2, LD_Z_aug, cov_aug, var_eps)
+			self.beta = self.sparse_reg.coef()['beta'][np.argmin(bic)][-1]
 		self.fit_flag = True
+
+	def bic(self, n2, LD_Z2, cor_ZY2, var_eps):
+		bic = []
+		for i in range(len(self.sparse_reg.coef()['beta'])):
+			beta_tmp = self.sparse_reg.coef()['beta'][i]
+			df_tmp = self.sparse_reg.coef()['df'][i]
+			error = ( n2 - 2*beta_tmp.dot(cor_ZY2) + beta_tmp.dot(LD_Z2).dot(beta_tmp) ) / n2 / var_eps
+			bic_tmp = error + np.log(n2) / n2 * df_tmp
+			bic.append(bic_tmp)
+		return bic
 
 	def est_var_eps(self, n2, LD_Z2, cor_ZY2):
 		alpha = np.linalg.inv(LD_Z2).dot(cor_ZY2)
 		sigma_res_y = 1 - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
 		return sigma_res_y
 
-	def fit(self, LD_Z, cor_ZX, cor_ZY):
+	def fit(self, LD_Z, cor_ZX, cor_ZY, lams=10**np.arange(-3,3,.1)):
 		self.fit_theta(LD_Z, cor_ZX)
-		self.fit_beta(LD_Z, cor_ZY)
+		self.fit_beta(LD_Z, cor_ZY, lams)
 	
 	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cor_ZY2, level):
 		if self.fit_flag:
