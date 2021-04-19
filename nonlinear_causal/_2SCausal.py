@@ -5,6 +5,8 @@ from sliced import SlicedInverseRegression
 from sklearn.neighbors import KNeighborsRegressor
 from nonlinear_causal.CDLoop import elastCD
 from scipy.stats import norm
+from scipy.linalg import sqrtm
+import pycasso
 
 class elasticSUM(object):
 	"""Elastic Net based on summary statistics
@@ -54,28 +56,29 @@ class _2SLS(object):
 	----------
 
 	"""
-	def __init__(self, theta=None, beta=None, normalize=True, sparse_reg=elasticSUM()):
+	def __init__(self, theta=None, beta=None, normalize=True, reg='l1'):
 		self.theta = theta
 		self.beta = beta
 		self.normalize = normalize
-		self.sparse_reg = sparse_reg
 		self.fit_flag = False
 		self.p_value = None
+		self.reg = reg
+		self.sparse_reg = None
 
 	def fit_theta(self, LD_Z, cor_ZX):
 		self.theta = np.dot(np.linalg.inv( LD_Z ), cor_ZX)
 		if self.normalize:
 			self.theta = normalize(self.theta.reshape(1, -1))[0]
 
-	def fit_beta(self, LD_Z, cor_ZY):
-		if self.sparse_reg == None:
+	def fit_beta(self, LD_Z, cor_ZY, lams=10**np.arange(-3,3,.1)):
+		if self.reg == None:
 			LD_X = self.theta.T.dot(LD_Z).dot(self.theta)
 			if LD_X.ndim == 0:
 				self.beta = self.theta.T.dot(cor_ZY) / LD_X
 			else:
 				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
-		elif self.sparse_reg.fit_flag:
-			self.beta = self.sparse_reg.beta[-1]
+		# elif self.sparse_reg.fit_flag:
+		# 	self.beta = self.sparse_reg.beta[-1]
 		else:
 			p = len(LD_Z)
 			LD_Z_aug = np.zeros((p+1,p+1))
@@ -85,7 +88,13 @@ class _2SLS(object):
 			LD_Z_aug[:p,-1] = cov_ZX
 			LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
 			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
-			self.sparse_reg.fit(LD_Z_aug, cov_aug)
+			LD_Z_aug[np.diag_indices_from(LD_Z_aug)] = LD_Z_aug[np.diag_indices_from(LD_Z_aug)] + 1e-5
+			pseudo_input = sqrtm(LD_Z_aug)
+			pseudo_output = np.linalg.inv(pseudo_input).dot(cov_aug)
+			self.sparse_reg = pycasso.Solver(pseudo_input, pseudo_output, penalty=self.reg, lambdas=lams)
+			self.sparse_reg.train()
+			
+			self.sparse_reg.coef()['beta']
 			self.beta = self.sparse_reg.beta[-1]
 		self.fit_flag = True
 
