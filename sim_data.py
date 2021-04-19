@@ -57,7 +57,7 @@ def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='linear', feat='normal', 
 
 	elif case == 'piecewise_linear':
 		tmp = np.dot(Z, theta0) + U**2 + eps
-		X = 1.*(tmp<=0.)*tmp + 2*tmp*(tmp>0.)
+		X = 1.*(tmp<=0.)*tmp + 2.*tmp*(tmp>0.)
 		phi = 1.*X*(X<=0) + .5*X*(X>0)
 		if IoR is not None:
 			phi_ior = 1.*(IoR<=0.)*IoR + 2*IoR*(IoR>0.)

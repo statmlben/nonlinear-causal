@@ -22,7 +22,7 @@ mse_RT_LS, mse_LS, ue_RT_LS, ue_LS = [], [], [], []
 link_plot = { 'x': [], 'phi': [], 'method': [] }
 
 # 'linear', 'log', 'cube-root', 'inverse', 'sigmoid', 'piecewise_linear'
-n_sim, case = 100, 'sigmoid'
+n_sim, case = 100, 'piecewise_linear'
 for i in range(n_sim):
 	# theta0 = np.random.randn(p)
 	theta0 = np.ones(p)
@@ -122,10 +122,10 @@ print('UE: AIR: %.3f(%.3f); mean: %.3f(%.3f), RT-LS: %.3f(%.3f); LS: %.3f(%.3f)'
 	   np.mean(ue_RT_LS), np.std(ue_RT_LS)/np.sqrt(n_sim),
 	   np.mean(ue_LS), np.std(ue_LS)/np.sqrt(n_sim) ))
 
-# import seaborn as sns
-# import matplotlib.pyplot as plt
-# plt.rcParams["figure.figsize"] = (10,6)
-# sns.set_theme(style="whitegrid")
-# sns.lineplot(data=link_plot, x="x", y="phi", hue="method",
-# 			style="method", alpha=.7)
-# plt.show()
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.rcParams["figure.figsize"] = (10,6)
+sns.set_theme(style="whitegrid")
+sns.lineplot(data=link_plot, x="x", y="phi", hue="method",
+			style="method", alpha=.7)
+plt.show()

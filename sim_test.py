@@ -84,15 +84,6 @@ for beta0 in [.00]:
 		'method': ['2SLS']*n_sim+['RT-2SLS']*n_sim+['2SIR']*n_sim}
 	p_value = np.array(p_value)
 
-	# import seaborn as sns
-	# import matplotlib.pyplot as plt
-	# plt.rcParams["figure.figsize"] = (12,6)	
-
-	# sns.set_theme(style="whitegrid")
-	# ax = sns.boxplot(x="method", y="abs_beta", data=d)
-	# ax = sns.swarmplot(x="method", y="abs_beta", data=d, color=".3", size=3.)
-	# plt.show()
-
 	print('#'*60)
 	print('simulation setting: n: %d, p: %d, beta0: %.3f' %(n,p, beta0))
 	## estimation acc
@@ -104,3 +95,13 @@ for beta0 in [.00]:
 			%( len(p_value[p_value[:,0]<.05])/n_sim,
 			len(p_value[p_value[:,1]<.05])/n_sim,
 			len(p_value[p_value[:,2]<.05])/n_sim))
+
+	import seaborn as sns
+	import matplotlib.pyplot as plt
+	plt.rcParams["figure.figsize"] = (12,6)	
+
+	sns.set_theme(style="whitegrid")
+	ax = sns.boxplot(x="method", y="abs_beta", data=d)
+	ax = sns.swarmplot(x="method", y="abs_beta", data=d, color=".3", size=3.)
+	ax.axhline(1, ls='--', color='r', alpha=.3)
+	plt.show()
