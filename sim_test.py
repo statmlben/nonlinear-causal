@@ -108,17 +108,17 @@ from sklearn.preprocessing import power_transform, quantile_transform
 n, p = 2000, 10
 d = {'beta': [], 'method': [], 'case': []}
 # for beta0 in [.05, .10, .15]:5
-# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
-for case in ['normal', 'cate']:
+for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
+# for case in ['normal', 'cate']:
 	beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 	p_value = []
 	n_sim = 100
 	for i in range(n_sim):
 		beta0 = .15
-		# theta0 = np.ones(p)
-		theta0 = np.random.randn(p)
+		theta0 = np.ones(p)
+		# theta0 = np.random.randn(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0=beta0, case='inverse', feat=case, range=.01)
+		Z, X, y, phi = sim(n, p, theta0, beta0=beta0, case=case, feat='normal', range=.01)
 		if abs(X).max() > 1e+8:
 			continue
 		## normalize Z, X, y
@@ -162,7 +162,7 @@ for case in ['normal', 'cate']:
 		RT_LS.test_effect(n2, LD_Z2, cor_ZY2)
 		d['beta'].append(RT_LS.beta*y_scale)
 		d['case'].append(case)
-		d['method'].append('RT-2SLS')
+		d['method'].append('PT-2SLS')
 		# print('est beta based on RT-OLS: %.3f; p-value: %.5f' %(RT_LS.beta*y_scale, RT_LS.p_value))
 
 		## solve by SIR+LS
@@ -188,7 +188,7 @@ import matplotlib.pyplot as plt
 plt.rcParams["figure.figsize"] = (12,6)	
 
 sns.set_theme(style="whitegrid")
-ax = sns.boxplot(x="method", y="beta", hue='case', data=d)
-# ax = sns.swarmplot(x="method", y="beta", data=d, color=".3", size=3.)
+# ax = sns.boxplot(x="method", y="beta", hue='case', data=d)
+ax = sns.boxplot(x="case", y="beta", hue='method', data=d)
 ax.axhline(beta0, ls='--', color='r', alpha=.5)
 plt.show()
