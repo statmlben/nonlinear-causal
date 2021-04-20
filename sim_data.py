@@ -3,9 +3,11 @@ from scipy.special import lambertw
 from sklearn.preprocessing import OneHotEncoder
 from random import choices
 
-def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='linear', feat='normal', range=1., prob=.3, return_phi=False):
+def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='log', feat='normal', range=1., prob=.3, return_phi=False):
 	if feat == 'normal':
 		Z = np.random.randn(n, p)
+	elif feat == 'laplace':
+		Z = np.random.laplace(size = (n, p))
 	elif feat == 'uniform':
 		Z = np.random.uniform(low=-range, high=range, size=(n,p))
 	elif feat == 'cate':
