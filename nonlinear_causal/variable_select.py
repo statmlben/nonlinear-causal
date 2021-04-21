@@ -269,6 +269,88 @@ class SCAD(RegressorMixin, LinearModel):
 		return self.alpha*(abs_coef <= self.alpha) + np.maximum(a*self.alpha - abs_coef, 0.) / (a - 1) * (abs_coef > self.alpha)
 
 class L0_IC(RegressorMixin, LinearModel):
+	"""Linear Model Selection trained with L0 prior as regularizer
+	The optimization objective for Lasso is::
+		(1 / (2 * n_samples)) * ||y - Xw||^2_2, s.t. ||w||_0 <= K
+	Parameters
+	----------
+	Ks: range of int, default=range(1,10)
+		Number of nonzero coef to be tuned.
+	alphas : float, default=1.0
+		List of alphas where to compute the SCAD. default=np.arange(-3,3,.1)
+	mask: ndarray of shape (n_features,); dtype = bool
+		Indicator to count the variable in L0 term. default = 'full'
+	fit_intercept : bool, default=True
+		Whether to calculate the intercept for this model. If set
+		to False, no intercept will be used in calculations
+		(i.e. data is expected to be centered).
+	normalize : bool, default=False
+		This parameter is ignored when ``fit_intercept`` is set to False.
+		If True, the regressors X will be normalized before regression by
+		subtracting the mean and dividing by the l2-norm.
+		If you wish to standardize, please use
+		:class:`~sklearn.preprocessing.StandardScaler` before calling ``fit``
+		on an estimator with ``normalize=False``.
+	precompute : 'auto', bool or array-like of shape (n_features, n_features),\
+				 default=False
+		Whether to use a precomputed Gram matrix to speed up
+		calculations. If set to ``'auto'`` let us decide. The Gram
+		matrix can also be passed as argument. For sparse input
+		this option is always ``True`` to preserve sparsity.
+	copy_X : bool, default=True
+		If ``True``, X will be copied; else, it may be overwritten.
+	max_iter : int, default=1000
+		The maximum number of iterations.
+	tol : float, default=1e-4
+		The tolerance for the optimization: if the updates are
+		smaller than ``tol``, the optimization code checks the
+		dual gap for optimality and continues until it is smaller
+		than ``tol``.
+	warm_start : bool, default=False
+		When set to True, reuse the solution of the previous call to fit as
+		initialization, otherwise, just erase the previous solution.
+		See :term:`the Glossary <warm_start>`.
+	positive : bool, default=False
+		When set to ``True``, forces the coefficients to be positive.
+	random_state : int, RandomState instance, default=None
+		The seed of the pseudo random number generator that selects a random
+		feature to update. Used when ``selection`` == 'random'.
+		Pass an int for reproducible output across multiple function calls.
+		See :term:`Glossary <random_state>`.
+	selection : {'cyclic', 'random'}, default='cyclic'
+		If set to 'random', a random coefficient is updated every iteration
+		rather than looping over features sequentially by default. This
+		(setting to 'random') often leads to significantly faster convergence
+		especially when tol is higher than 1e-4.
+	Attributes
+	----------
+	coef_ : ndarray of shape (n_features,) or (n_targets, n_features)
+		Parameter vector (w in the cost function formula).
+	dual_gap_ : float or ndarray of shape (n_targets,)
+		Given param alpha, the dual gaps at the end of the optimization,
+		same shape as each observation of y.
+	sparse_coef_ : sparse matrix of shape (n_features, 1) or \
+			(n_targets, n_features)
+		Readonly property derived from ``coef_``.
+	intercept_ : float or ndarray of shape (n_targets,)
+		Independent term in decision function.
+	n_iter_ : int or list of int
+		Number of iterations run by the coordinate descent solver to reach
+		the specified tolerance.
+	Examples
+	--------
+	>>> from sklearn import linear_model
+	>>> clf = linear_model.Lasso(alpha=0.1)
+	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
+	Lasso(alpha=0.1)
+	>>> print(clf.coef_)
+	[0.85 0.  ]
+	>>> print(clf.intercept_)
+	0.15...
+	The algorithm used to fit the model is coordinate descent.
+	To avoid unnecessary memory duplication the X argument of the fit method
+	should be directly passed as a Fortran-contiguous numpy array.
+	"""
 
 	def __init__(self, criterion='bic', Ks=range(1,10), alphas=np.arange(-3,3,.1), mask='full', fit_intercept=True, normalize=False,
 				precompute=False, copy_X=True, max_iter=1000,
@@ -326,10 +408,16 @@ class L0_IC(RegressorMixin, LinearModel):
 		## find the best model
 		criterion_lst = []
 		for model_tmp in candidate_model:
-			model_tmp = np.array(model_tmp)
-			clf_tmp = LinearRegression()
-			clf_tmp.fit(X[:,model_tmp], y, sample_weight)
-			res = y - clf_tmp.predict(X[:,model_tmp])
+			if model_tmp == []:
+				if self.fit_intercept:
+					res = y - y.mean()
+				else:
+					res = y
+			else:
+				model_tmp = np.array(model_tmp)
+				clf_tmp = LinearRegression()
+				clf_tmp.fit(X[:,model_tmp], y, sample_weight)
+				res = y - clf_tmp.predict(X[:,model_tmp])
 			if self.criterion == 'bic':
 				criterion_tmp = np.mean(res**2) / (var_res**2 + eps64) + len(model_tmp) * np.log(n_sample) / n_sample
 			elif self.criterion == 'aic':
@@ -339,11 +427,19 @@ class L0_IC(RegressorMixin, LinearModel):
 			criterion_lst.append(criterion_tmp)
 		## best model
 		best_model = np.array(candidate_model[np.argmin(criterion_lst)])
-		clf_best = LinearRegression()
-		clf_best.fit(X[:,best_model], y)
-		self.coef_ = np.zeros(n_feature)
-		self.coef_[best_model] = clf_best.coef_
-		self.intercept_ = clf_best.intercept_
+		if best_model = []:
+			if self.fit_intercept:
+				self.coef_ = np.zeros(n_feature)
+				self.intercept_ = y.mean()
+			else:
+				self.coef_ = np.zeros(n_feature)
+				self.intercept_ = 0.
+		else:
+			clf_best = LinearRegression()
+			clf_best.fit(X[:,best_model], y)
+			self.coef_ = np.zeros(n_feature)
+			self.coef_[best_model] = clf_best.coef_
+			self.intercept_ = clf_best.intercept_
 		
 # ## test
 import numpy as np
