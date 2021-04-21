@@ -71,8 +71,8 @@ for i in range(n_sim):
 	LS.fit_beta(LD_Z2, cor_ZY2, n2=n2)
 	# LS.fit_beta(LD_pop, cor_ZY2)
 	## generate CI for beta
-	# LS.test_effect(n2, LD_Z2, cor_ZY2, if_abs=False)
-	LS.test_effect(n2, LD_pop, cor_ZY2, if_abs=False)
+	# LS.test_effect(n2, LD_Z2, cor_ZY2)
+	LS.test_effect(n2, LD_pop, cor_ZY2)
 	p_value.append(LS.p_value)
 p_value = np.array(p_value)
 print('Rejection: 2sls: %.3f' %(len(p_value[p_value<.05])/n_sim))

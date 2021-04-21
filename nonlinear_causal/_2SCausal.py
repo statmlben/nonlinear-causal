@@ -3,51 +3,10 @@ from sklearn.base import BaseEstimator
 from sklearn.preprocessing import normalize
 from sliced import SlicedInverseRegression
 from sklearn.neighbors import KNeighborsRegressor
-from nonlinear_causal.CDLoop import elastCD
 from scipy.stats import norm
 from scipy.linalg import sqrtm
 import pycasso
-
-class elasticSUM(object):
-	"""Elastic Net based on summary statistics
-
-	Parameters
-	----------
-	"""
-
-	def __init__(self, lam=10., lam2=0., max_iter=1000, eps=1e-4, print_step=1, criterion='bic'):
-		self.lam = lam
-		self.lam2 = lam2
-		self.beta = []
-		self.max_iter = max_iter
-		self.eps = eps
-		self.print_step = print_step
-		self.criterion = criterion
-		self.fit_flag = False
-	
-	def fit(self, LD_X, cov):
-		"""
-		fit the linear coeff based on feature and summary statistics.
-
-		Parameters
-		----------
-		"""
-		if (type(self.lam) == int or float):
-			self.beta = elastCD(LD_X, cov, self.lam, self.lam2, self.max_iter, self.eps, self.print_step)
-		else:
-			lam_lst, beta_path, df_lst = [], [], []
-			for lam_tmp in self.lam:
-				beta_tmp = elastCD(LD_X, cov, lam_tmp, self.lam2, self.max_iter, self.eps, self.print_step)
-				df_tmp = np.sum(np.abs(beta_tmp) > self.eps)
-				df_lst.append(df_tmp)
-				beta_path.append(beta_tmp)
-				lam_lst.append(lam_tmp)
-			lam_lst, beta_path, df_lst = np.array(lam_lst), np.array(beta_path), np.array(df_lst)
-			## compute criteria
-		self.fit_flag = True
-
-	def predict(self, X):
-		return np.dot(X, self.beta)
+from variable_select import WLasso, SCAD
 
 class _2SLS(object):
 	"""Two-stage least square
