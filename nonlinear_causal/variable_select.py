@@ -1,7 +1,9 @@
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.linear_model import Lasso, ElasticNet, LinearRegression
+from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
 from sklearn.linear_model._base import LinearModel
+from sklearn.linear_model._coordinate_descent import LinearModelCV
 import numpy as np
+import pandas as pd
 
 class WLasso(RegressorMixin, LinearModel):
 	"""Linear Model trained with Weighted L1 prior as regularizer (aka the weighted-Lasso)
@@ -234,6 +236,7 @@ class SCAD(RegressorMixin, LinearModel):
 		self.positive = positive
 		self.random_state = random_state
 		self.selection = selection
+		self.sol_path_ = []
 
 	def fit(self, X, y, sample_weight=None):
 		"""
@@ -260,7 +263,8 @@ class SCAD(RegressorMixin, LinearModel):
 			self.coef_ = Wlasso_tmp.coef_
 			self.intercept_ = Wlasso_tmp.intercept_
 			self.sparse_coef_ = Wlasso_tmp.sparse_coef_
-			if np.mean((coef_old - Wlasso_tmp.coef_)**2) < self.tol:
+			self.sol_path_.append(list(Wlasso_tmp.coef_))
+			if np.max(abs(coef_old - Wlasso_tmp.coef_)) < self.tol:
 				break
 			coef_old = Wlasso_tmp.coef_
 	
@@ -268,7 +272,85 @@ class SCAD(RegressorMixin, LinearModel):
 		abs_coef = abs(self.coef_)
 		return self.alpha*(abs_coef <= self.alpha) + np.maximum(a*self.alpha - abs_coef, 0.) / (a - 1) * (abs_coef > self.alpha)
 
-class L0_IC(RegressorMixin, LinearModel):
+class SCAD_IC(RegressorMixin, LinearModelCV):
+	def __init__(self, *, criterion='bic', alphas=10**np.arange(-3,3,.1), ada_weight=1.0, fit_intercept=True, normalize=False,
+				precompute=False, copy_X=True, max_iter=1000, var_res = None,
+				tol=1e-4, warm_start=False, positive=False,
+				random_state=None, selection='cyclic'):
+		self.alphas = alphas
+		self.criterion = criterion
+		self.ada_weight = ada_weight
+		self.fit_intercept = fit_intercept
+		self.normalize = normalize
+		self.precompute = precompute
+		self.max_iter = max_iter
+		self.copy_X = copy_X
+		self.tol = tol
+		self.warm_start = warm_start
+		self.positive = positive
+		self.random_state = random_state
+		self.selection = selection
+		self.var_res = var_res
+		self.best_estimator = None
+		self.fit_flag = False
+
+	def fit(self, X, y, sample_weight=None):
+		n_sample, n_feature = X.shape
+		eps64 = np.finfo('float64').eps
+		self.ada_weight = self.ada_weight * np.ones(n_feature)
+		scad_tmp = SCAD(ada_weight=self.ada_weight, fit_intercept=self.fit_intercept, normalize=self.normalize, 
+						precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
+						tol=self.tol, warm_start=self.warm_start, positive=self.positive, 
+						random_state=self.random_state, selection=self.selection)
+		if self.var_res == None:
+			clf_full = LinearRegression(fit_intercept=self.fit_intercept)
+			clf_full.fit(X, y)
+			var_res = np.mean(( y - clf_full.predict(X) )**2)
+			self.var_res = var_res
+		criterion_lst, mse_lst, model_lst = [], [], []
+		for alpha_tmp in self.alphas:
+			scad_tmp.alpha = alpha_tmp
+			scad_tmp.fit(X, y, sample_weight)
+			res = y - scad_tmp.predict(X)
+			mse_tmp = np.mean(res**2)
+			model_tmp = np.where( abs(scad_tmp.coef_) > eps64 )[0]
+			df_tmp = len(model_tmp)
+			if self.criterion == 'bic':
+				criterion_tmp = mse_tmp / (self.var_res + eps64) + df_tmp * np.log(n_sample) / n_sample
+			elif self.criterion == 'aic':
+				criterion_tmp = mse_tmp / (self.var_res + eps64) + df_tmp * 2 / n_sample
+			else:
+				raise NameError('criteria should be aic or bic')
+			criterion_lst.append(criterion_tmp)
+			mse_lst.append(mse_tmp)
+			model_lst.append(model_tmp)
+		self.criterion_lst_ = criterion_lst
+		self.mse_lst_ = mse_lst
+		self.model_lst_ = model_lst
+		## best model
+		best_alpha = self.alphas[np.argmin(criterion_lst)]
+		scad_tmp.alpha = best_alpha
+		scad_tmp.fit(X, y, sample_weight)
+		self.coef_ = scad_tmp.coef_
+		self.intercept_ = scad_tmp.intercept_
+		self.best_estimator = scad_tmp
+		self.fit_flag = True
+	
+	def _get_estimator(self):
+		return SCAD()
+
+	def _is_multitask(self):
+		return False
+
+	def _more_tags(self):
+		return {'multioutput': False}
+	
+	def selection_summary(self):
+		d = {'model': self.model_lst_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
+		df = pd.DataFrame(data=d)
+		print(df)
+		
+class L0_IC(LassoLarsIC):
 	"""Linear Model Selection trained with L0 prior as regularizer
 	The optimization objective for Lasso is::
 		(1 / (2 * n_samples)) * ||y - Xw||^2_2, s.t. ||w||_0 <= K
@@ -352,36 +434,41 @@ class L0_IC(RegressorMixin, LinearModel):
 	should be directly passed as a Fortran-contiguous numpy array.
 	"""
 
-	def __init__(self, criterion='bic', Ks=range(1,10), alphas=np.arange(-3,3,.1), mask='full', fit_intercept=True, normalize=False,
-				precompute=False, copy_X=True, max_iter=1000,
-				tol=1e-4, warm_start=False, positive=False,
+	def __init__(self, criterion='bic', *, Ks=range(10), alphas=10**np.arange(-3,3,.1), ada_weight=True, fit_intercept=True, normalize=False,
+				precompute=False, copy_X=True, max_iter=1000, verbose=False, eps=np.finfo(float).eps,
+				tol=1e-4, warm_start=False, positive=False, var_res = None,
 				random_state=None, selection='cyclic'):
 		self.criterion = criterion
 		self.Ks = Ks
 		self.alphas = alphas
-		self.mask = mask
+		self.ada_weight = ada_weight
 		self.fit_intercept = fit_intercept
 		self.normalize = normalize
 		self.precompute = precompute
 		self.max_iter = max_iter
+		self.verbose = verbose
 		self.copy_X = copy_X
 		self.tol = tol
 		self.warm_start = warm_start
 		self.positive = positive
 		self.random_state = random_state
 		self.selection = selection
+		self.fit_flag = False
+		self.eps = eps
+		self.var_res = var_res
 
 	def fit(self, X, y, sample_weight=None):
 		n_sample, n_feature = X.shape
 		eps64 = np.finfo('float64').eps
-		pre_select = list(np.where(self.mask==False)[0])
-		if self.mask == 'full':
+		pre_select = list(np.where(self.ada_weight==False)[0])
+		self.ada_weight = self.ada_weight * np.ones(n_feature, dtype=bool)
+		if all(self.ada_weight):
 			scad_tmp = SCAD(fit_intercept=self.fit_intercept, normalize=self.normalize, precompute=self.precompute, 
 							copy_X=self.copy_X, max_iter=self.max_iter,
 							tol=self.tol, warm_start=self.warm_start, positive=self.positive,
 							random_state=self.random_state, selection=self.selection)
 		else:
-			scad_tmp = SCAD(ada_weight=1.*self.mask, fit_intercept=self.fit_intercept, 
+			scad_tmp = SCAD(ada_weight=1.*self.ada_weight, fit_intercept=self.fit_intercept, 
 							normalize=self.normalize, precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
 							tol=self.tol, warm_start=self.warm_start, positive=self.positive,
 							random_state=self.random_state, selection=self.selection)
@@ -390,7 +477,7 @@ class L0_IC(RegressorMixin, LinearModel):
 			scad_tmp.alpha = alpha_tmp
 			scad_tmp.fit(X, y, sample_weight)
 			## we don't select the features with mask = False
-			abs_coef = abs(scad_tmp.coef_) * self.mask
+			abs_coef = abs(scad_tmp.coef_) * self.ada_weight
 			nz_ind = np.argsort(abs_coef)[-sum(abs_coef > eps64):][::-1]
 			for K_tmp in self.Ks:
 				if K_tmp > len(nz_ind):
@@ -400,13 +487,15 @@ class L0_IC(RegressorMixin, LinearModel):
 				candidate_model.append(nz_ind_tmp)
 		candidate_model = set(map(tuple, candidate_model))
 		candidate_model = list(candidate_model)
-		
+		self.candidate_model_ = candidate_model
 		## fit largest model to get variance
-		clf_full = LinearRegression()
-		clf_full.fit(X, y)
-		var_res = np.mean(( y - clf_full.predict(X) )**2)
+		if self.var_res == None:
+			clf_full = LinearRegression(fit_intercept=self.fit_intercept)
+			clf_full.fit(X, y)
+			var_res = np.mean(( y - clf_full.predict(X) )**2)
+			self.var_res = var_res
 		## find the best model
-		criterion_lst = []
+		criterion_lst, mse_lst = [], []
 		for model_tmp in candidate_model:
 			if model_tmp == []:
 				if self.fit_intercept:
@@ -415,19 +504,23 @@ class L0_IC(RegressorMixin, LinearModel):
 					res = y
 			else:
 				model_tmp = np.array(model_tmp)
-				clf_tmp = LinearRegression()
+				clf_tmp = LinearRegression(fit_intercept=self.fit_intercept)
 				clf_tmp.fit(X[:,model_tmp], y, sample_weight)
 				res = y - clf_tmp.predict(X[:,model_tmp])
+			mse_tmp = np.mean(res**2)
 			if self.criterion == 'bic':
-				criterion_tmp = np.mean(res**2) / (var_res**2 + eps64) + len(model_tmp) * np.log(n_sample) / n_sample
+				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n_sample) / n_sample
 			elif self.criterion == 'aic':
-				criterion_tmp = np.mean(res**2) / (var_res**2 + eps64) + len(model_tmp) * 2 / n_sample
+				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * 2 / n_sample
 			else:
 				raise NameError('criteria should be aic or bic')
 			criterion_lst.append(criterion_tmp)
+			mse_lst.append(mse_tmp)
+		self.criterion_lst_ = criterion_lst
+		self.mse_lst_ = mse_lst
 		## best model
 		best_model = np.array(candidate_model[np.argmin(criterion_lst)])
-		if best_model = []:
+		if best_model == []:
 			if self.fit_intercept:
 				self.coef_ = np.zeros(n_feature)
 				self.intercept_ = y.mean()
@@ -435,34 +528,15 @@ class L0_IC(RegressorMixin, LinearModel):
 				self.coef_ = np.zeros(n_feature)
 				self.intercept_ = 0.
 		else:
-			clf_best = LinearRegression()
+			clf_best = LinearRegression(fit_intercept=self.fit_intercept)
 			clf_best.fit(X[:,best_model], y)
 			self.coef_ = np.zeros(n_feature)
 			self.coef_[best_model] = clf_best.coef_
 			self.intercept_ = clf_best.intercept_
+		self.fit_flag = True
+	
+	def selection_summary(self):
+		d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
+		df = pd.DataFrame(data=d)
+		print(df)
 		
-# ## test
-import numpy as np
-from sklearn.datasets import make_regression
-X, y, true_beta = make_regression(1000, 100, coef=True)
-## L0_IC
-n, d = X.shape
-mask = np.ones(d, dtype=bool)
-mask[0] = False
-tmp = L0_IC(Ks=range(1,d), mask=mask)
-tmp.fit(X, y)
-
-
-## weighted Lasso
-ada_weight = np.ones(100)
-ada_weight[:50] = 0.
-tmp = SCAD(alpha=.1, ada_weight=ada_weight)
-tmp.fit(X, y)
-pred_y = tmp.predict(X)
-np.mean((y - pred_y)**2)
-
-# ## lasso
-# clf = Lasso(alpha=.1)
-# clf.fit(X, y)
-# pred_y = clf.predict(X)
-# np.mean((y - pred_y)**2)

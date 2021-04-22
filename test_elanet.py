@@ -39,6 +39,7 @@ from scipy import stats
 from sklearn.model_selection import train_test_split
 from nonlinear_causal import _2SCausal
 from sklearn.preprocessing import power_transform, quantile_transform
+from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC, SCAD_IC
 
 n, p = 2000, 10
 # theta0 = np.random.randn(p)
@@ -87,9 +88,9 @@ from sklearn.model_selection import train_test_split
 from nonlinear_causal import _2SCausal
 from sklearn.preprocessing import power_transform, quantile_transform
 from scipy.linalg import sqrtm
-import pycasso
+from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC, SCAD_IC
 
-n, p = 2000, 10
+n, p = 20000, 10
 # theta0 = np.random.randn(p)
 p_value = []
 n_sim = 1
@@ -97,7 +98,8 @@ for i in range(n_sim):
 	theta0, beta0 = np.ones(p), .00
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	alpha0 = np.zeros(p)
-	alpha0[:5] = .2
+	alpha0[:3] = 1.
+	alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
 	Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='linear', feat='normal', range=.01)
 	## normalize Z, X, y
 	center = StandardScaler(with_std=False)
@@ -112,7 +114,10 @@ for i in range(n_sim):
 	# print('True beta: %.3f' %beta0)
 
 	## solve by 2sls
-	LS = _2SCausal._2SLS(reg='scad')
+	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-2,2,.1), 
+					Ks=range(p), max_iter=10000)
+	LS = _2SCausal._2SLS(sparse_reg=reg_model)
+	# LS = _2SCausal._2SLS(sparse_reg = SCAD_IC(fit_intercept=False, max_iter=10000))
 	## Stage-1 fit theta
 	LS.fit_theta(LD_Z1, cor_ZX1)
 	## Stage-2 fit beta
@@ -125,3 +130,21 @@ for i in range(n_sim):
 p_value = np.array(p_value)
 print('Rejection: 2sls: %.3f' %(len(p_value[p_value<.05])/n_sim))
 
+## Test L0 selection
+import numpy as np
+from sklearn.datasets import make_regression
+from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC, SCAD_IC
+
+X, y, true_beta = make_regression(1000, 10, n_informative=5, coef=True, noise=1.)
+# SCAD
+scad_tmp = SCAD(alpha=.1)
+scad_tmp.fit(X,y/100.)
+
+# ## L0_IC
+# n, d = X.shape
+# tmp = L0_IC(Ks=range(1,d))
+# tmp.fit(X, y)
+
+# SCAD_IC
+scad_tmp = SCAD_IC()
+scad_tmp.fit(X,y)

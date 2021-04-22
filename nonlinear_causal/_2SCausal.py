@@ -6,7 +6,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from scipy.stats import norm
 from scipy.linalg import sqrtm
 import pycasso
-from variable_select import WLasso, SCAD
+from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC
 
 class _2SLS(object):
 	"""Two-stage least square
@@ -15,14 +15,13 @@ class _2SLS(object):
 	----------
 
 	"""
-	def __init__(self, theta=None, beta=None, normalize=True, reg='l1'):
-		self.theta = theta
-		self.beta = beta
+	def __init__(self, normalize=True, sparse_reg=None):
+		self.theta = None
+		self.beta = None
 		self.normalize = normalize
 		self.fit_flag = False
 		self.p_value = None
-		self.reg = reg
-		self.sparse_reg = None
+		self.sparse_reg = sparse_reg
 		self.alpha = None
 		self.p = None
 
@@ -33,15 +32,16 @@ class _2SLS(object):
 			self.theta = normalize(self.theta.reshape(1, -1))[0]
 
 	def fit_beta(self, LD_Z, cor_ZY, n2=None, lams=10**np.arange(-3,3,.1)):
-		if self.reg == None:
+		if self.sparse_reg == None:
 			self.alpha = np.zeros(self.p)
 			LD_X = self.theta.T.dot(LD_Z).dot(self.theta)
 			if LD_X.ndim == 0:
 				self.beta = self.theta.T.dot(cor_ZY) / LD_X
 			else:
 				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
-		# elif self.sparse_reg.fit_flag:
-		# 	self.beta = self.sparse_reg.beta[-1]
+		elif self.sparse_reg.fit_flag:
+			self.beta = self.sparse_reg.coef_[-1]
+			self.alpha = self.sparse_reg.coef_[:-1]
 		else:
 			p = len(LD_Z)
 			LD_Z_aug = np.zeros((p+1,p+1))
@@ -54,14 +54,22 @@ class _2SLS(object):
 			LD_Z_aug = LD_Z_aug + 1e-5*np.identity(p+1)
 			pseudo_input = sqrtm(LD_Z_aug)
 			pseudo_output = np.linalg.inv(pseudo_input).dot(cov_aug)
-			self.sparse_reg = pycasso.Solver(pseudo_input, pseudo_output, penalty=self.reg, lambdas=lams)
-			self.sparse_reg.train()
-			## select via BIC
-			var_eps = self.est_var_eps(n2, LD_Z, cor_ZY)
-			bic = self.bic(n2, LD_Z_aug, cov_aug, var_eps)
-			best_ind = np.argmin(bic)
-			self.beta = self.sparse_reg.coef()['beta'][best_ind][-1]
-			self.alpha = self.sparse_reg.coef()['beta'][best_ind][:-1]
+			ada_weight = np.ones(p+1, dtype=bool)
+			ada_weight[-1] = False
+			var_res = self.est_var_res(n2, LD_Z, cor_ZY)
+			self.sparse_reg.ada_weight = ada_weight
+			self.sparse_reg.var_res = var_res
+			self.sparse_reg.fit(pseudo_input, pseudo_output)
+			# self.sparse_reg = pycasso.Solver(pseudo_input, pseudo_output, penalty=self.reg, lambdas=lams)
+			# self.sparse_reg.train()
+			# ## select via BIC
+			# var_eps = self.est_var_eps(n2, LD_Z, cor_ZY)
+			# bic = self.bic(n2, LD_Z_aug, cov_aug, var_eps)
+			# best_ind = np.argmin(bic)
+			# self.beta = self.sparse_reg.coef()['beta'][best_ind][-1]
+			# self.alpha = self.sparse_reg.coef()['beta'][best_ind][:-1]
+			self.beta = self.sparse_reg.coef_[-1]
+			self.alpha = self.sparse_reg.coef_[:-1]
 		self.fit_flag = True
 
 	def bic(self, n2, LD_Z2, cor_ZY2, var_eps):
@@ -74,10 +82,10 @@ class _2SLS(object):
 			bic.append(bic_tmp)
 		return bic
 
-	def est_var_eps(self, n2, LD_Z2, cor_ZY2):
+	def est_var_res(self, n2, LD_Z2, cor_ZY2):
 		alpha = np.linalg.inv(LD_Z2).dot(cor_ZY2)
-		sigma_res_y = 1 - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
-		return sigma_res_y
+		sigma_res_y = 1. - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
+		return max(sigma_res_y, 0.) + np.finfo('float32').eps
 
 	def fit(self, LD_Z, cor_ZX, cor_ZY, lams=10**np.arange(-3,3,.1)):
 		self.fit_theta(LD_Z, cor_ZX)
@@ -100,20 +108,21 @@ class _2SLS(object):
 	
 	def test_effect(self, n2, LD_Z2, cor_ZY2):
 		if self.fit_flag:
-			var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
-			if np.max(abs(self.alpha)) < 1e-4:
-				var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
+			var_eps = self.est_var_res(n2, LD_Z2, cor_ZY2)
+			if np.max(abs(self.alpha)) < np.finfo('float32').eps:
+				var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) + np.finfo('float32').eps
 				## we only test for absolute value
 				Z = abs(self.beta) / np.sqrt(var_beta)
 				self.p_value = 1. - norm.cdf(Z)  + norm.cdf(-Z)
 			else:
-				invalid_iv = np.where(abs(self.alpha) > 1e-4)[0]
+				invalid_iv = np.where(abs(self.alpha) > np.finfo('float32').eps)[0]
 				select_mat_inv = np.linalg.inv(LD_Z2[invalid_iv[:,None], invalid_iv])
 				select_cov = LD_Z2[:,invalid_iv].dot(select_mat_inv).dot(LD_Z2[invalid_iv,:])
 				select_var = self.theta.dot(select_cov).dot(self.theta.T)
-				var_beta = var_eps / (self.theta.dot(LD_Z2).dot(self.theta.T) - select_var)
+				var_beta = var_eps / (self.theta.dot(LD_Z2).dot(self.theta.T) - select_var) + np.finfo('float32').eps
 				Z = abs(self.beta) / np.sqrt(var_beta)
 				self.p_value = 1. - norm.cdf(Z)  + norm.cdf(-Z)
+			self.var_beta_ = var_beta
 		else:
 			raise NameError('Testing can only be conducted after fit!')
 
@@ -168,7 +177,7 @@ class _2SIR(object):
 			LD_Z_aug[:p,-1] = cov_ZX
 			LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
 			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
-			LD_Z_aug[np.diag_indices_from(LD_Z_aug)] = LD_Z_aug[np.diag_indices_from(LD_Z_aug)] + 1e-5
+			LD_Z_aug[np.diag_indices_from(LD_Z_aug)] = LD_Z_aug[np.diag_indices_from(LD_Z_aug)] + np.finfo('float32').eps
 			pseudo_input = sqrtm(LD_Z_aug)
 			pseudo_output = np.linalg.inv(pseudo_input).dot(cov_aug)
 			self.sparse_reg = pycasso.Solver(pseudo_input, pseudo_output, penalty=self.reg, lambdas=lams)
