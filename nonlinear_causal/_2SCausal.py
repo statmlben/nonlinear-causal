@@ -7,6 +7,8 @@ from scipy.stats import norm
 from scipy.linalg import sqrtm
 import pycasso
 from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC
+from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
+
 
 class _2SLS(object):
 	"""Two-stage least square
@@ -31,35 +33,62 @@ class _2SLS(object):
 		if self.normalize:
 			self.theta = normalize(self.theta.reshape(1, -1))[0]
 
-	def fit_beta(self, LD_Z, cor_ZY, n2=None, lams=10**np.arange(-3,3,.1)):
+	def fit_beta(self, LD_Z2, cor_ZY2, n2=None, lams=10**np.arange(-3,3,.1)):
+		eps64 = np.finfo('float64').eps
 		if self.sparse_reg == None:
 			self.alpha = np.zeros(self.p)
-			LD_X = self.theta.T.dot(LD_Z).dot(self.theta)
+			LD_X = self.theta.T.dot(LD_Z2).dot(self.theta)
 			if LD_X.ndim == 0:
-				self.beta = self.theta.T.dot(cor_ZY) / LD_X
+				self.beta = self.theta.T.dot(cor_ZY2) / LD_X
 			else:
-				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY)
+				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY2)
 		elif self.sparse_reg.fit_flag:
 			self.beta = self.sparse_reg.coef_[-1]
 			self.alpha = self.sparse_reg.coef_[:-1]
 		else:
-			p = len(LD_Z)
+			p = len(LD_Z2)
 			LD_Z_aug = np.zeros((p+1,p+1))
-			LD_Z_aug[:p,:p] = LD_Z
-			cov_ZX = np.dot(self.theta, LD_Z)
+			LD_Z_aug[:p,:p] = LD_Z2
+			cov_ZX = np.dot(self.theta, LD_Z2)
 			LD_Z_aug[-1,:p] = cov_ZX
 			LD_Z_aug[:p,-1] = cov_ZX
 			LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
-			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
-			LD_Z_aug = LD_Z_aug + 1e-5*np.identity(p+1)
+			cov_aug = np.hstack((cor_ZY2, np.dot(self.theta, cor_ZY2)))
+			LD_Z_aug = LD_Z_aug + np.finfo('float32').eps*np.identity(p+1)
 			pseudo_input = sqrtm(LD_Z_aug)
 			pseudo_output = np.linalg.inv(pseudo_input).dot(cov_aug)
 			ada_weight = np.ones(p+1, dtype=bool)
 			ada_weight[-1] = False
-			var_res = self.est_var_res(n2, LD_Z, cor_ZY)
+			var_res = self.est_var_res(n2, LD_Z2, cor_ZY2)
+			self.var_res = var_res
 			self.sparse_reg.ada_weight = ada_weight
 			self.sparse_reg.var_res = var_res
 			self.sparse_reg.fit(pseudo_input, pseudo_output)
+			criterion_lst, mse_lst = [], []
+			for model_tmp in self.sparse_reg.candidate_model_:
+				model_tmp = np.array(model_tmp)
+				LD_Z_aug_tmp = LD_Z_aug[model_tmp[:,None], model_tmp]
+				cov_aug_tmp = cov_aug[model_tmp]
+				coef_aug_tmp = np.linalg.inv(LD_Z_aug_tmp).dot(cov_aug_tmp)
+				# pseudo_input_tmp = sqrtm(LD_Z_aug_tmp)
+				# pseudo_output_tmp = np.linalg.inv(pseudo_input_tmp).dot(cov_aug_tmp)
+				# clf_tmp = LinearRegression(fit_intercept=self.sparse_reg.fit_intercept)
+				# clf_tmp.fit(pseudo_input_tmp, pseudo_output_tmp)
+				mse_tmp = 1. - 2 * np.dot(coef_aug_tmp, cov_aug_tmp) / n2 + coef_aug_tmp.T.dot(LD_Z_aug_tmp).dot(coef_aug_tmp) / n2
+				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n2) / n2
+				criterion_lst.append(criterion_tmp)
+				mse_lst.append(mse_tmp)
+			## fit the best model
+			best_model = np.array(self.sparse_reg.candidate_model_[np.argmin(criterion_lst)])
+			self.best_model_ = best_model
+			LD_Z_aug_tmp = LD_Z_aug[best_model[:,None], best_model]
+			cov_aug_tmp = cov_aug[best_model]
+			coef_aug_best = np.linalg.inv(LD_Z_aug_tmp).dot(cov_aug_tmp)
+			# pseudo_input_tmp = sqrtm(LD_Z_aug_tmp)
+			# pseudo_output_tmp = np.linalg.inv(pseudo_input_tmp).dot(cov_aug_tmp)
+			# clf_best = LinearRegression(fit_intercept=self.sparse_reg.fit_intercept)
+			# clf_best.fit(pseudo_input_tmp, pseudo_output_tmp)
+			self.alpha = np.zeros(p)
 			# self.sparse_reg = pycasso.Solver(pseudo_input, pseudo_output, penalty=self.reg, lambdas=lams)
 			# self.sparse_reg.train()
 			# ## select via BIC
@@ -68,8 +97,8 @@ class _2SLS(object):
 			# best_ind = np.argmin(bic)
 			# self.beta = self.sparse_reg.coef()['beta'][best_ind][-1]
 			# self.alpha = self.sparse_reg.coef()['beta'][best_ind][:-1]
-			self.beta = self.sparse_reg.coef_[-1]
-			self.alpha = self.sparse_reg.coef_[:-1]
+			self.beta = coef_aug_best[-1]
+			self.alpha[best_model[:-1]] = coef_aug_best[:-1]
 		self.fit_flag = True
 
 	def bic(self, n2, LD_Z2, cor_ZY2, var_eps):

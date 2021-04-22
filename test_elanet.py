@@ -89,16 +89,17 @@ from nonlinear_causal import _2SCausal
 from sklearn.preprocessing import power_transform, quantile_transform
 from scipy.linalg import sqrtm
 from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC, SCAD_IC
+from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
 
-n, p = 20000, 10
+n, p = 5000, 10
 # theta0 = np.random.randn(p)
 p_value = []
-n_sim = 1
+n_sim = 500
 for i in range(n_sim):
 	theta0, beta0 = np.ones(p), .00
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	alpha0 = np.zeros(p)
-	alpha0[:3] = 1.
+	alpha0[:3] = 1.	
 	alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
 	Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='linear', feat='normal', range=.01)
 	## normalize Z, X, y
@@ -115,7 +116,7 @@ for i in range(n_sim):
 
 	## solve by 2sls
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-2,2,.1), 
-					Ks=range(p), max_iter=10000)
+					Ks=range(p), max_iter=10000, refit=False)
 	LS = _2SCausal._2SLS(sparse_reg=reg_model)
 	# LS = _2SCausal._2SLS(sparse_reg = SCAD_IC(fit_intercept=False, max_iter=10000))
 	## Stage-1 fit theta

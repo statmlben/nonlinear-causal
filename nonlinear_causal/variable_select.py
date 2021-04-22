@@ -436,7 +436,7 @@ class L0_IC(LassoLarsIC):
 
 	def __init__(self, criterion='bic', *, Ks=range(10), alphas=10**np.arange(-3,3,.1), ada_weight=True, fit_intercept=True, normalize=False,
 				precompute=False, copy_X=True, max_iter=1000, verbose=False, eps=np.finfo(float).eps,
-				tol=1e-4, warm_start=False, positive=False, var_res = None,
+				tol=1e-4, warm_start=False, positive=False, var_res = None, refit = True,
 				random_state=None, selection='cyclic'):
 		self.criterion = criterion
 		self.Ks = Ks
@@ -456,6 +456,7 @@ class L0_IC(LassoLarsIC):
 		self.fit_flag = False
 		self.eps = eps
 		self.var_res = var_res
+		self.refit = refit
 
 	def fit(self, X, y, sample_weight=None):
 		n_sample, n_feature = X.shape
@@ -478,13 +479,16 @@ class L0_IC(LassoLarsIC):
 			scad_tmp.fit(X, y, sample_weight)
 			## we don't select the features with mask = False
 			abs_coef = abs(scad_tmp.coef_) * self.ada_weight
-			nz_ind = np.argsort(abs_coef)[-sum(abs_coef > eps64):][::-1]
-			for K_tmp in self.Ks:
-				if K_tmp > len(nz_ind):
-					break
-				nz_ind_tmp = list(nz_ind[:K_tmp])
-				nz_ind_tmp.extend(pre_select)
-				candidate_model.append(nz_ind_tmp)
+			if sum(abs_coef > eps64) == 0:
+				candidate_model.append(pre_select)
+			else:
+				nz_ind = np.argsort(abs_coef)[-sum(abs_coef > eps64):][::-1]
+				for K_tmp in self.Ks:
+					if K_tmp > len(nz_ind):
+						break
+					nz_ind_tmp = list(set(nz_ind[:K_tmp]))
+					nz_ind_tmp.extend(pre_select)
+					candidate_model.append(nz_ind_tmp)
 		candidate_model = set(map(tuple, candidate_model))
 		candidate_model = list(candidate_model)
 		self.candidate_model_ = candidate_model
@@ -519,22 +523,23 @@ class L0_IC(LassoLarsIC):
 		self.criterion_lst_ = criterion_lst
 		self.mse_lst_ = mse_lst
 		## best model
-		best_model = np.array(candidate_model[np.argmin(criterion_lst)])
-		if best_model == []:
-			if self.fit_intercept:
-				self.coef_ = np.zeros(n_feature)
-				self.intercept_ = y.mean()
+		if self.refit:
+			best_model = np.array(candidate_model[np.argmin(criterion_lst)])
+			if best_model == []:
+				if self.fit_intercept:
+					self.coef_ = np.zeros(n_feature)
+					self.intercept_ = y.mean()
+				else:
+					self.coef_ = np.zeros(n_feature)
+					self.intercept_ = 0.
 			else:
+				clf_best = LinearRegression(fit_intercept=self.fit_intercept)
+				clf_best.fit(X[:,best_model], y)
 				self.coef_ = np.zeros(n_feature)
-				self.intercept_ = 0.
-		else:
-			clf_best = LinearRegression(fit_intercept=self.fit_intercept)
-			clf_best.fit(X[:,best_model], y)
-			self.coef_ = np.zeros(n_feature)
-			self.coef_[best_model] = clf_best.coef_
-			self.intercept_ = clf_best.intercept_
-		self.fit_flag = True
-	
+				self.coef_[best_model] = clf_best.coef_
+				self.intercept_ = clf_best.intercept_
+			self.fit_flag = True
+			
 	def selection_summary(self):
 		d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
 		df = pd.DataFrame(data=d)
