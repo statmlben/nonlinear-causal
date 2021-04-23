@@ -33,7 +33,7 @@ class _2SLS(object):
 		if self.normalize:
 			self.theta = normalize(self.theta.reshape(1, -1))[0]
 
-	def fit_beta(self, LD_Z2, cor_ZY2, n2=None, lams=10**np.arange(-3,3,.1)):
+	def fit_beta(self, LD_Z2, cor_ZY2, n2=None):
 		eps64 = np.finfo('float64').eps
 		if self.sparse_reg == None:
 			self.alpha = np.zeros(self.p)
@@ -162,20 +162,21 @@ class _2SIR(object):
 	----------
 
 	"""
-	def __init__(self, theta=None, beta=None, sir=None, n_directions=1, n_slices='auto', data_in_slice=50, cond_mean=KNeighborsRegressor(n_neighbors=10), fit_link=True, reg='scad'):
-		self.theta = theta
-		self.beta = beta
+	def __init__(self, n_directions=1, n_slices='auto', data_in_slice=50, cond_mean=KNeighborsRegressor(n_neighbors=10), fit_link=True, sparse_reg=None):
+		self.theta = None
+		self.beta = None
 		self.n_directions = n_directions
 		self.n_slices = n_slices
 		self.data_in_slice = data_in_slice
 		self.fit_link = fit_link
 		self.cond_mean = cond_mean
+		self.sparse_reg = sparse_reg
 		self.sir = None
 		self.rho = None
 		self.fit_flag = False
 		self.p_value = None
-		self.sparse_reg = None
-		self.reg = reg
+		self.alpha = None
+
 
 	def fit_sir(self, Z, X):
 		if self.n_slices == 'auto':
@@ -188,43 +189,61 @@ class _2SIR(object):
 		if self.theta.shape[0] == 1:
 			self.theta = self.theta.flatten()
 
-	def fit_reg(self, LD_Z, cor_ZY):
-		if self.reg == None:
-			LD_X_sir = self.theta.T.dot(LD_Z).dot(self.theta)
+	def fit_reg(self, LD_Z2, cor_ZY2, n2=None):
+		eps64 = np.finfo('float64').eps
+		p = len(LD_Z2)
+		if self.sparse_reg == None:
+			self.alpha = np.zeros(p)
+			LD_X_sir = self.theta.T.dot(LD_Z2).dot(self.theta)
 			if LD_X_sir.ndim == 0:
-				self.beta = np.dot(self.theta, cor_ZY) / LD_X_sir
+				self.beta = np.dot(self.theta, cor_ZY2) / LD_X_sir
 			else:
-				self.beta = np.linalg.inv(LD_X_sir).dot(np.dot(self.theta, cor_ZY))
+				self.beta = np.linalg.inv(LD_X_sir).dot(np.dot(self.theta, cor_ZY2))
 		# elif self.sparse_reg.fit_flag:
 		# 	self.beta = self.sparse_reg.beta[-1]
 		else:
-			p = len(LD_Z)
+			p = len(LD_Z2)
+			# compute aug info
 			LD_Z_aug = np.zeros((p+1,p+1))
-			LD_Z_aug[:p,:p] = LD_Z
-			cov_ZX = np.dot(self.theta, LD_Z)
+			LD_Z_aug[:p,:p] = LD_Z2
+			cov_ZX = np.dot(self.theta, LD_Z2)
 			LD_Z_aug[-1,:p] = cov_ZX
 			LD_Z_aug[:p,-1] = cov_ZX
 			LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
-			cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
-			LD_Z_aug[np.diag_indices_from(LD_Z_aug)] = LD_Z_aug[np.diag_indices_from(LD_Z_aug)] + np.finfo('float32').eps
+			cov_aug = np.hstack((cor_ZY2, np.dot(self.theta, cor_ZY2)))
+			LD_Z_aug = LD_Z_aug + np.finfo('float32').eps*np.identity(p+1)
+			# generate pseudo input and output
 			pseudo_input = sqrtm(LD_Z_aug)
 			pseudo_output = np.linalg.inv(pseudo_input).dot(cov_aug)
-			self.sparse_reg = pycasso.Solver(pseudo_input, pseudo_output, penalty=self.reg, lambdas=lams)
-			self.sparse_reg.train()
-			## select via BIC
-			var_eps = self.est_var_eps(n2, LD_Z, cor_ZY)
-			bic = self.bic(n2, LD_Z_aug, cov_aug, var_eps)
-			self.beta = self.sparse_reg.coef()['beta'][np.argmin(bic)][-1]
-			# p = len(LD_Z)
-			# LD_Z_aug = np.zeros((p+1,p+1))
-			# LD_Z_aug[:p,:p] = LD_Z
-			# cov_ZX = np.dot(self.theta, LD_Z)
-			# LD_Z_aug[-1,:p] = cov_ZX
-			# LD_Z_aug[:p,-1] = cov_ZX
-			# LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
-			# cov_aug = np.hstack((cor_ZY, np.dot(self.theta, cor_ZY)))
-			# self.sparse_reg.fit(LD_Z_aug, cov_aug)
-			# self.beta = self.sparse_reg.beta[-1]
+			ada_weight = np.ones(p+1, dtype=bool)
+			ada_weight[-1] = False
+			var_res = self.est_var_res(n2, LD_Z2, cor_ZY2)
+			# est residual variance
+			self.var_res = var_res
+			self.sparse_reg.ada_weight = ada_weight
+			self.sparse_reg.var_res = var_res
+			# fit model and find the candidate models
+			self.sparse_reg.fit(pseudo_input, pseudo_output)
+			# bic to select best model
+			criterion_lst, mse_lst = [], []
+			for model_tmp in self.sparse_reg.candidate_model_:
+				model_tmp = np.array(model_tmp)
+				LD_Z_aug_tmp = LD_Z_aug[model_tmp[:,None], model_tmp]
+				cov_aug_tmp = cov_aug[model_tmp]
+				coef_aug_tmp = np.linalg.inv(LD_Z_aug_tmp).dot(cov_aug_tmp)
+				mse_tmp = 1. - 2 * np.dot(coef_aug_tmp, cov_aug_tmp) / n2 + coef_aug_tmp.T.dot(LD_Z_aug_tmp).dot(coef_aug_tmp) / n2
+				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n2) / n2
+				criterion_lst.append(criterion_tmp)
+				mse_lst.append(mse_tmp)
+			## fit the best model
+			best_model = np.array(self.sparse_reg.candidate_model_[np.argmin(criterion_lst)])
+			self.best_model_ = best_model
+			LD_Z_aug_tmp = LD_Z_aug[best_model[:,None], best_model]
+			cov_aug_tmp = cov_aug[best_model]
+			coef_aug_best = np.linalg.inv(LD_Z_aug_tmp).dot(cov_aug_tmp)
+			self.alpha = np.zeros(p)
+			self.beta = coef_aug_best[-1]
+			self.alpha[best_model[:-1]] = coef_aug_best[:-1]
 		if self.beta < 0.:
 			self.beta = -self.beta
 			self.theta = -self.theta
@@ -263,7 +282,7 @@ class _2SIR(object):
 		else:
 			raise NameError('You must fit a link function before evaluate it!')
 
-	def est_var_eps(self, n2, LD_Z2, cor_ZY2):
+	def est_var_res(self, n2, LD_Z2, cor_ZY2):
 		alpha = np.linalg.inv(LD_Z2).dot(cor_ZY2)
 		sigma_res_y = 1 - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
 		return sigma_res_y
@@ -285,11 +304,32 @@ class _2SIR(object):
 
 	def test_effect(self, n2, LD_Z2, cor_ZY2):
 		if self.fit_flag:
-			var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
-			var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
-			Z = self.beta/np.sqrt(var_beta)
-			self.p_value = 1. - norm.cdf(Z) + norm.cdf(-Z)
+			var_eps = self.est_var_res(n2, LD_Z2, cor_ZY2)
+			if np.max(abs(self.alpha)) < np.finfo('float32').eps:
+				var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) + np.finfo('float32').eps
+				## we only test for absolute value
+				Z = abs(self.beta) / np.sqrt(var_beta)
+				self.p_value = 1. - norm.cdf(Z)  + norm.cdf(-Z)
+			else:
+				invalid_iv = np.where(abs(self.alpha) > np.finfo('float32').eps)[0]
+				select_mat_inv = np.linalg.inv(LD_Z2[invalid_iv[:,None], invalid_iv])
+				select_cov = LD_Z2[:,invalid_iv].dot(select_mat_inv).dot(LD_Z2[invalid_iv,:])
+				select_var = self.theta.dot(select_cov).dot(self.theta.T)
+				var_beta = var_eps / (self.theta.dot(LD_Z2).dot(self.theta.T) - select_var) + np.finfo('float32').eps
+				Z = abs(self.beta) / np.sqrt(var_beta)
+				self.p_value = 1. - norm.cdf(Z)  + norm.cdf(-Z)
+			self.var_beta_ = var_beta
 		else:
 			raise NameError('Testing can only be conducted after fit!')
+
+
+	# def test_effect(self, n2, LD_Z2, cor_ZY2):
+	# 	if self.fit_flag:
+	# 		var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
+	# 		var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
+	# 		Z = self.beta/np.sqrt(var_beta)
+	# 		self.p_value = 1. - norm.cdf(Z) + norm.cdf(-Z)
+	# 	else:
+	# 		raise NameError('Testing can only be conducted after fit!')
 
 

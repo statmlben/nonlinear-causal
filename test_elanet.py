@@ -91,7 +91,7 @@ from scipy.linalg import sqrtm
 from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC, SCAD_IC
 from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
 
-n, p = 5000, 10
+n, p = 2000, 10
 # theta0 = np.random.randn(p)
 p_value = []
 n_sim = 500
@@ -115,7 +115,7 @@ for i in range(n_sim):
 	# print('True beta: %.3f' %beta0)
 
 	## solve by 2sls
-	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-2,2,.1), 
+	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.2), 
 					Ks=range(p), max_iter=10000, refit=False)
 	LS = _2SCausal._2SLS(sparse_reg=reg_model)
 	# LS = _2SCausal._2SLS(sparse_reg = SCAD_IC(fit_intercept=False, max_iter=10000))
@@ -125,8 +125,8 @@ for i in range(n_sim):
 	LS.fit_beta(LD_Z2, cor_ZY2, n2=n2)
 	## generate CI for beta
 	LS.test_effect(n2, LD_Z2, cor_ZY2)
-	print('alpha: %s' %(LS.alpha*y_scale))
-	print('est beta based on OLS: %.3f; p-value: %.5f' %(LS.beta*y_scale, LS.p_value))
+	# print('alpha: %s' %(LS.alpha*y_scale))
+	# print('est beta based on OLS: %.3f; p-value: %.5f' %(LS.beta*y_scale, LS.p_value))
 	p_value.append(LS.p_value)
 p_value = np.array(p_value)
 print('Rejection: 2sls: %.3f' %(len(p_value[p_value<.05])/n_sim))
