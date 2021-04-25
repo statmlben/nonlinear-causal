@@ -11,7 +11,7 @@ from scipy.linalg import sqrtm
 from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC, SCAD_IC
 from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
 
-n, p = 5000, 100
+n, p = 5000, 10
 # theta0 = np.random.randn(p)
 p_value = []
 n_sim = 500
@@ -21,7 +21,9 @@ for i in range(n_sim):
 	alpha0 = np.zeros(p)
 	alpha0[:3] = 1.	
 	alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
-	Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='inverse', feat='normal', range=.01)
+	Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='cube-root', feat='normal', range=.01)
+	if abs(X).max() > 1e+8:
+			continue
 	## normalize Z, X, y
 	center = StandardScaler(with_std=False)
 	mean_X, mean_y = X.mean(), y.mean()
@@ -35,8 +37,8 @@ for i in range(n_sim):
 	# print('True beta: %.3f' %beta0)
 
 	## solve by 2sls
-	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.2), 
-					Ks=range(p), max_iter=10000, refit=False)
+	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-2,2,.2), 
+					Ks=range(p), max_iter=100000, refit=False)
 	LS = _2SCausal._2SLS(sparse_reg=reg_model)
 	# LS = _2SCausal._2SLS(sparse_reg = SCAD_IC(fit_intercept=False, max_iter=10000))
 	## Stage-1 fit theta
@@ -50,8 +52,8 @@ for i in range(n_sim):
 
 	RT_X1 = power_transform(X1.reshape(-1,1)).flatten()
 	# RT_X1 = quantile_transform(X1.reshape(-1,1), output_distribution='normal')
-	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.2), 
-				Ks=range(p), max_iter=10000, refit=False)
+	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-2,2,.2), 
+				Ks=range(p), max_iter=100000, refit=False)
 	RT_cor_ZX1 = np.dot(Z1.T, RT_X1)
 	RT_LS = _2SCausal._2SLS(sparse_reg=reg_model)
 	## Stage-1 fit theta
@@ -64,7 +66,7 @@ for i in range(n_sim):
 
 	## solve by SIR+LS
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.2), 
-			Ks=range(p), max_iter=10000, refit=False)
+			Ks=range(p), max_iter=100000, refit=False)
 	echo = _2SCausal._2SIR(sparse_reg=reg_model)
 	## Stage-1 fit theta
 	echo.fit_sir(Z1, X1)
