@@ -11,17 +11,17 @@ from scipy.linalg import sqrtm
 from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC, SCAD_IC
 from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
 
-n, p = 5000, 10
+n, p = 5000, 50
 # theta0 = np.random.randn(p)
 p_value = []
-n_sim = 500
+n_sim = 1000
 for i in range(n_sim):
 	theta0, beta0 = np.ones(p), .00
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	alpha0 = np.zeros(p)
 	alpha0[:3] = 1.	
 	alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
-	Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='cube-root', feat='normal', range=.01)
+	Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='piecewise_linear', feat='normal', range=.01)
 	if abs(X).max() > 1e+8:
 			continue
 	## normalize Z, X, y
