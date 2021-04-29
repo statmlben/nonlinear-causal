@@ -21,7 +21,7 @@ for i in range(n_sim):
 	alpha0 = np.zeros(p)
 	alpha0[:3] = 1.	
 	alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
-	Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='inverse', feat='normal', range=.01)
+	Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='cube-root', feat='normal', range=.01)
 	if abs(X).max() > 1e+8:
 			continue
 	## normalize Z, X, y
