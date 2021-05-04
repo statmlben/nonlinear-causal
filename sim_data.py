@@ -3,13 +3,19 @@ from scipy.special import lambertw
 from sklearn.preprocessing import OneHotEncoder
 from random import choices
 
-def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='log', feat='normal', range=1., prob=.3, return_phi=False):
+def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='log', feat='normal', u_range=1., prob=.3, return_phi=False):
 	if feat == 'normal':
 		Z = np.random.randn(n, p)
+	elif feat == 'AP-normal':
+		cov = np.zeros((p,p))
+		for i in range(p):
+			for j in range(p):
+				cov[i,j] = (.5)**abs(i-j)
+		Z = np.random.multivariate_normal(np.zeros(p), cov, n)
 	elif feat == 'laplace':
 		Z = np.random.laplace(size = (n, p))
 	elif feat == 'uniform':
-		Z = np.random.uniform(low=-range, high=range, size=(n,p))
+		Z = np.random.uniform(low=-u_range, high=u_range, size=(n,p))
 	elif feat == 'cate':
 		Z = np.random.choice(2, size=(n, p), p=[1-prob, prob]) + np.random.choice(2, size=(n, p), p=[1-prob, prob])
 	else:
