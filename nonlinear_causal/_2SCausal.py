@@ -8,7 +8,7 @@ from scipy.linalg import sqrtm
 import pycasso
 from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC
 from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
-
+import pandas as pd
 
 class _2SLS(object):
 	"""Two-stage least square
@@ -114,7 +114,7 @@ class _2SLS(object):
 	def est_var_res(self, n2, LD_Z2, cor_ZY2):
 		alpha = np.linalg.inv(LD_Z2).dot(cor_ZY2)
 		sigma_res_y = 1. - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
-		return max(sigma_res_y, 0.) + np.finfo('float32').eps
+		return max(sigma_res_y, 0.) + np.finfo('float64').eps
 
 	def fit(self, LD_Z, cor_ZX, cor_ZY, lams=10**np.arange(-3,3,.1)):
 		self.fit_theta(LD_Z, cor_ZX)
@@ -162,7 +162,7 @@ class _2SIR(object):
 	----------
 
 	"""
-	def __init__(self, n_directions=1, n_slices='auto', data_in_slice=50, cond_mean=KNeighborsRegressor(n_neighbors=10), fit_link=True, sparse_reg=None):
+	def __init__(self, n_directions=1, n_slices='auto', data_in_slice=100, cond_mean=KNeighborsRegressor(n_neighbors=10), fit_link=True, sparse_reg=None):
 		self.theta = None
 		self.beta = None
 		self.n_directions = n_directions
@@ -225,6 +225,7 @@ class _2SIR(object):
 			# fit model and find the candidate models
 			self.sparse_reg.fit(pseudo_input, pseudo_output)
 			# bic to select best model
+			self.candidate_model_ = self.sparse_reg.candidate_model_
 			criterion_lst, mse_lst = [], []
 			for model_tmp in self.sparse_reg.candidate_model_:
 				model_tmp = np.array(model_tmp)
@@ -233,8 +234,11 @@ class _2SIR(object):
 				coef_aug_tmp = np.linalg.inv(LD_Z_aug_tmp).dot(cov_aug_tmp)
 				mse_tmp = 1. - 2 * np.dot(coef_aug_tmp, cov_aug_tmp) / n2 + coef_aug_tmp.T.dot(LD_Z_aug_tmp).dot(coef_aug_tmp) / n2
 				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n2) / n2
+				# criterion_tmp = n2 * np.log(mse_tmp) + np.log(n2) * len(model_tmp)
 				criterion_lst.append(criterion_tmp)
 				mse_lst.append(mse_tmp)
+			self.criterion_lst_ = criterion_lst
+			self.mse_lst_ = mse_lst
 			## fit the best model
 			best_model = np.array(self.sparse_reg.candidate_model_[np.argmin(criterion_lst)])
 			self.best_model_ = best_model
@@ -249,6 +253,12 @@ class _2SIR(object):
 			self.theta = -self.theta
 		self.fit_flag = True
 	
+	def selection_summary(self):
+		d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
+		df = pd.DataFrame(data=d)
+		# print(df)
+		return df
+
 	def bic(self, n2, LD_Z2, cor_ZY2, var_eps):
 		bic = []
 		for i in range(len(self.sparse_reg.coef()['beta'])):

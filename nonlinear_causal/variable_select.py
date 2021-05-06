@@ -348,7 +348,8 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 	def selection_summary(self):
 		d = {'model': self.model_lst_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
 		df = pd.DataFrame(data=d)
-		print(df)
+		# print(df)
+		return df
 		
 class L0_IC(LassoLarsIC):
 	"""Linear Model Selection trained with L0 prior as regularizer
@@ -436,7 +437,7 @@ class L0_IC(LassoLarsIC):
 
 	def __init__(self, criterion='bic', *, Ks=range(10), alphas=10**np.arange(-3,3,.1), ada_weight=True, fit_intercept=True, normalize=False,
 				precompute=False, copy_X=True, max_iter=1000, verbose=False, eps=np.finfo(float).eps,
-				tol=1e-4, warm_start=False, positive=False, var_res = None, refit = True,
+				tol=1e-4, warm_start=False, positive=False, var_res = None, refit = True, find_best=True,
 				random_state=None, selection='cyclic'):
 		self.criterion = criterion
 		self.Ks = Ks
@@ -457,6 +458,7 @@ class L0_IC(LassoLarsIC):
 		self.eps = eps
 		self.var_res = var_res
 		self.refit = refit
+		self.find_best = find_best
 
 	def fit(self, X, y, sample_weight=None):
 		n_sample, n_feature = X.shape
@@ -492,56 +494,59 @@ class L0_IC(LassoLarsIC):
 		candidate_model = set(map(tuple, candidate_model))
 		candidate_model = list(candidate_model)
 		self.candidate_model_ = candidate_model
-		## fit largest model to get variance
-		if self.var_res == None:
-			clf_full = LinearRegression(fit_intercept=self.fit_intercept)
-			clf_full.fit(X, y)
-			var_res = np.mean(( y - clf_full.predict(X) )**2)
-			self.var_res = var_res
-		## find the best model
-		criterion_lst, mse_lst = [], []
-		for model_tmp in candidate_model:
-			if model_tmp == []:
-				if self.fit_intercept:
-					res = y - y.mean()
+		if self.find_best:
+			## fit largest model to get variance
+			if self.var_res == None:
+				clf_full = LinearRegression(fit_intercept=self.fit_intercept)
+				clf_full.fit(X, y)
+				var_res = np.mean(( y - clf_full.predict(X) )**2)
+				self.var_res = var_res
+			## find the best model
+			criterion_lst, mse_lst = [], []
+			for model_tmp in candidate_model:
+				if model_tmp == []:
+					if self.fit_intercept:
+						res = y - y.mean()
+					else:
+						res = y
 				else:
-					res = y
-			else:
-				model_tmp = np.array(model_tmp)
-				clf_tmp = LinearRegression(fit_intercept=self.fit_intercept)
-				clf_tmp.fit(X[:,model_tmp], y, sample_weight)
-				res = y - clf_tmp.predict(X[:,model_tmp])
-			mse_tmp = np.mean(res**2)
-			if self.criterion == 'bic':
-				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n_sample) / n_sample
-			elif self.criterion == 'aic':
-				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * 2 / n_sample
-			else:
-				raise NameError('criteria should be aic or bic')
-			criterion_lst.append(criterion_tmp)
-			mse_lst.append(mse_tmp)
-		self.criterion_lst_ = criterion_lst
-		self.mse_lst_ = mse_lst
-		## best model
-		if self.refit:
-			best_model = np.array(candidate_model[np.argmin(criterion_lst)])
-			if best_model == []:
-				if self.fit_intercept:
-					self.coef_ = np.zeros(n_feature)
-					self.intercept_ = y.mean()
+					model_tmp = np.array(model_tmp)
+					clf_tmp = LinearRegression(fit_intercept=self.fit_intercept)
+					clf_tmp.fit(X[:,model_tmp], y, sample_weight)
+					res = y - clf_tmp.predict(X[:,model_tmp])
+				mse_tmp = np.mean(res**2)
+				if self.criterion == 'bic':
+					criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n_sample) / n_sample
+				elif self.criterion == 'aic':
+					criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * 2 / n_sample
 				else:
+					raise NameError('criteria should be aic or bic')
+				criterion_lst.append(criterion_tmp)
+				mse_lst.append(mse_tmp)
+			self.criterion_lst_ = criterion_lst
+			self.mse_lst_ = mse_lst
+			## best model
+			if self.refit:
+				best_model = np.array(candidate_model[np.argmin(criterion_lst)])
+				if best_model == []:
+					if self.fit_intercept:
+						self.coef_ = np.zeros(n_feature)
+						self.intercept_ = y.mean()
+					else:
+						self.coef_ = np.zeros(n_feature)
+						self.intercept_ = 0.
+				else:
+					clf_best = LinearRegression(fit_intercept=self.fit_intercept)
+					clf_best.fit(X[:,best_model], y)
 					self.coef_ = np.zeros(n_feature)
-					self.intercept_ = 0.
-			else:
-				clf_best = LinearRegression(fit_intercept=self.fit_intercept)
-				clf_best.fit(X[:,best_model], y)
-				self.coef_ = np.zeros(n_feature)
-				self.coef_[best_model] = clf_best.coef_
-				self.intercept_ = clf_best.intercept_
-			self.fit_flag = True
+					self.coef_[best_model] = clf_best.coef_
+					self.intercept_ = clf_best.intercept_
+					self.dual_gap_ = clf_best.dual_gap_
+				self.fit_flag = True
 			
 	def selection_summary(self):
 		d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
 		df = pd.DataFrame(data=d)
-		print(df)
+		# print(df)
+		return df
 		
