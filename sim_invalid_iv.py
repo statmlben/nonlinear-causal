@@ -34,11 +34,11 @@ from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsI
 
 n, p = 10000, 50
 # theta0 = np.random.randn(p)
-for beta0 in [.03, .05, .10]:
+# for beta0 in [.03, .05, .10]:
+for beta0 in [.00]:
 	bad_case, bad_select = 0, 0
-# for beta0 in [.00]:
 	p_value = []
-	n_sim = 100
+	n_sim = 1000
 	for i in range(n_sim):
 		theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
