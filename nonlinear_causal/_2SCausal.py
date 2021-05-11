@@ -11,12 +11,86 @@ from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsI
 import pandas as pd
 
 class _2SLS(object):
-	"""Two-stage least square
+	"""
+	Two-Stage least squares (2SLS)
+
+	Two-Stage least squares (2SLS) regression is a statistical technique that is used in the analysis of structural equations.
+	(stage 1) x = z^T \theta + \omega; 		(Stage 2) y = \beta x + z^T \alpha + \epsilon
+
+	Note that data is expected to be centered, and y is normarlized as sd(y) = 1.
 
 	Parameters
 	----------
+	normalize: bool, default=True
+		Whether to normalize the resulting $\theta$ in Stage 1.
+	
+	fit_flag: bool, default=False
+		A flag to indicate if the estimation is done.
 
+	sparse_reg: class, default=None
+		A sparse regression used in the Stage 2. If set to None, we will use OLS in for the Stage 2.
+	
+	Attributes
+	----------
+	p_value: float
+		P-value for hypothesis testing H_0: \beta = 0; H_a: \beta \neq 0.
+	
+	theta: array of shape (n_features, )
+		Estimated linear coefficients for the linear regression in Stage 1.
+
+	beta: float
+		The marginal causal effect $\beta$ in Stage 2.  
+	
+	alpha: array of shape (n_features, )
+		Estimated linear coefficients for Invalid IVs in Stage 2.
+	
+	Examples
+    --------
+    >>> import numpy as np
+	>>> from nonlinear_causal._2SCausal import _2SLS
+	>>> from sklearn.preprocessing import StandardScaler
+	>>> from sklearn.model_selection import train_test_split
+	>>> n, p = 1000, 50
+	>>> Z = np.random.randn(n, p)
+	>>> U, eps, gamma = np.random.randn(n), np.random.randn(n), np.random.randn(n)
+	>>> theta0 = np.random.randn(p)
+	>>> theta0 = theta0 / np.sqrt(np.sum(theta0**2))
+	>>> beta0 = .5
+	>>> X = np.dot(Z, theta0) + U**2 + eps
+	>>> y = beta0 * X + U + gamma
+	>>> ## normalize Z, X, y
+	>>>	center = StandardScaler(with_std=False)
+	>>>	mean_X, mean_y = X.mean(), y.mean()
+	>>>	Z, X, y = center.fit_transform(Z), X - mean_X, y - mean_y
+	>>>	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=.5, random_state=42)
+	>>>	n1, n2 = len(Z1), len(Z2)
+	>>>	LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
+	>>>	LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
+	>>> ## Define 2SLS 
+	>>> LS = _2SCausal._2SLS(sparse_reg=None)
+	>>> ## Estimate theta in Stage 1
+	>>> LS.fit_theta(LD_Z1, cov_ZX1)
+	>>> LS.theta
+	>>> array([-0.20606854,  0.02530397, -0.00135975,  0.25715265, -0.11367783,
+        0.10418381,  0.03810379,  0.14383798,  0.04221932,  0.00745648,
+       -0.02993945,  0.1373113 , -0.02653782,  0.1544586 , -0.0245656 ,
+       -0.13433774,  0.00501199, -0.00215122, -0.11677635, -0.21730994,
+       -0.04971654, -0.02443733,  0.02816777, -0.10271307,  0.0776153 ,
+        0.10138465, -0.3372472 ,  0.05636817,  0.29783612, -0.10146229,
+        0.0390833 , -0.11371503, -0.01425523, -0.03003318,  0.15177592,
+        0.1430128 ,  0.12335511, -0.09934032, -0.26117461,  0.13902241,
+       -0.35279522,  0.38152773, -0.02832687, -0.01635542, -0.06796552,
+       -0.03075916, -0.1368516 , -0.03330756,  0.0251337 ,  0.06097916])
+	>>> ## Estimate beta in Stage 2
+	>>> LS.fit_beta(LD_Z2, cov_ZY2, n2=n2)
+	>>> LS.beta
+	>>> 0.5514705289617268
+	>>> ## p-value for infer if causal effect is zero
+	>>> LS.test_effect(n2, LD_Z2, cov_ZY2)
+	>>> LS.p_value
+	>>> 1.016570334366972e-118
 	"""
+
 	def __init__(self, normalize=True, sparse_reg=None):
 		self.theta = None
 		self.beta = None
@@ -27,21 +101,53 @@ class _2SLS(object):
 		self.alpha = None
 		self.p = None
 
-	def fit_theta(self, LD_Z, cor_ZX):
-		self.p = len(LD_Z)
-		self.theta = np.dot(np.linalg.inv( LD_Z ), cor_ZX)
+	def fit_theta(self, LD_Z1, cov_ZX1):
+		"""
+		Fit the linear model in Stage 1.
+
+		Parameters
+		----------
+		LD_Z1: {array-like, float} of shape (n_features, n_features)
+			LD matrix of Z based on the first sample: LD_Z1 = np.dot(Z1.T, Z1)
+
+		cov_ZX1: {array-like, float} of shape (n_features, )
+			Cov(Z1, X1); cov_ZX1 = np.dot(Z1.T, X1)
+		
+		Returns
+		-------
+		self: returns an theta of self.
+		"""
+
+		self.p = len(LD_Z1)
+		self.theta = np.dot(np.linalg.inv( LD_Z1 ), cov_ZX1)
 		if self.normalize:
 			self.theta = normalize(self.theta.reshape(1, -1))[0]
 
-	def fit_beta(self, LD_Z2, cor_ZY2, n2=None):
+	def fit_beta(self, LD_Z2, cov_ZY2, n2=None):
+		"""
+		Fit the linear model in Stage 2.
+
+		Parameters
+		----------
+		LD_Z2: {array-like, float} of shape (n_features, n_features)
+			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+
+		cov_ZY2: {array-like, float} of shape (n_features, )
+			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+
+		Returns
+		-------
+		self: returns an beta of self.
+		"""
+
 		eps64 = np.finfo('float64').eps
 		if self.sparse_reg == None:
 			self.alpha = np.zeros(self.p)
 			LD_X = self.theta.T.dot(LD_Z2).dot(self.theta)
 			if LD_X.ndim == 0:
-				self.beta = self.theta.T.dot(cor_ZY2) / LD_X
+				self.beta = self.theta.T.dot(cov_ZY2) / LD_X
 			else:
-				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cor_ZY2)
+				self.beta = np.linalg.inv(LD_X).dot(self.theta.T).dot(cov_ZY2)
 		elif self.sparse_reg.fit_flag:
 			self.beta = self.sparse_reg.coef_[-1]
 			self.alpha = self.sparse_reg.coef_[:-1]
@@ -53,13 +159,13 @@ class _2SLS(object):
 			LD_Z_aug[-1,:p] = cov_ZX
 			LD_Z_aug[:p,-1] = cov_ZX
 			LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
-			cov_aug = np.hstack((cor_ZY2, np.dot(self.theta, cor_ZY2)))
+			cov_aug = np.hstack((cov_ZY2, np.dot(self.theta, cov_ZY2)))
 			LD_Z_aug = LD_Z_aug + np.finfo('float32').eps*np.identity(p+1)
 			pseudo_input = sqrtm(LD_Z_aug)
 			pseudo_output = np.linalg.inv(pseudo_input).dot(cov_aug)
 			ada_weight = np.ones(p+1, dtype=bool)
 			ada_weight[-1] = False
-			var_res = self.est_var_res(n2, LD_Z2, cor_ZY2)
+			var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
 			self.var_res = var_res
 			self.sparse_reg.ada_weight = ada_weight
 			self.sparse_reg.var_res = var_res
@@ -92,7 +198,7 @@ class _2SLS(object):
 			# self.sparse_reg = pycasso.Solver(pseudo_input, pseudo_output, penalty=self.reg, lambdas=lams)
 			# self.sparse_reg.train()
 			# ## select via BIC
-			# var_eps = self.est_var_eps(n2, LD_Z, cor_ZY)
+			# var_eps = self.est_var_eps(n2, LD_Z, cov_ZY)
 			# bic = self.bic(n2, LD_Z_aug, cov_aug, var_eps)
 			# best_ind = np.argmin(bic)
 			# self.beta = self.sparse_reg.coef()['beta'][best_ind][-1]
@@ -101,28 +207,65 @@ class _2SLS(object):
 			self.alpha[best_model[:-1]] = coef_aug_best[:-1]
 		self.fit_flag = True
 
-	def bic(self, n2, LD_Z2, cor_ZY2, var_eps):
+	def bic(self, n2, LD_Z2, cov_ZY2, var_eps):
+		"""
+		Return BIC for list of beta on `sparse_reg`
+
+		Parameters
+		----------
+		n2: int
+			The number of sample on the second dataset.
+
+		LD_Z2: {array-like, float} of shape (n_features, n_features)
+			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+
+		cov_ZY2: {array-like, float} of shape (n_features, )
+			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+
+		Returns
+		-------
+		self: returns an beta of self.
+		"""
 		bic = []
 		for i in range(len(self.sparse_reg.coef()['beta'])):
 			beta_tmp = self.sparse_reg.coef()['beta'][i]
 			df_tmp = self.sparse_reg.coef()['df'][i]
-			error = ( n2 - 2*beta_tmp.dot(cor_ZY2) + beta_tmp.dot(LD_Z2).dot(beta_tmp) ) / n2 
+			error = ( n2 - 2*beta_tmp.dot(cov_ZY2) + beta_tmp.dot(LD_Z2).dot(beta_tmp) ) / n2 
 			bic_tmp = error / var_eps + np.log(n2) / n2 * df_tmp
 			bic.append(bic_tmp)
 		return bic
 
-	def est_var_res(self, n2, LD_Z2, cor_ZY2):
-		alpha = np.linalg.inv(LD_Z2).dot(cor_ZY2)
-		sigma_res_y = 1. - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
+	def est_var_res(self, n2, LD_Z2, cov_ZY2):
+		"""
+		Estimated variance for y regress on Z.
+
+		Parameters
+		----------
+		n2: int
+			The number of sample on the second dataset.
+
+		LD_Z2: {array-like, float} of shape (n_features, n_features)
+			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+
+		cov_ZY2: {array-like, float} of shape (n_features, )
+			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+
+		Returns
+		-------
+		The estimated variance y regress on Z.
+		"""
+
+		alpha = np.linalg.inv(LD_Z2).dot(cov_ZY2)
+		sigma_res_y = 1. - 2 * np.dot(alpha, cov_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
 		return max(sigma_res_y, 0.) + np.finfo('float64').eps
 
-	def fit(self, LD_Z, cor_ZX, cor_ZY, lams=10**np.arange(-3,3,.1)):
-		self.fit_theta(LD_Z, cor_ZX)
-		self.fit_beta(LD_Z, cor_ZY, lams)
+	# def fit(self, LD_Z, cov_ZX, cov_ZY):
+	# 	self.fit_theta(LD_Z, cov_ZX)
+	# 	self.fit_beta(LD_Z, cov_ZY)
 	
-	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cor_ZY2, level):
+	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, level):
 		if self.fit_flag:
-			var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
+			var_eps = self.est_var_eps(n2, LD_Z2, cov_ZY2)
 			ratio = n2 / n1
 			var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
 			var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
@@ -135,9 +278,28 @@ class _2SLS(object):
 		else:
 			raise NameError('CI can only be generated after fit!')
 	
-	def test_effect(self, n2, LD_Z2, cor_ZY2):
+	def test_effect(self, n2, LD_Z2, cov_ZY2):
+		"""
+		Causal inference for the marginal causal effect.
+
+		Parameters
+		----------
+		n2: int
+			The number of samples in the second dataset.
+
+		LD_Z2: {array-like, float} of shape (n_features, n_features)
+			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+
+		cov_ZY2: {array-like, float} of shape (n_features, )
+			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+
+		Returns
+		-------
+		self: returns p-value of self.
+		"""
+
 		if self.fit_flag:
-			var_eps = self.est_var_res(n2, LD_Z2, cor_ZY2)
+			var_eps = self.est_var_res(n2, LD_Z2, cov_ZY2)
 			if np.max(abs(self.alpha)) < np.finfo('float32').eps:
 				var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) + np.finfo('float32').eps
 				## we only test for absolute value
@@ -189,16 +351,16 @@ class _2SIR(object):
 		if self.theta.shape[0] == 1:
 			self.theta = self.theta.flatten()
 
-	def fit_reg(self, LD_Z2, cor_ZY2, n2=None):
+	def fit_reg(self, LD_Z2, cov_ZY2, n2=None):
 		eps64 = np.finfo('float64').eps
 		p = len(LD_Z2)
 		if self.sparse_reg == None:
 			self.alpha = np.zeros(p)
 			LD_X_sir = self.theta.T.dot(LD_Z2).dot(self.theta)
 			if LD_X_sir.ndim == 0:
-				self.beta = np.dot(self.theta, cor_ZY2) / LD_X_sir
+				self.beta = np.dot(self.theta, cov_ZY2) / LD_X_sir
 			else:
-				self.beta = np.linalg.inv(LD_X_sir).dot(np.dot(self.theta, cor_ZY2))
+				self.beta = np.linalg.inv(LD_X_sir).dot(np.dot(self.theta, cov_ZY2))
 		# elif self.sparse_reg.fit_flag:
 		# 	self.beta = self.sparse_reg.beta[-1]
 		else:
@@ -210,14 +372,14 @@ class _2SIR(object):
 			LD_Z_aug[-1,:p] = cov_ZX
 			LD_Z_aug[:p,-1] = cov_ZX
 			LD_Z_aug[-1,-1] = cov_ZX.dot(self.theta)
-			cov_aug = np.hstack((cor_ZY2, np.dot(self.theta, cor_ZY2)))
+			cov_aug = np.hstack((cov_ZY2, np.dot(self.theta, cov_ZY2)))
 			LD_Z_aug = LD_Z_aug + np.finfo('float32').eps*np.identity(p+1)
 			# generate pseudo input and output
 			pseudo_input = sqrtm(LD_Z_aug)
 			pseudo_output = np.linalg.inv(pseudo_input).dot(cov_aug)
 			ada_weight = np.ones(p+1, dtype=bool)
 			ada_weight[-1] = False
-			var_res = self.est_var_res(n2, LD_Z2, cor_ZY2)
+			var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
 			# est residual variance
 			self.var_res = var_res
 			self.sparse_reg.ada_weight = ada_weight
@@ -259,12 +421,12 @@ class _2SIR(object):
 		# print(df)
 		return df
 
-	def bic(self, n2, LD_Z2, cor_ZY2, var_eps):
+	def bic(self, n2, LD_Z2, cov_ZY2, var_eps):
 		bic = []
 		for i in range(len(self.sparse_reg.coef()['beta'])):
 			beta_tmp = self.sparse_reg.coef()['beta'][i]
 			df_tmp = self.sparse_reg.coef()['df'][i]
-			error = ( n2 - 2*beta_tmp.dot(cor_ZY2) + beta_tmp.dot(LD_Z2).dot(beta_tmp) ) / n2 / var_eps
+			error = ( n2 - 2*beta_tmp.dot(cov_ZY2) + beta_tmp.dot(LD_Z2).dot(beta_tmp) ) / n2 / var_eps
 			bic_tmp = error + np.log(n2) / n2 * df_tmp
 			bic.append(bic_tmp)
 		return bic
@@ -277,11 +439,11 @@ class _2SIR(object):
 		cross_mean_Z = np.sum(Z * pred_mean[:,None], axis=0)
 		self.rho = (self.theta.dot(LD_Z_sum).dot(self.theta)) / np.dot( self.theta, cross_mean_Z )
 
-	def fit(self, Z, X, cor_ZY):
+	def fit(self, Z, X, cov_ZY):
 		## Stage 1: estimate theta based on SIR
 		self.fit_sir(Z, X)
 		## Stage 2: estimate beta via sparse regression
-		self.fit_reg(Z, cor_ZY)
+		self.fit_reg(Z, cov_ZY)
 		## Estimate link function
 		if self.fit_link:
 			self.fit_air(Z, X)
@@ -292,14 +454,14 @@ class _2SIR(object):
 		else:
 			raise NameError('You must fit a link function before evaluate it!')
 
-	def est_var_res(self, n2, LD_Z2, cor_ZY2):
-		alpha = np.linalg.inv(LD_Z2).dot(cor_ZY2)
-		sigma_res_y = 1 - 2 * np.dot(alpha, cor_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
+	def est_var_res(self, n2, LD_Z2, cov_ZY2):
+		alpha = np.linalg.inv(LD_Z2).dot(cov_ZY2)
+		sigma_res_y = 1 - 2 * np.dot(alpha, cov_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
 		return sigma_res_y
 
-	# def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cor_ZY2, level=.95):
+	# def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95):
 	# 	if self.fit_flag:
-	# 		var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
+	# 		var_eps = self.est_var_eps(n2, LD_Z2, cov_ZY2)
 	# 		ratio = n2 / n1
 	# 		var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
 	# 		var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
@@ -312,9 +474,9 @@ class _2SIR(object):
 	# 	else:
 	# 		raise NameError('CI can only be generated after fit!')
 
-	def test_effect(self, n2, LD_Z2, cor_ZY2):
+	def test_effect(self, n2, LD_Z2, cov_ZY2):
 		if self.fit_flag:
-			var_eps = self.est_var_res(n2, LD_Z2, cor_ZY2)
+			var_eps = self.est_var_res(n2, LD_Z2, cov_ZY2)
 			if np.max(abs(self.alpha)) < np.finfo('float32').eps:
 				var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) + np.finfo('float32').eps
 				## we only test for absolute value
@@ -333,9 +495,9 @@ class _2SIR(object):
 			raise NameError('Testing can only be conducted after fit!')
 
 
-	# def test_effect(self, n2, LD_Z2, cor_ZY2):
+	# def test_effect(self, n2, LD_Z2, cov_ZY2):
 	# 	if self.fit_flag:
-	# 		var_eps = self.est_var_eps(n2, LD_Z2, cor_ZY2)
+	# 		var_eps = self.est_var_eps(n2, LD_Z2, cov_ZY2)
 	# 		var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
 	# 		Z = self.beta/np.sqrt(var_beta)
 	# 		self.p_value = 1. - norm.cdf(Z) + norm.cdf(-Z)
