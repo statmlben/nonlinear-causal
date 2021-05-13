@@ -318,10 +318,98 @@ class _2SLS(object):
 			raise NameError('Testing can only be conducted after fit!')
 
 class _2SIR(object):
-	"""Sliced inverse regression + least sqaure
+	"""Two-stage instrumental regression (2SIR): sliced inverse regression + least sqaure
+
+	Two-stage instrumental regression (2SIR) is a statistical technique used in the analysis of structural equations.
+	(stage 1) \phi(x) = z^T \theta + \omega; 		(Stage 2) y = \beta \phi(x) + z^T \alpha + \epsilon
+
+	Note that data is expected to be centered, and y is normarlized as sd(y) = 1.
 
 	Parameters
 	----------
+	n_directions: int, default=False
+		A number of directions for sliced inverse regression (SIR). Currently, we only focus on 1-dimensional case.
+
+	n_slices: int, default='auto'
+		A number of slices for SIR, if `n_slices='auto'`, then it is determined by int(n_sample / data_in_slice).
+	
+	data_in_slice: int, default=100
+		A number of samples in a slice for SIR. If data_in_slice is not None, then n_slices = int(n_sample / data_in_slice).
+
+	cond_mean: class, default=KNeighborsRegressor(n_neighbors=10)
+		A nonparameteric regression model for estimate link function.
+
+	fit_link: bool, default=True
+		Whether to calculate the link function $\phi$ for this model.
+
+	fit_flag: bool, default=False
+		A flag to indicate if the estimation is done.
+
+	sparse_reg: class, default=None
+		A sparse regression used in the Stage 2. If set to None, we will use OLS in for the Stage 2.
+	
+	Attributes
+	----------
+	p_value: float
+		P-value for hypothesis testing H_0: \beta = 0; H_a: \beta \neq 0.
+	
+	theta: array of shape (n_features, )
+		Estimated linear coefficients for the linear regression in Stage 1.
+
+	beta: float
+		The marginal causal effect $\beta$ in Stage 2.  
+	
+	alpha: array of shape (n_features, )
+		Estimated linear coefficients for Invalid IVs in Stage 2.
+	
+	self.rho: float
+		A correction for link estimation.
+
+	Examples
+    --------
+    >>> import numpy as np
+	>>> from nonlinear_causal._2SCausal import _2SLS
+	>>> from sklearn.preprocessing import StandardScaler
+	>>> from sklearn.model_selection import train_test_split
+	>>> n, p = 1000, 50
+	>>> Z = np.random.randn(n, p)
+	>>> U, eps, gamma = np.random.randn(n), np.random.randn(n), np.random.randn(n)
+	>>> theta0 = np.random.randn(p)
+	>>> theta0 = theta0 / np.sqrt(np.sum(theta0**2))
+	>>> beta0 = .5
+	>>> X = np.dot(Z, theta0) + U**2 + eps
+	>>> y = beta0 * X + U + gamma
+	>>> ## normalize Z, X, y
+	>>>	center = StandardScaler(with_std=False)
+	>>>	mean_X, mean_y = X.mean(), y.mean()
+	>>>	Z, X, y = center.fit_transform(Z), X - mean_X, y - mean_y
+	>>>	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=.5, random_state=42)
+	>>>	n1, n2 = len(Z1), len(Z2)
+	>>>	LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
+	>>>	LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
+	>>> ## Define 2SLS 
+	>>> LS = _2SCausal._2SLS(sparse_reg=None)
+	>>> ## Estimate theta in Stage 1
+	>>> LS.fit_theta(LD_Z1, cov_ZX1)
+	>>> LS.theta
+	>>> array([-0.20606854,  0.02530397, -0.00135975,  0.25715265, -0.11367783,
+        0.10418381,  0.03810379,  0.14383798,  0.04221932,  0.00745648,
+       -0.02993945,  0.1373113 , -0.02653782,  0.1544586 , -0.0245656 ,
+       -0.13433774,  0.00501199, -0.00215122, -0.11677635, -0.21730994,
+       -0.04971654, -0.02443733,  0.02816777, -0.10271307,  0.0776153 ,
+        0.10138465, -0.3372472 ,  0.05636817,  0.29783612, -0.10146229,
+        0.0390833 , -0.11371503, -0.01425523, -0.03003318,  0.15177592,
+        0.1430128 ,  0.12335511, -0.09934032, -0.26117461,  0.13902241,
+       -0.35279522,  0.38152773, -0.02832687, -0.01635542, -0.06796552,
+       -0.03075916, -0.1368516 , -0.03330756,  0.0251337 ,  0.06097916])
+	>>> ## Estimate beta in Stage 2
+	>>> LS.fit_beta(LD_Z2, cov_ZY2, n2=n2)
+	>>> LS.beta
+	>>> 0.5514705289617268
+	>>> ## p-value for infer if causal effect is zero
+	>>> LS.test_effect(n2, LD_Z2, cov_ZY2)
+	>>> LS.p_value
+	>>> 1.016570334366972e-118
 
 	"""
 	def __init__(self, n_directions=1, n_slices='auto', data_in_slice=100, cond_mean=KNeighborsRegressor(n_neighbors=10), fit_link=True, sparse_reg=None):
