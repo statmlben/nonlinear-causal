@@ -265,16 +265,16 @@ class _2SLS(object):
 	
 	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, level):
 		if self.fit_flag:
-			var_eps = self.est_var_eps(n2, LD_Z2, cov_ZY2)
+			var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
 			ratio = n2 / n1
 			var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
-			var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
+			var_beta = var_res / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
 			# correction for variance
-			var_beta = var_beta * (1. + ratio*var_x*(self.beta**2)/var_eps )
+			var_beta = var_beta * (1. + ratio*var_x*(self.beta**2)/var_res )
 			delta_tmp = abs(norm.ppf((1. - level)/2)) * np.sqrt(var_beta) / np.sqrt(n2)
 			beta_low = self.beta - delta_tmp
 			beta_high = self.beta + delta_tmp
-			return [beta_low, beta_high]
+			self.CI = np.array([beta_low, beta_high])
 		else:
 			raise NameError('CI can only be generated after fit!')
 	
@@ -426,6 +426,7 @@ class _2SIR(object):
 		self.fit_flag = False
 		self.p_value = None
 		self.alpha = None
+		self.CI = []
 
 
 	def fit_sir(self, Z, X):
@@ -527,14 +528,14 @@ class _2SIR(object):
 		cross_mean_Z = np.sum(Z * pred_mean[:,None], axis=0)
 		self.rho = (self.theta.dot(LD_Z_sum).dot(self.theta)) / np.dot( self.theta, cross_mean_Z )
 
-	def fit(self, Z, X, cov_ZY):
-		## Stage 1: estimate theta based on SIR
-		self.fit_sir(Z, X)
-		## Stage 2: estimate beta via sparse regression
-		self.fit_reg(Z, cov_ZY)
-		## Estimate link function
-		if self.fit_link:
-			self.fit_air(Z, X)
+	# def fit(self, Z, X, cov_ZY):
+	# 	## Stage 1: estimate theta based on SIR
+	# 	self.fit_sir(Z, X)
+	# 	## Stage 2: estimate beta via sparse regression
+	# 	self.fit_reg(LD_Z2, cov_ZY2)
+	# 	## Estimate link function
+	# 	if self.fit_link:
+	# 		self.fit_air(Z, X)
 
 	def link(self, X):
 		if self.fit_link:
@@ -547,20 +548,37 @@ class _2SIR(object):
 		sigma_res_y = 1 - 2 * np.dot(alpha, cov_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
 		return sigma_res_y
 
-	# def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95):
-	# 	if self.fit_flag:
-	# 		var_eps = self.est_var_eps(n2, LD_Z2, cov_ZY2)
-	# 		ratio = n2 / n1
-	# 		var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
-	# 		var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
-	# 		# correction for variance
-	# 		var_beta = var_beta * (1. + ratio*var_x*(self.beta**2)/var_eps )
-	# 		delta_tmp = abs(norm.ppf((1. - level)/2)) * np.sqrt(var_beta) / np.sqrt(n2)
-	# 		beta_low = self.beta - delta_tmp
-	# 		beta_high = self.beta + delta_tmp
-	# 		return [beta_low, beta_high]
-	# 	else:
-	# 		raise NameError('CI can only be generated after fit!')
+	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
+		if not self.fit_flag:
+			self.fit_sir(Z1, X1)
+			self.fit_reg(LD_Z2, cor_ZY2)
+		var_eps = self.est_var_res(n2, LD_Z2, cov_ZY2)
+		## compute the variance of beta
+		invalid_iv = np.where(abs(self.alpha) > np.finfo('float32').eps)[0]
+		select_mat_inv = np.linalg.inv(LD_Z2[invalid_iv[:,None], invalid_iv])
+		select_cov = LD_Z2[:,invalid_iv].dot(select_mat_inv).dot(LD_Z2[invalid_iv,:])
+		mid_cov = (LD_Z2 - select_cov) / n2
+		omega_x = 1. / (self.theta.dot(mid_cov).dot(self.theta.T))
+		var_beta = var_eps * omega_x  + np.finfo('float32').eps
+		## resampling
+		zeta = np.sqrt(var_beta)*np.random.randn(B_sample)
+		eta = []
+		left_tmp = np.sqrt(n2/n1)*self.beta*omega_x*self.theta.dot(mid_cov)
+		for i in range(B_sample):
+			B_ind = np.random.choice(n1, n1)
+			Z1_B, X1_B = Z1[B_ind], X1[B_ind]
+			_2SIR_tmp = _2SIR(sparse_reg=None)
+			_2SIR_tmp.fit_sir(Z1_B, X1_B)
+			_2SIR_tmp.fit_reg(LD_Z2, cov_ZY2)
+			xi_tmp = np.sqrt(n1)*( _2SIR_tmp.theta - self.theta )
+			eta_tmp = left_tmp.dot(xi_tmp)
+			eta.append(eta_tmp)
+		eta = np.array(eta)
+		err = zeta + eta
+		beta_low = self.beta + np.quantile(err, (1-level)/2) / np.sqrt(n2)
+		beta_low = max(0., beta_low)
+		beta_up = self.beta + np.quantile(err, (1+level)/2) / np.sqrt(n2)
+		self.CI = np.array([beta_low, beta_up])
 
 	def test_effect(self, n2, LD_Z2, cov_ZY2):
 		if self.fit_flag:
@@ -581,15 +599,5 @@ class _2SIR(object):
 			self.var_beta_ = var_beta
 		else:
 			raise NameError('Testing can only be conducted after fit!')
-
-
-	# def test_effect(self, n2, LD_Z2, cov_ZY2):
-	# 	if self.fit_flag:
-	# 		var_eps = self.est_var_eps(n2, LD_Z2, cov_ZY2)
-	# 		var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
-	# 		Z = self.beta/np.sqrt(var_beta)
-	# 		self.p_value = 1. - norm.cdf(Z) + norm.cdf(-Z)
-	# 	else:
-	# 		raise NameError('Testing can only be conducted after fit!')
 
 

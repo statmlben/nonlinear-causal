@@ -12,6 +12,7 @@ from sklearn.preprocessing import power_transform, quantile_transform
 n, p = 5000, 50
 # for beta0 in [.05, .10, .15]:
 for beta0 in [.00]:
+	beta0 = 0.0
 	beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 	p_value = []
 	n_sim = 1000
@@ -19,7 +20,7 @@ for beta0 in [.00]:
 		theta0 = np.random.randn(p)
 		# theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, case='linear', feat='normal', range=.01)
+		Z, X, y, phi = sim(n, p, theta0, beta0, case='linear', feat='normal')
 		if abs(X).max() > 1e+8:
 			continue
 		## normalize Z, X, y
@@ -31,19 +32,19 @@ for beta0 in [.00]:
 		Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=0.5, random_state=42)
 		n1, n2 = len(Z1), len(Z2)
 		# LD_Z, cor_ZX, cor_ZY = np.dot(Z.T, Z), np.dot(Z.T, X), np.dot(Z.T, y)
-		LD_Z1, cor_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
-		LD_Z2, cor_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
+		LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
+		LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 		# np.cov( np.dot(Z, theta0), X )
 		# print('True beta: %.3f' %beta0)
 
 		## solve by 2sls
 		LS = _2SCausal._2SLS(sparse_reg=None)
 		## Stage-1 fit theta 
-		LS.fit_theta(LD_Z1, cor_ZX1)
+		LS.fit_theta(LD_Z1, cov_ZX1)
 		## Stage-2 fit beta
-		LS.fit_beta(LD_Z2, cor_ZY2)
+		LS.fit_beta(LD_Z2, cov_ZY2)
 		## generate CI for beta
-		LS.test_effect(n2, LD_Z2, cor_ZY2)
+		LS.test_effect(n2, LD_Z2, cov_ZY2)
 		
 		# print('est beta based on OLS: %.3f; p-value: %.5f' %(LS.beta*y_scale, LS.p_value))
 
@@ -56,9 +57,9 @@ for beta0 in [.00]:
 		## Stage-1 fit theta
 		RT_LS.fit_theta(LD_Z1, RT_cor_ZX1)
 		## Stage-2 fit beta
-		RT_LS.fit_beta(LD_Z2, cor_ZY2)
+		RT_LS.fit_beta(LD_Z2, cov_ZY2)
 		## generate CI for beta
-		RT_LS.test_effect(n2, LD_Z2, cor_ZY2)
+		RT_LS.test_effect(n2, LD_Z2, cov_ZY2)
 
 		# print('est beta based on RT-OLS: %.3f; p-value: %.5f' %(RT_LS.beta*y_scale, RT_LS.p_value))
 
@@ -67,10 +68,9 @@ for beta0 in [.00]:
 		## Stage-1 fit theta
 		echo.fit_sir(Z1, X1)
 		## Stage-2 fit beta
-		echo.fit_reg(LD_Z2, cor_ZY2)
+		echo.fit_reg(LD_Z2, cov_ZY2)
 		## generate CI for beta
-		echo.test_effect(n2, LD_Z2, cor_ZY2)
-
+		echo.test_effect(n2, LD_Z2, cov_ZY2)
 		# print('est beta based on 2SIR: %.3f; p-value: %.5f' %(echo.beta*y_scale, echo.p_value))
 
 		beta_LS.append(LS.beta*y_scale)
