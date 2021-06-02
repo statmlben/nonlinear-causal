@@ -549,7 +549,7 @@ class _2SIR(object):
 		sigma_res_y = 1 - 2 * np.dot(alpha, cov_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
 		return sigma_res_y
 
-	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
+	def CI_beta_old(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
 		if not self.fit_flag:
 			self.fit_sir(Z1, X1)
 			self.fit_reg(LD_Z2, cov_ZY2)
@@ -585,7 +585,7 @@ class _2SIR(object):
 		beta_up = self.beta + delta
 		self.CI = np.array([beta_low, beta_up])
 
-	def CI_beta_old(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
+	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
 		if not self.fit_flag:
 			self.fit_sir(Z1, X1)
 			self.fit_reg(LD_Z2, cov_ZY2)
@@ -606,7 +606,8 @@ class _2SIR(object):
 			Z1_B, X1_B = Z1[B_ind], X1[B_ind]
 			_2SIR_tmp = _2SIR(sparse_reg=None)
 			_2SIR_tmp.fit_sir(Z1_B, X1_B)
-			_2SIR_tmp.fit_reg(LD_Z2, cov_ZY2)
+			_2SIR_tmp.theta = np.sign(np.dot(self.theta, _2SIR_tmp.theta)) * _2SIR_tmp.theta
+			# _2SIR_tmp.fit_reg(LD_Z2, cov_ZY2)
 			xi_tmp = np.sqrt(n1)*( _2SIR_tmp.theta - self.theta )
 			eta_tmp = left_tmp.dot(xi_tmp)
 			eta.append(eta_tmp)

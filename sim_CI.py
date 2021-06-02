@@ -12,8 +12,8 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 
-n, p = 20000, 20
-for beta0 in [1.00]:
+n, p = 5000, 10
+for beta0 in [.05]:
 # for beta0 in [.00, 1/np.sqrt(n), .05, .10, .15]:
 	beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 	len_LS, len_RT_LS, len_SIR = [], [], []
@@ -23,9 +23,10 @@ for beta0 in [1.00]:
 		theta0 = np.random.randn(p)
 		# theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, case='linear', feat='normal')
-		# if abs(X).max() > 1e+8:
-		# 	continue
+		Z, X, y, phi = sim(n, p, theta0, beta0, case='piecewise_linear', feat='normal')
+		if abs(X).max() > 1e+8:
+			i = i - 1
+			continue
 		## normalize Z, X, y
 		center = StandardScaler(with_std=False)
 		mean_X, mean_y = X.mean(), y.mean()
@@ -48,6 +49,7 @@ for beta0 in [1.00]:
 		LS.fit_beta(LD_Z2, cov_ZY2)
 		## generate CI for beta
 		LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95)
+		LS.CI[0] = max(LS.CI[0], 0.)
 		len_tmp = (LS.CI[1] - LS.CI[0])*y_scale
 		if ( (beta0 >= LS.CI[0]*y_scale) and (beta0 <= LS.CI[1]*y_scale) ):
 			cover_LS = cover_LS + 1 / n_sim
@@ -58,16 +60,23 @@ for beta0 in [1.00]:
 		# print('est beta based on OLS: %.3f; p-value: %.5f' %(LS.beta*y_scale, LS.p_value))
 
 		## solve by RT-2SLS
-		# RT_X1 = power_transform(X1.reshape(-1,1)).flatten()
-		# # RT_X1 = quantile_transform(X1.reshape(-1,1), output_distribution='normal')
-		# RT_cor_ZX1 = np.dot(Z1.T, RT_X1)
-		# RT_LS = _2SCausal._2SLS(sparse_reg=None)
-		# ## Stage-1 fit theta
-		# RT_LS.fit_theta(LD_Z1, RT_cor_ZX1)
-		# ## Stage-2 fit beta
-		# RT_LS.fit_beta(LD_Z2, cov_ZY2)
-		# ## generate CI for beta
-		# RT_LS.test_effect(n2, LD_Z2, cov_ZY2)
+		RT_X1 = power_transform(X1.reshape(-1,1)).flatten()
+		# RT_X1 = quantile_transform(X1.reshape(-1,1), output_distribution='normal')
+		RT_cor_ZX1 = np.dot(Z1.T, RT_X1)
+		RT_LS = _2SCausal._2SLS(sparse_reg=None)
+		## Stage-1 fit theta
+		RT_LS.fit_theta(LD_Z1, RT_cor_ZX1)
+		## Stage-2 fit beta
+		RT_LS.fit_beta(LD_Z2, cov_ZY2)
+		## generate CI for beta
+		RT_LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95)
+		RT_LS.CI[0] = max(RT_LS.CI[0], 0.)
+		len_tmp = (RT_LS.CI[1] - RT_LS.CI[0])*y_scale
+		if ( (beta0 >= RT_LS.CI[0]*y_scale) and (beta0 <= RT_LS.CI[1]*y_scale) ):
+			cover_RT_LS = cover_RT_LS + 1 / n_sim
+		len_RT_LS.append(len_tmp)
+		print('est beta based on RT-2SLS: %.3f; CI: %s; len: %.3f' %(RT_LS.beta*y_scale, RT_LS.CI*y_scale, (RT_LS.CI[1] - RT_LS.CI[0])*y_scale))
+
 
 		# print('est beta based on RT-OLS: %.3f; p-value: %.5f' %(RT_LS.beta*y_scale, RT_LS.p_value))
 
@@ -103,6 +112,7 @@ for beta0 in [1.00]:
 	# 		np.mean(beta_LS_SIR), np.std(beta_LS_SIR)))
 
 	print('2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_LS, np.mean(len_LS)))
+	print('PT-2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_RT_LS, np.mean(len_RT_LS)))
 	print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_SIR, np.mean(len_SIR)))
 
 ## n = 5000, p = 10; linear
