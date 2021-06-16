@@ -265,13 +265,26 @@ class _2SLS(object):
 	
 	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, level):
 		if self.fit_flag:
+			# compute variance
 			var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
 			ratio = n2 / n1
 			var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
-			var_beta = var_res / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
-			# correction for variance
-			var_beta = var_beta * (1. + ratio*var_x*(self.beta**2)/var_res )
-			# variance
+			invalid_iv = np.where(abs(self.alpha) > np.finfo('float32').eps)[0]
+			if len(invalid_iv) == 0:
+				var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
+				ratio = n2 / n1
+				var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
+				var_beta = var_res / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
+			else:
+				# compute reduced covariance matrix 
+				select_mat_inv = np.linalg.inv(LD_Z2[invalid_iv[:,None], invalid_iv])
+				select_cov = LD_Z2[:,invalid_iv].dot(select_mat_inv).dot(LD_Z2[invalid_iv,:])
+				reduced_cov = (LD_Z2 - select_cov) / n2
+				# omega_x = np.linalg.inv( self.theta.dot(reduced_cov).dot(self.theta.T) )
+				omega_x = 1. / self.theta.dot(reduced_cov).dot(self.theta.T)
+				mid_mat = self.theta.dot(reduced_cov).dot(np.linalg.inv(np.dot(Z1.T, Z1) / n1)).dot(reduced_cov).dot(self.theta)
+				var_beta = omega_x * var_res + ratio * self.beta**2 * omega_x**2 * var_x * mid_mat
+			# CI
 			delta_tmp = abs(norm.ppf((1. - level)/2)) * np.sqrt(var_beta) / np.sqrt(n2)
 			beta_low = self.beta - delta_tmp
 			beta_high = self.beta + delta_tmp
@@ -549,41 +562,41 @@ class _2SIR(object):
 		sigma_res_y = 1 - 2 * np.dot(alpha, cov_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
 		return sigma_res_y
 
-	def CI_beta_old(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
-		if not self.fit_flag:
-			self.fit_sir(Z1, X1)
-			self.fit_reg(LD_Z2, cov_ZY2)
-			self.fit_air(Z1, X1)
-		var_eps = self.est_var_res(n2, LD_Z2, cov_ZY2)
-		## compute the variance of beta
-		invalid_iv = np.where(abs(self.alpha) > np.finfo('float32').eps)[0]
-		select_mat_inv = np.linalg.inv(LD_Z2[invalid_iv[:,None], invalid_iv])
-		select_cov = LD_Z2[:,invalid_iv].dot(select_mat_inv).dot(LD_Z2[invalid_iv,:])
-		mid_cov = (LD_Z2 - select_cov) / n2
-		omega_x = 1. / (self.theta.dot(mid_cov).dot(self.theta.T))
-		var_beta = var_eps * omega_x  + np.finfo('float32').eps
-		## resampling
-		zeta = np.sqrt(var_beta)*np.random.randn(B_sample)
-		# m(X)
-		pred_Z1 = self.cond_mean.predict(X1[:,None])
-		# pred_Z1 = self.link(X1[:,None])
-		# Z - theta0 * m(X)
-		res_Z1 = pred_Z1[:,None] * (Z1 - pred_Z1[:,None] * self.theta)
-		sigma_SIR = ( res_Z1.T.dot(res_Z1) / n1 ) / ( np.mean( pred_Z1**2 ) ** 2 )
-		left_tmp = np.sqrt(n2/n1)*self.beta*omega_x*self.theta.dot(mid_cov)
-		xi = np.random.multivariate_normal(np.zeros(len(self.theta)), sigma_SIR, B_sample)
-		eta = xi.dot(left_tmp)
-		err = np.abs(zeta + eta)
-		# beta_low = self.beta - np.quantile(err, (1+level)/2) / np.sqrt(n2)
-		# beta_low = max(0., beta_low)
-		# beta_up = self.beta
-		# beta is not 0
-		err = np.abs(zeta - eta)
-		delta = np.quantile(err, level) / np.sqrt(n2)
-		beta_low = self.beta - delta
-		beta_low = max(0., beta_low)
-		beta_up = self.beta + delta
-		self.CI = np.array([beta_low, beta_up])
+	# def CI_beta_old(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
+	# 	if not self.fit_flag:
+	# 		self.fit_sir(Z1, X1)
+	# 		self.fit_reg(LD_Z2, cov_ZY2)
+	# 		self.fit_air(Z1, X1)
+	# 	var_eps = self.est_var_res(n2, LD_Z2, cov_ZY2)
+	# 	## compute the variance of beta
+	# 	invalid_iv = np.where(abs(self.alpha) > np.finfo('float32').eps)[0]
+	# 	select_mat_inv = np.linalg.inv(LD_Z2[invalid_iv[:,None], invalid_iv])
+	# 	select_cov = LD_Z2[:,invalid_iv].dot(select_mat_inv).dot(LD_Z2[invalid_iv,:])
+	# 	mid_cov = (LD_Z2 - select_cov) / n2
+	# 	omega_x = 1. / (self.theta.dot(mid_cov).dot(self.theta.T))
+	# 	var_beta = var_eps * omega_x  + np.finfo('float32').eps
+	# 	## resampling
+	# 	zeta = np.sqrt(var_beta)*np.random.randn(B_sample)
+	# 	# m(X)
+	# 	pred_Z1 = self.cond_mean.predict(X1[:,None])
+	# 	# pred_Z1 = self.link(X1[:,None])
+	# 	# Z - theta0 * m(X)
+	# 	res_Z1 = pred_Z1[:,None] * (Z1 - pred_Z1[:,None] * self.theta)
+	# 	sigma_SIR = ( res_Z1.T.dot(res_Z1) / n1 ) / ( np.mean( pred_Z1**2 ) ** 2 )
+	# 	left_tmp = np.sqrt(n2/n1)*self.beta*omega_x*self.theta.dot(mid_cov)
+	# 	xi = np.random.multivariate_normal(np.zeros(len(self.theta)), sigma_SIR, B_sample)
+	# 	eta = xi.dot(left_tmp)
+	# 	err = np.abs(zeta + eta)
+	# 	# beta_low = self.beta - np.quantile(err, (1+level)/2) / np.sqrt(n2)
+	# 	# beta_low = max(0., beta_low)
+	# 	# beta_up = self.beta
+	# 	# beta is not 0
+	# 	err = np.abs(zeta - eta)
+	# 	delta = np.quantile(err, level) / np.sqrt(n2)
+	# 	beta_low = self.beta - delta
+	# 	beta_low = max(0., beta_low)
+	# 	beta_up = self.beta + delta
+	# 	self.CI = np.array([beta_low, beta_up])
 
 	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
 		if not self.fit_flag:
