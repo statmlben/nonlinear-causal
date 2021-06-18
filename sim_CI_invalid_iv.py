@@ -26,7 +26,7 @@ for beta0 in [.05]:
 		alpha0 = np.zeros(p)
 		alpha0[:5] = 1.
 		# alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='piecewise_linear', feat='AP-normal')
+		Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='linear', feat='normal')
 		if abs(X).max() > 1e+8:
 			bad_case = bad_case + 1
 			continue
