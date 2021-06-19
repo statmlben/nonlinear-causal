@@ -26,7 +26,7 @@ for beta0 in [.05]:
 		alpha0 = np.zeros(p)
 		alpha0[:5] = 1.
 		# alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='linear', feat='normal')
+		Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case='inverse', feat='normal')
 		if abs(X).max() > 1e+8:
 			bad_case = bad_case + 1
 			continue
@@ -100,9 +100,10 @@ for beta0 in [.05]:
 			cover_SIR = cover_SIR + 1 / n_sim
 		len_SIR.append(len_tmp)
 		print('est beta based on 2SIR: %.3f; CI: %s; len: %.3f' %(echo.beta*y_scale, echo.CI*y_scale, (echo.CI[1] - echo.CI[0])*y_scale))
+		# len_SIR.append(1.)
 
-		if sorted(echo.best_model_) != sorted([0,1,2,3,4,50]):
-			bad_select += 1
+		# if sorted(echo.best_model_) != sorted([0,1,2,3,4,50]):
+		# 	bad_select += 1
 	
 	print('2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_LS, np.mean(len_LS)))
 	print('PT-2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_RT_LS, np.mean(len_RT_LS)))
