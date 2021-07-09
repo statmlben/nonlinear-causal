@@ -12,7 +12,7 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
-n, p = 5000, 50
+n, p = 2000, 50
 for beta0 in [.05]:
 # for beta0 in [.00, 1/np.sqrt(n), .05, .10, .15]:
 	beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
@@ -23,7 +23,7 @@ for beta0 in [.05]:
 		theta0 = np.random.randn(p)
 		# theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, case='inverse', feat='cate')
+		Z, X, y, phi = sim(n, p, theta0, beta0, case='log', feat='cate')
 		if abs(X).max() > 1e+8:
 			i = i - 1
 			continue
