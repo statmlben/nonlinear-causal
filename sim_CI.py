@@ -23,7 +23,7 @@ for beta0 in [.05]:
 		theta0 = np.random.randn(p)
 		# theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, case='log', feat='cate')
+		Z, X, y, phi = sim(n, p, theta0, beta0, case='inverse', feat='cate')
 		if abs(X).max() > 1e+8:
 			i = i - 1
 			continue
