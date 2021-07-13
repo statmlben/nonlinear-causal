@@ -12,7 +12,7 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
-n, p = 2000, 50
+n, p = 2000, 10
 for beta0 in [.05]:
 # for beta0 in [.00, 1/np.sqrt(n), .05, .10, .15]:
 	beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
