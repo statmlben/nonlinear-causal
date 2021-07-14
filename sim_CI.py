@@ -12,7 +12,7 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
-n, p = 2000, 10
+n, p = 5000, 50
 for beta0 in [.05]:
 # for beta0 in [.00, 1/np.sqrt(n), .05, .10, .15]:
 	beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
@@ -23,7 +23,7 @@ for beta0 in [.05]:
 		theta0 = np.random.randn(p)
 		# theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, case='inverse', feat='cate')
+		Z, X, y, phi = sim(n, p, theta0, beta0, case='cube-root', feat='cate')
 		if abs(X).max() > 1e+8:
 			i = i - 1
 			continue
@@ -81,21 +81,22 @@ for beta0 in [.05]:
 		# print('est beta based on RT-OLS: %.3f; p-value: %.5f' %(RT_LS.beta*y_scale, RT_LS.p_value))
 
 		# solve by SIR+LS
-		echo = _2SCausal._2SIR(sparse_reg=None)
-		# echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
-		echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
-		## Stage-1 fit theta
-		echo.fit_sir(Z1, X1)
-		## Stage-2 fit beta
-		echo.fit_reg(LD_Z2, cov_ZY2)
-		echo.fit_air(Z1, X1)
-		## generate CI for beta
-		echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95)
-		len_tmp = (echo.CI[1] - echo.CI[0])*y_scale
-		print('est beta based on 2SIR: %.3f; CI: %s; len: %.3f' %(echo.beta*y_scale, echo.CI*y_scale, (echo.CI[1] - echo.CI[0])*y_scale))
-		if ( (beta0 >= echo.CI[0]*y_scale) and (beta0 <= echo.CI[1]*y_scale) ):
-			cover_SIR = cover_SIR + 1 / n_sim
-		len_SIR.append(len_tmp)
+		# echo = _2SCausal._2SIR(sparse_reg=None)
+		# # echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
+		# echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
+		# ## Stage-1 fit theta
+		# echo.fit_sir(Z1, X1)
+		# ## Stage-2 fit beta
+		# echo.fit_reg(LD_Z2, cov_ZY2)
+		# echo.fit_air(Z1, X1)
+		# ## generate CI for beta
+		# echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95)
+		# len_tmp = (echo.CI[1] - echo.CI[0])*y_scale
+		# print('est beta based on 2SIR: %.3f; CI: %s; len: %.3f' %(echo.beta*y_scale, echo.CI*y_scale, (echo.CI[1] - echo.CI[0])*y_scale))
+		# if ( (beta0 >= echo.CI[0]*y_scale) and (beta0 <= echo.CI[1]*y_scale) ):
+		# 	cover_SIR = cover_SIR + 1 / n_sim
+		# len_SIR.append(len_tmp)
+
 
 		# beta_LS.append(LS.beta*y_scale)
 		# beta_RT_LS.append(RT_LS.beta*y_scale)
@@ -114,4 +115,4 @@ for beta0 in [.05]:
 
 	print('2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_LS, np.mean(len_LS)))
 	print('PT-2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_RT_LS, np.mean(len_RT_LS)))
-	print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_SIR, np.mean(len_SIR)))
+	# print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_SIR, np.mean(len_SIR)))

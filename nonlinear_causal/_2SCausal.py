@@ -273,8 +273,9 @@ class _2SLS(object):
 			if len(invalid_iv) == 0:
 				var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
 				ratio = n2 / n1
-				var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
+				# var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
 				var_beta = var_res / self.theta.dot(LD_Z2).dot(self.theta.T) * n2
+				var_beta = var_beta * (1. + ratio*var_x*(self.beta**2)/var_res )
 			else:
 				# compute reduced covariance matrix 
 				select_mat_inv = np.linalg.inv(LD_Z2[invalid_iv[:,None], invalid_iv])
