@@ -6,7 +6,7 @@ from sim_data import sim
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
 from sklearn.model_selection import train_test_split
-from nonlinear_causal import _2SCausal
+from nonlinear_causal import _2S_TWAS
 from sklearn.preprocessing import power_transform, quantile_transform
 from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
@@ -42,7 +42,7 @@ for beta0 in [.05]:
 		# print('True beta: %.3f' %beta0)
 
 		## solve by 2sls
-		LS = _2SCausal._2SLS(sparse_reg=None)
+		LS = _2S_TWAS._2SLS(sparse_reg=None)
 		## Stage-1 fit theta 
 		LS.fit_theta(LD_Z1, cov_ZX1)
 		## Stage-2 fit beta
@@ -63,7 +63,7 @@ for beta0 in [.05]:
 		RT_X1 = power_transform(X1.reshape(-1,1)).flatten()
 		# RT_X1 = quantile_transform(X1.reshape(-1,1), output_distribution='normal')
 		RT_cor_ZX1 = np.dot(Z1.T, RT_X1)
-		RT_LS = _2SCausal._2SLS(sparse_reg=None)
+		RT_LS = _2S_TWAS._2SLS(sparse_reg=None)
 		## Stage-1 fit theta
 		RT_LS.fit_theta(LD_Z1, RT_cor_ZX1)
 		## Stage-2 fit beta
@@ -81,21 +81,21 @@ for beta0 in [.05]:
 		# print('est beta based on RT-OLS: %.3f; p-value: %.5f' %(RT_LS.beta*y_scale, RT_LS.p_value))
 
 		# solve by SIR+LS
-		# echo = _2SCausal._2SIR(sparse_reg=None)
-		# # echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
-		# echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
-		# ## Stage-1 fit theta
-		# echo.fit_sir(Z1, X1)
-		# ## Stage-2 fit beta
-		# echo.fit_reg(LD_Z2, cov_ZY2)
-		# echo.fit_air(Z1, X1)
-		# ## generate CI for beta
-		# echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95)
-		# len_tmp = (echo.CI[1] - echo.CI[0])*y_scale
-		# print('est beta based on 2SIR: %.3f; CI: %s; len: %.3f' %(echo.beta*y_scale, echo.CI*y_scale, (echo.CI[1] - echo.CI[0])*y_scale))
-		# if ( (beta0 >= echo.CI[0]*y_scale) and (beta0 <= echo.CI[1]*y_scale) ):
-		# 	cover_SIR = cover_SIR + 1 / n_sim
-		# len_SIR.append(len_tmp)
+		echo = _2S_TWAS._2SIR(sparse_reg=None)
+		# echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
+		echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
+		## Stage-1 fit theta
+		echo.fit_sir(Z1, X1)
+		## Stage-2 fit beta
+		echo.fit_reg(LD_Z2, cov_ZY2)
+		echo.fit_air(Z1, X1)
+		## generate CI for beta
+		echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95)
+		len_tmp = (echo.CI[1] - echo.CI[0])*y_scale
+		print('est beta based on 2SIR: %.3f; CI: %s; len: %.3f' %(echo.beta*y_scale, echo.CI*y_scale, (echo.CI[1] - echo.CI[0])*y_scale))
+		if ( (beta0 >= echo.CI[0]*y_scale) and (beta0 <= echo.CI[1]*y_scale) ):
+			cover_SIR = cover_SIR + 1 / n_sim
+		len_SIR.append(len_tmp)
 
 
 		# beta_LS.append(LS.beta*y_scale)

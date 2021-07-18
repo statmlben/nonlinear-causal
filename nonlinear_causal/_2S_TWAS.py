@@ -43,11 +43,14 @@ class _2SLS(object):
 	
 	alpha: array of shape (n_features, )
 		Estimated linear coefficients for Invalid IVs in Stage 2.
+
+	CI: array of shape (2, )
+		Estimated confidence interval for marginal causal effect (\beta).
 	
 	Examples
     --------
     >>> import numpy as np
-	>>> from nonlinear_causal._2SCausal import _2SLS
+	>>> from nonlinear_causal._2S_TWAS import _2SLS
 	>>> from sklearn.preprocessing import StandardScaler
 	>>> from sklearn.model_selection import train_test_split
 	>>> n, p = 1000, 50
@@ -67,7 +70,7 @@ class _2SLS(object):
 	>>>	LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
 	>>>	LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 	>>> ## Define 2SLS 
-	>>> LS = _2SCausal._2SLS(sparse_reg=None)
+	>>> LS = _2S_TWAS._2SLS(sparse_reg=None)
 	>>> ## Estimate theta in Stage 1
 	>>> LS.fit_theta(LD_Z1, cov_ZX1)
 	>>> LS.theta
@@ -89,6 +92,8 @@ class _2SLS(object):
 	>>> LS.test_effect(n2, LD_Z2, cov_ZY2)
 	>>> LS.p_value
 	>>> 1.016570334366972e-118
+	>>> LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95)
+	>>> 
 	"""
 
 	def __init__(self, normalize=True, sparse_reg=None):
