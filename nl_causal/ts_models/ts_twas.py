@@ -46,11 +46,12 @@ class _2SLS(object):
 	
 	Examples
     --------
-    >>> import numpy as np
-	>>> from nonlinear_causal._2S_TWAS import _2SLS
+	>>> import numpy as np
+	>>> from nl_causal import ts_models
 	>>> from sklearn.preprocessing import StandardScaler
 	>>> from sklearn.model_selection import train_test_split
 	>>> n, p = 1000, 50
+	>>> np.random.seed(0)
 	>>> Z = np.random.randn(n, p)
 	>>> U, eps, gamma = np.random.randn(n), np.random.randn(n), np.random.randn(n)
 	>>> theta0 = np.random.randn(p)
@@ -61,35 +62,38 @@ class _2SLS(object):
 	>>> ## normalize Z, X, y
 	>>>	center = StandardScaler(with_std=False)
 	>>>	mean_X, mean_y = X.mean(), y.mean()
+	>>> y_scale = y.std()
+	>>> y = y / y_scale
 	>>>	Z, X, y = center.fit_transform(Z), X - mean_X, y - mean_y
 	>>>	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=.5, random_state=42)
 	>>>	n1, n2 = len(Z1), len(Z2)
 	>>>	LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
 	>>>	LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 	>>> ## Define 2SLS 
-	>>> LS = _2S_TWAS._2SLS(sparse_reg=None)
+	>>> LS = ts_models._2SLS(sparse_reg=None)
 	>>> ## Estimate theta in Stage 1
 	>>> LS.fit_theta(LD_Z1, cov_ZX1)
 	>>> LS.theta
-	>>> array([-0.20606854,  0.02530397, -0.00135975,  0.25715265, -0.11367783,
-        0.10418381,  0.03810379,  0.14383798,  0.04221932,  0.00745648,
-       -0.02993945,  0.1373113 , -0.02653782,  0.1544586 , -0.0245656 ,
-       -0.13433774,  0.00501199, -0.00215122, -0.11677635, -0.21730994,
-       -0.04971654, -0.02443733,  0.02816777, -0.10271307,  0.0776153 ,
-        0.10138465, -0.3372472 ,  0.05636817,  0.29783612, -0.10146229,
-        0.0390833 , -0.11371503, -0.01425523, -0.03003318,  0.15177592,
-        0.1430128 ,  0.12335511, -0.09934032, -0.26117461,  0.13902241,
-       -0.35279522,  0.38152773, -0.02832687, -0.01635542, -0.06796552,
-       -0.03075916, -0.1368516 , -0.03330756,  0.0251337 ,  0.06097916])
+	>>> array([ 0.07268042, -0.06393631, -0.34863568, -0.04453319, -0.10313442,
+        0.09284717,  0.13514061,  0.24597997,  0.08304104,  0.02459302,
+       -0.06349473,  0.21502581,  0.21177209, -0.08895919,  0.08082504,
+       -0.13174606,  0.04644996,  0.23102817, -0.05635546,  0.08286319,
+        0.20736079, -0.07574444, -0.20129764,  0.20311458, -0.15965619,
+       -0.02148001,  0.01761156,  0.10617795,  0.02028776, -0.00221961,
+       -0.11686226, -0.09116777,  0.08004126,  0.00663467, -0.13549927,
+       -0.12674926,  0.09331474, -0.24688913, -0.18701941,  0.02714403,
+        0.0854651 ,  0.30291367,  0.08926479,  0.023272  , -0.04798961,
+        0.26668035, -0.16051689,  0.01169355, -0.08651508, -0.1342292 ])
 	>>> ## Estimate beta in Stage 2
 	>>> LS.fit_beta(LD_Z2, cov_ZY2, n2=n2)
 	>>> LS.beta
-	>>> 0.5514705289617268
+	>>> 0.47526913304288304
 	>>> ## p-value for infer if causal effect is zero
 	>>> LS.test_effect(n2, LD_Z2, cov_ZY2)
 	>>> LS.p_value
-	>>> 1.016570334366972e-118
+	>>> 1.2114293989960872e-59
 	>>> LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95)
+	>>> array([0.38869162, 0.56184665])
 	"""
 
 	def __init__(self, normalize=True, sparse_reg=None):
@@ -468,49 +472,56 @@ class _2SIR(object):
 
 	Examples
     --------
-    >>> import numpy as np
-	>>> from nonlinear_causal._2SCausal import _2SLS
+	>>> import numpy as np
+	>>> from nl_causal import ts_models
 	>>> from sklearn.preprocessing import StandardScaler
 	>>> from sklearn.model_selection import train_test_split
-	>>> n, p = 1000, 50
+	>>> n, p = 2000, 50
+	>>> np.random.seed(0)
 	>>> Z = np.random.randn(n, p)
 	>>> U, eps, gamma = np.random.randn(n), np.random.randn(n), np.random.randn(n)
 	>>> theta0 = np.random.randn(p)
 	>>> theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-	>>> beta0 = .5
-	>>> X = np.dot(Z, theta0) + U**2 + eps
-	>>> y = beta0 * X + U + gamma
+	>>> beta0 = 1.
+	>>>	X = 1. / (np.dot(Z, theta0) + U**2 + eps)
+	>>> phi = 1. / X
+	>>> y = beta0 * phi + U + gamma
 	>>> ## normalize Z, X, y
 	>>>	center = StandardScaler(with_std=False)
 	>>>	mean_X, mean_y = X.mean(), y.mean()
 	>>>	Z, X, y = center.fit_transform(Z), X - mean_X, y - mean_y
+	>>> y_scale = y.std()
+	>>> y = y / y_scale
 	>>>	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=.5, random_state=42)
 	>>>	n1, n2 = len(Z1), len(Z2)
 	>>>	LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
 	>>>	LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
-	>>> ## Define 2SLS 
-	>>> LS = _2SCausal._2SLS(sparse_reg=None)
+	>>> ## Define 2SLS
+	>>> nl_twas = ts_models._2SIR(sparse_reg=None)
 	>>> ## Estimate theta in Stage 1
-	>>> LS.fit_theta(LD_Z1, cov_ZX1)
-	>>> LS.theta
-	>>> array([-0.20606854,  0.02530397, -0.00135975,  0.25715265, -0.11367783,
-        0.10418381,  0.03810379,  0.14383798,  0.04221932,  0.00745648,
-       -0.02993945,  0.1373113 , -0.02653782,  0.1544586 , -0.0245656 ,
-       -0.13433774,  0.00501199, -0.00215122, -0.11677635, -0.21730994,
-       -0.04971654, -0.02443733,  0.02816777, -0.10271307,  0.0776153 ,
-        0.10138465, -0.3372472 ,  0.05636817,  0.29783612, -0.10146229,
-        0.0390833 , -0.11371503, -0.01425523, -0.03003318,  0.15177592,
-        0.1430128 ,  0.12335511, -0.09934032, -0.26117461,  0.13902241,
-       -0.35279522,  0.38152773, -0.02832687, -0.01635542, -0.06796552,
-       -0.03075916, -0.1368516 , -0.03330756,  0.0251337 ,  0.06097916])
+	>>> nl_twas.fit_theta(Z1, X1)
+	>>> nl_twas.theta
+	>>> array([-0.31331769, -0.10041349, -0.0068858 ,  0.01292981, -0.06329046,
+       -0.16037138, -0.16804225,  0.21417387,  0.03366815,  0.06368144,
+       -0.24217008,  0.05969993,  0.10396408,  0.1464862 , -0.08197703,
+        0.06766957,  0.0663083 , -0.11894489,  0.01675101,  0.29531242,
+        0.1923396 , -0.02299256,  0.14921243, -0.01075526, -0.04526044,
+       -0.03111288,  0.05537396, -0.02358006,  0.12615653,  0.03938541,
+       -0.09100911,  0.12907855,  0.19518874, -0.23574715, -0.12036349,
+       -0.04914323, -0.03463147,  0.01019404,  0.15832153, -0.0180269 ,
+        0.05225932,  0.33307795,  0.1104155 , -0.21012056, -0.16505056,
+        0.16029017,  0.04530822,  0.24969932,  0.13906269,  0.13336765])
 	>>> ## Estimate beta in Stage 2
-	>>> LS.fit_beta(LD_Z2, cov_ZY2, n2=n2)
-	>>> LS.beta
-	>>> 0.5514705289617268
+	>>> nl_twas.fit_beta(LD_Z2, cov_ZY2, n2)
+	>>> nl_twas.beta*y_scale
+	>>> 1.0294791446256897
 	>>> ## p-value for infer if causal effect is zero
-	>>> LS.test_effect(n2, LD_Z2, cov_ZY2)
-	>>> LS.p_value
-	>>> 1.016570334366972e-118
+	>>> nl_twas.test_effect(n2, LD_Z2, cov_ZY2)
+	>>> nl_twas.p_value
+	>>> 5.582982509645985e-48
+	>>> nl_twas.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95)
+	>>> nl_twas.CI*y_scale
+	>>> array([0.82237254, 1.23658575])
 
 	"""
 	def __init__(self, n_directions=1, n_slices='auto', data_in_slice=100, cond_mean=KNeighborsRegressor(n_neighbors=10), if_fit_link=True, sparse_reg=None):

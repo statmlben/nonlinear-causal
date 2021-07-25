@@ -20,7 +20,7 @@ for beta0 in [.00]:
 		theta0 = np.random.randn(p)
 		# theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, case='linear', feat='normal')
+		Z, X, y, phi = sim(n, p, theta0, beta0, case='inverse', feat='normal')
 		if abs(X).max() > 1e+8:
 			continue
 		## normalize Z, X, y
@@ -66,9 +66,9 @@ for beta0 in [.00]:
 		## solve by SIR+LS
 		echo = _2SCausal._2SIR(sparse_reg=None)
 		## Stage-1 fit theta
-		echo.fit_sir(Z1, X1)
+		echo.fit_theta(Z1, X1)
 		## Stage-2 fit beta
-		echo.fit_reg(LD_Z2, cov_ZY2)
+		echo.fit_beta(LD_Z2, cov_ZY2)
 		## generate CI for beta
 		echo.test_effect(n2, LD_Z2, cov_ZY2)
 		# print('est beta based on 2SIR: %.3f; p-value: %.5f' %(echo.beta*y_scale, echo.p_value))

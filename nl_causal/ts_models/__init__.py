@@ -1,4 +1,6 @@
-import pyximport
-pyximport.install()
-from ts_models._2S_TWAS import _2SLS
-from ts_models._2S_TWAS import _2SIR
+from .ts_twas import _2SLS, _2SIR
+
+__all__ = [
+	"_2SLS", 
+	"_2SIR"
+	]
