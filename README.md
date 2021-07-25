@@ -1,5 +1,5 @@
 <!-- ![Pypi](https://badge.fury.io/py/dnn-locate.svg) -->
-[![Python](https://img.shields.io/badge/python-3-blue.svg)][https://www.python.org/]
+[![Python](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
 <!-- ![License](https://img.shields.io/pypi/l/keras-bert.svg) -->
 <!-- ![Downloads](https://static.pepy.tech/badge/dnn-locate)
 ![MonthDownloads](https://pepy.tech/badge/dnn-locate/month) -->
