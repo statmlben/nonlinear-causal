@@ -11,7 +11,7 @@
 
 ![logo](./logo/model_white.gif)
 
-## What we can do:
+## What We Can Do:
 - Estimate `\theta`, `\beta`.
 - Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect `\beta`.
 - Estimate nonlinear causal link `\phi`.
