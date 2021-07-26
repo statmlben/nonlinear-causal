@@ -5,7 +5,7 @@
 ![MonthDownloads](https://pepy.tech/badge/dnn-locate/month) -->
 
 
-# nonlinear-causal
+# 🧬 nonlinear-causal
 
 **nonlinear-causal** is a Python module for nonlinear causal inference built on top of Two-stage methods. The proposed model is:
 
