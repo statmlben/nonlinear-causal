@@ -6,7 +6,7 @@ from sim_data import sim
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
 from sklearn.model_selection import train_test_split
-from nonlinear_causal import _2S_TWAS
+from nl_causal import ts_models
 from sklearn.preprocessing import power_transform, quantile_transform
 from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
@@ -23,7 +23,7 @@ for beta0 in [.05]:
 		theta0 = np.random.randn(p)
 		# theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, case='cube-root', feat='cate')
+		Z, X, y, phi = sim(n, p, theta0, beta0, case='inverse', feat='normal')
 		if abs(X).max() > 1e+8:
 			i = i - 1
 			continue
@@ -42,11 +42,11 @@ for beta0 in [.05]:
 		# print('True beta: %.3f' %beta0)
 
 		## solve by 2sls
-		LS = _2S_TWAS._2SLS(sparse_reg=None)
+		LS = ts_models._2SLS(sparse_reg=None)
 		## Stage-1 fit theta 
 		LS.fit_theta(LD_Z1, cov_ZX1)
 		## Stage-2 fit beta
-		LS.fit_beta(LD_Z2, cov_ZY2)
+		LS.fit_beta(LD_Z2, cov_ZY2, n2)
 		## generate CI for beta
 		LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95)
 		LS.CI[0] = max(LS.CI[0], 0.)
@@ -60,14 +60,14 @@ for beta0 in [.05]:
 		# print('est beta based on OLS: %.3f; p-value: %.5f' %(LS.beta*y_scale, LS.p_value))
 
 		## solve by RT-2SLS
-		RT_X1 = power_transform(X1.reshape(-1,1)).flatten()
+		RT_X1 = power_transform(X1.reshape(-1,1), method='yeo-johnson').flatten()
 		# RT_X1 = quantile_transform(X1.reshape(-1,1), output_distribution='normal')
 		RT_cor_ZX1 = np.dot(Z1.T, RT_X1)
-		RT_LS = _2S_TWAS._2SLS(sparse_reg=None)
+		RT_LS = ts_models._2SLS(sparse_reg=None)
 		## Stage-1 fit theta
 		RT_LS.fit_theta(LD_Z1, RT_cor_ZX1)
 		## Stage-2 fit beta
-		RT_LS.fit_beta(LD_Z2, cov_ZY2)
+		RT_LS.fit_beta(LD_Z2, cov_ZY2, n2)
 		## generate CI for beta
 		RT_LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95)
 		RT_LS.CI[0] = max(RT_LS.CI[0], 0.)
@@ -81,14 +81,14 @@ for beta0 in [.05]:
 		# print('est beta based on RT-OLS: %.3f; p-value: %.5f' %(RT_LS.beta*y_scale, RT_LS.p_value))
 
 		# solve by SIR+LS
-		echo = _2S_TWAS._2SIR(sparse_reg=None)
+		echo = ts_models._2SIR(sparse_reg=None)
 		# echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
 		echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
 		## Stage-1 fit theta
-		echo.fit_sir(Z1, X1)
+		echo.fit_theta(Z1, X1)
 		## Stage-2 fit beta
-		echo.fit_reg(LD_Z2, cov_ZY2)
-		echo.fit_air(Z1, X1)
+		echo.fit_beta(LD_Z2, cov_ZY2, n2)
+		# echo.fit_air(Z1, X1)
 		## generate CI for beta
 		echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95)
 		len_tmp = (echo.CI[1] - echo.CI[0])*y_scale

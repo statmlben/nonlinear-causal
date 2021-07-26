@@ -7,7 +7,15 @@
 
 # nonlinear-causal
 
-**nonlinear-causal** is a Python module for nonlinear causal inference built on top of Two-stage methods.
+**nonlinear-causal** is a Python module for nonlinear causal inference built on top of Two-stage methods. The proposed model is:
+
+![logo](./logo/model_black.gif)
+
+## What we can do:
+- Estimate `\theta`, `\beta`.
+- Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect `\beta`.
+- Estimate nonlinear causal link `\phi`.
+
 
 ## Installation
 
@@ -15,11 +23,9 @@
 
 `nonlinear-causal` requires:
 
-- Python
-- Numpy
-- Pandas
-- sklearn
-- SciPy
+| | | | | | |
+|-|-|-|-|-|-|
+| Python>=3.8 | numpy | Pandas | sklearn | SciPy | sliced |
 
 ### User installation
 
@@ -37,10 +43,11 @@ You can check the latest sources with the command::
 git clone https://github.com/statmlben/nonlinear-causal.git
 ```
 
-## Documentation
+## Examples and notebooks
 
-
-
+- Notebook 1: [Simulation for HT and CI with standard setup](sim_main.ipynb)
+- Notebook 2: [Simulation for HT and CI with invalid IVs](sim_main.ipynb)
+- Notebook 3: [Real application]()
 
 
 

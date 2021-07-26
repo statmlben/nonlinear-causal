@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from nonlinear_causal import _2SCausal
 from sklearn.preprocessing import power_transform, quantile_transform
 from scipy.linalg import sqrtm
-from nonlinear_causal.variable_select import WLasso, SCAD, L0_IC, SCAD_IC
+from nl_causal.sparse_reg import L0_IC
 from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
 
 # normal AR(.5)
