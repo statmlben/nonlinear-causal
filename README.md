@@ -24,12 +24,14 @@
 src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML,
 https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script>
 
-
 The proposed model is:
+<center>
+<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{Gray}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="400">
+</center>
 
-$$
+<!-- $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
-$$
+$$ -->
 
 - $\beta$: marginal causal effect from $x$ to $y$;
 - $\phi(\cdot)$: nonlinear causal link;
