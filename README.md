@@ -85,6 +85,6 @@ git clone https://github.com/statmlben/nonlinear-causal.git
 - Notebook 4: [Real application]()
 
 
-## Contributor
+<!-- ## Contributor
 This project was created by [Ben Dai](www.bendai.org), [Chunlin Li](https://github.com/chunlinli) and [Haoran Xue](https://xue-hr.github.io/). 
-
+ -->
