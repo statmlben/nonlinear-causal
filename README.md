@@ -7,9 +7,9 @@
 
 # 🧬 nonlinear-causal
 
-<img style="float: left; max-width: 10%" src="./logo/logo_transparent.png">
+<!-- <img style="float: left; max-width: 10%" src="./logo/logo_transparent.png"> -->
 
-<!-- ![logo](./logo/logo_transparent.png) -->
+![logo](./logo/logo_cover_transparent.png)
 
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
 
@@ -18,10 +18,12 @@
 - PyPi: [**nl-causal**]()
 - Open Source: [**MIT license**]()
 - Paper: [**pdf** in ???]()
-- About: [**contributor**]()
 
 
-<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+<script type="text/javascript" charset="utf-8" 
+src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML,
+https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script>
+
 
 The proposed model is:
 
