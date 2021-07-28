@@ -7,9 +7,11 @@
 
 # 🧬 nonlinear-causal
 
+![logo](./logo/logo_cover.png)
+
 **nonlinear-causal** is a Python module for nonlinear causal inference built on top of Two-stage methods. The proposed model is:
 
-![logo](./logo/model_white.gif)
+![logo](./logo/model_black.gif)
 
 ## What We Can Do:
 - Estimate `\theta`, `\beta`.
@@ -25,7 +27,7 @@
 
 | | | | | | |
 |-|-|-|-|-|-|
-| Python>=3.8 | numpy | Pandas | sklearn | SciPy | sliced |
+| Python>=3.8 | numpy | pandas | sklearn | scipy | sliced |
 
 ### User installation
 
