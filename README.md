@@ -1,7 +1,6 @@
 ![Pypi](https://badge.fury.io/py/nl-causal.svg)
 [![Python](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
 [![image](https://pepy.tech/badge/leafmap)](https://pepy.tech/project/leafmap)
-[![image](https://github.com/giswqs/leafmap/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="https://bendai.org"><img src="https://img.shields.io/badge/Powered%20by-cuhk%40dAI-purple.svg"/></a>
 
@@ -10,6 +9,7 @@
 ![Downloads](https://static.pepy.tech/badge/nl-causal)
 ![MonthDownloads](https://pepy.tech/badge/nl-causal/month)
 [![Conda](https://img.shields.io/conda/vn/conda-forge/???.svg)]() -->
+<!-- [![image](https://github.com/statmlben/nonlinear-causal/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild) -->
 
 
 # 🧬 nonlinear-causal
