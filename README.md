@@ -20,9 +20,9 @@
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
 
 - GitHub repo: [https://github.com/statmlben/nonlinear-causal](https://github.com/statmlben/nonlinear-causal)
-- Documentation: [https://dnn-inference.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/)
-- PyPi: [https://pypi.org/project/nl-causal](https://pypi.org/project/dnn-inference/0.10/)
-- Open Source: [MIT license]()
+- Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/)
+- PyPi: [https://pypi.org/project/nl-causal](https://pypi.org/project/nonlinear-causal)
+- Open Source: [MIT license](https://opensource.org/licenses/MIT)
 - Paper: [pdf]()
 
 
@@ -32,7 +32,7 @@ https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 
 The proposed model is:
 <p align="center">
-<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="300">
+<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
 </p>
 
 <!-- $$
@@ -85,6 +85,7 @@ git clone https://github.com/statmlben/nonlinear-causal.git
 - Notebook 4: [Real application]()
 
 
-<!-- ## Contributor
-This project was created by [Ben Dai](www.bendai.org), [Chunlin Li](https://github.com/chunlinli) and [Haoran Xue](https://xue-hr.github.io/). 
- -->
+## Contributors
+<a href = "https://github.com/statmlben/nonlinear-causal/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=statmlben/nonlinear-causal"/>
+</a>
