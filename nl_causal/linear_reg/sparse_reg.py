@@ -624,6 +624,8 @@ class L0_IC(LassoLarsIC):
 		self.var_res = var_res
 		self.refit = refit
 		self.find_best = find_best
+		self.criterion_lst_ = []
+		self.mse_lst_ = []
 
 	def fit(self, X, y, sample_weight=None):
 		X, y = np.array(X), np.array(y)

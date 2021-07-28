@@ -178,6 +178,7 @@ class _2SLS(object):
 			self.sparse_reg.ada_weight = ada_weight
 			self.sparse_reg.var_res = var_res
 			self.sparse_reg.fit(pseudo_input, pseudo_output)
+			self.candidate_model_ = self.sparse_reg.candidate_model_
 			criterion_lst, mse_lst = [], []
 			for model_tmp in self.sparse_reg.candidate_model_:
 				model_tmp = np.array(model_tmp)
@@ -192,6 +193,8 @@ class _2SLS(object):
 				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n2) / n2
 				criterion_lst.append(criterion_tmp)
 				mse_lst.append(mse_tmp)
+			self.criterion_lst_ = criterion_lst
+			self.mse_lst_ = mse_lst
 			## fit the best model
 			best_model = np.array(self.sparse_reg.candidate_model_[np.argmin(criterion_lst)])
 			self.best_model_ = best_model
