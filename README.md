@@ -17,31 +17,32 @@
 - Documentation: [**docs**]()
 - PyPi: [**nl-causal**]()
 - Open Source: [**MIT license**]()
-- Paper: [**pdf** in ???]()
+- Paper: [**pdf**]()
 
 
-<script type="text/javascript" charset="utf-8" 
+<!-- <script type="text/javascript" charset="utf-8" 
 src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML,
-https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script>
+https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 
 The proposed model is:
 <center>
-<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{Gray}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="400">
+<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{Gray}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="300">
 </center>
 
 <!-- $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
 $$ -->
 
-- $\beta$: marginal causal effect from $x$ to $y$;
-- $\phi(\cdot)$: nonlinear causal link;
+- <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\beta" title="\color{Gray} \beta" />: marginal causal effect from X -> Y;
+- <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\phi(\cdot)" tilte="\phi"/>: nonlinear causal link;
 
 <!-- ![logo](./logo/model_black.gif) -->
 
+
 ## What We Can Do:
-- Estimate $\theta$, $\beta$.
+- Estimate <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\theta" title="\color{Gray} \theta" /> and <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\beta" title="\color{Gray} \beta" />.
 - Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
-- Estimate nonlinear causal link $\phi(\cdot)$.
+- Estimate nonlinear causal link <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\phi(\cdot)" tilte="\phi"/>.
 
 
 ## Installation
