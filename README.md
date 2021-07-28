@@ -7,16 +7,38 @@
 
 # 🧬 nonlinear-causal
 
-![logo](./logo/logo_cover.png)
+<img style="float: left; max-width: 50%" src="./logo/logo_transparent.png">
 
-**nonlinear-causal** is a Python module for nonlinear causal inference built on top of Two-stage methods. The proposed model is:
 
-![logo](./logo/model_black.gif)
+<!-- ![logo](./logo/logo_transparent.png) -->
+
+**nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
+
+- GitHub repo: [**nonlinear-causal**](https://github.com/statmlben/nonlinear-causal)
+- Documentation: [**docs**]()
+- PyPi: [**nl-causal**]()
+- Open Source: [**MIT license**]()
+- Paper: [**pdf** in ???]()
+- About: [**contributor**]()
+
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+
+The proposed model is:
+
+$$
+\phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
+$$
+
+- $\beta$: marginal causal effect from $x$ to $y$;
+- $\phi(\cdot)$: nonlinear causal link;
+
+<!-- ![logo](./logo/model_black.gif) -->
 
 ## What We Can Do:
-- Estimate `\theta`, `\beta`.
-- Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect `\beta`.
-- Estimate nonlinear causal link `\phi`.
+- Estimate $\theta$, $\beta$.
+- Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
+- Estimate nonlinear causal link $\phi(\cdot)$.
 
 
 ## Installation
@@ -48,8 +70,9 @@ git clone https://github.com/statmlben/nonlinear-causal.git
 ## Examples and notebooks
 
 - Notebook 1: [Simulation for HT and CI with standard setup](sim_main.ipynb)
-- Notebook 2: [Simulation for HT and CI with invalid IVs](sim_main.ipynb)
-- Notebook 3: [Real application]()
+- Notebook 2: [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
+- Notebook 3: [Simulation for HT and CI with categorical IVs](sim_main.ipynb)
+- Notebook 4: [Real application]()
 
 
 
