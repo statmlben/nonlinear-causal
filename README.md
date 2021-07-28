@@ -1,8 +1,14 @@
-<!-- ![Pypi](https://badge.fury.io/py/dnn-locate.svg) -->
+![Pypi](https://badge.fury.io/py/nl-causal.svg)
 [![Python](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
-<!-- ![License](https://img.shields.io/pypi/l/keras-bert.svg) -->
-<!-- ![Downloads](https://static.pepy.tech/badge/dnn-locate)
-![MonthDownloads](https://pepy.tech/badge/dnn-locate/month) -->
+[![image](https://pepy.tech/badge/leafmap)](https://pepy.tech/project/leafmap)
+[![image](https://github.com/giswqs/leafmap/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild)
+[![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<a href="https://bendai.org"><img src="https://img.shields.io/badge/Powered%20by-cuhk%40dAI-purple.svg"/></a>
+
+<!-- [![Youtube](https://img.shields.io/badge/YouTube-Channel-red)]()
+![Downloads](https://static.pepy.tech/badge/nl-causal)
+![MonthDownloads](https://pepy.tech/badge/nl-causal/month)
+[![Conda](https://img.shields.io/conda/vn/conda-forge/???.svg)]() -->
 
 
 # 🧬 nonlinear-causal
@@ -13,11 +19,11 @@
 
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
 
-- GitHub repo: [**nonlinear-causal**](https://github.com/statmlben/nonlinear-causal)
-- Documentation: [**docs**]()
-- PyPi: [**nl-causal**]()
-- Open Source: [**MIT license**]()
-- Paper: [**pdf**]()
+- GitHub repo: [https://github.com/statmlben/nonlinear-causal](https://github.com/statmlben/nonlinear-causal)
+- Documentation: [https://dnn-inference.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/)
+- PyPi: [https://pypi.org/project/nl-causal](https://pypi.org/project/dnn-inference/0.10/)
+- Open Source: [MIT license]()
+- Paper: [pdf]()
 
 
 <!-- <script type="text/javascript" charset="utf-8" 
