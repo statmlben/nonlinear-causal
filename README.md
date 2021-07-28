@@ -7,8 +7,7 @@
 
 # 🧬 nonlinear-causal
 
-<img style="float: left; max-width: 50%" src="./logo/logo_transparent.png">
-
+<img style="float: left; max-width: 10%" src="./logo/logo_transparent.png">
 
 <!-- ![logo](./logo/logo_transparent.png) -->
 
