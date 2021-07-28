@@ -81,21 +81,10 @@ git clone https://github.com/statmlben/nonlinear-causal.git
 
 - Notebook 1: [Simulation for HT and CI with standard setup](sim_main.ipynb)
 - Notebook 2: [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
-- Notebook 3: [Simulation for HT and CI with categorical IVs](sim_main.ipynb)
+- Notebook 3: [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
 - Notebook 4: [Real application]()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- This project was created by [Ben Dai](www.bendai.org), [Chunlin Li](https://github.com/chunlinli) and [Haoran Xue](https://xue-hr.github.io/).  If there is any problem and suggestion please contact me via <bdai@umn.edu>. -->
+## Contributor
+This project was created by [Ben Dai](www.bendai.org), [Chunlin Li](https://github.com/chunlinli) and [Haoran Xue](https://xue-hr.github.io/). 
 
