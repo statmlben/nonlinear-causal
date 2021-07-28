@@ -26,23 +26,23 @@ https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 
 The proposed model is:
 <center>
-<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{Gray}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="300">
+<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="300">
 </center>
 
 <!-- $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
 $$ -->
 
-- <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\beta" title="\color{Gray} \beta" />: marginal causal effect from X -> Y;
-- <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\phi(\cdot)" tilte="\phi"/>: nonlinear causal link;
+- <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\beta" title="\color{Gray} \beta" />: marginal causal effect from X -> Y;
+- <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\phi(\cdot)" tilte="\phi"/>: nonlinear causal link;
 
 <!-- ![logo](./logo/model_black.gif) -->
 
 
 ## What We Can Do:
-- Estimate <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\theta" title="\color{Gray} \theta" /> and <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\beta" title="\color{Gray} \beta" />.
+- Estimate <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\theta" title="\color{Gray} \theta" /> and <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\beta" title="\color{Gray} \beta" />.
 - Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
-- Estimate nonlinear causal link <img src="https://latex.codecogs.com/svg.image?\color{Gray}&space;\phi(\cdot)" tilte="\phi"/>.
+- Estimate nonlinear causal link <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\phi(\cdot)" tilte="\phi"/>.
 
 
 ## Installation
