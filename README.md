@@ -1,7 +1,5 @@
 ![Pypi](https://badge.fury.io/py/nl-causal.svg)
 [![Python](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
-[![image](https://pepy.tech/badge/leafmap)](https://pepy.tech/project/leafmap)
-[![image](https://github.com/giswqs/leafmap/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="https://bendai.org"><img src="https://img.shields.io/badge/Powered%20by-cuhk%40dAI-purple.svg"/></a>
 
@@ -10,7 +8,8 @@
 ![Downloads](https://static.pepy.tech/badge/nl-causal)
 ![MonthDownloads](https://pepy.tech/badge/nl-causal/month)
 [![Conda](https://img.shields.io/conda/vn/conda-forge/???.svg)]() -->
-
+<!-- [![image](https://pepy.tech/badge/leafmap)](https://pepy.tech/project/leafmap) -->
+<!-- [![image](https://github.com/giswqs/leafmap/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild) -->
 
 # 🧬 nonlinear-causal
 
@@ -32,9 +31,9 @@ src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLor
 https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 
 The proposed model is:
-<center>
+<p align="center">
 <img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="300">
-</center>
+</p>
 
 <!-- $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
