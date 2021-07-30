@@ -842,15 +842,14 @@ class _2SIR(object):
 		var_beta = var_eps * omega_x  + np.finfo('float64').eps
 		## resampling
 		zeta = np.sqrt(var_beta)*np.random.randn(B_sample)
-		eta = []
+		eta, beta_B = [], []
 		left_tmp = np.sqrt(n2/n1)*self.beta*omega_x*self.theta.dot(mid_cov)
 		for i in range(B_sample):
 			B_ind = np.random.choice(n1, n1)
 			Z1_B, X1_B = Z1[B_ind], X1[B_ind]
-			_2SIR_tmp = _2SIR(sparse_reg=None)
+			_2SIR_tmp = _2SIR(sparse_reg=self.sparse_reg)
 			_2SIR_tmp.fit_theta(Z1_B, X1_B)
 			_2SIR_tmp.theta = np.sign(np.dot(self.theta, _2SIR_tmp.theta)) * _2SIR_tmp.theta
-			# _2SIR_tmp.fit_reg(LD_Z2, cov_ZY2)
 			xi_tmp = np.sqrt(n1)*( _2SIR_tmp.theta - self.theta )
 			eta_tmp = left_tmp.dot(xi_tmp)
 			eta.append(eta_tmp)
@@ -861,6 +860,7 @@ class _2SIR(object):
 		beta_low = max(0., beta_low)
 		beta_up = self.beta + delta
 		self.CI = np.array([beta_low, beta_up])
+
 
 	def test_effect(self, n2, LD_Z2, cov_ZY2):
 		"""
