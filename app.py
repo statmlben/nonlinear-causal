@@ -14,7 +14,6 @@ df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'CI': []}
 gene_files = ['A1BGJuly20_2SIR', 'ABCA7July20_2SIR', 'ABHD8July20_2SIR', 'ACER1July20_2SIR', 'ACP5July20_2SIR', 
 			'ACPTJuly20_2SIR', 'ACSBG2July20_2SIR', 'ACTL9July20_2SIR', 'ACTN4July20_2SIR', 'ADAMTS10July20_2SIR']
 for file_tmp in gene_files:
-
 	# file_tmp = 'ACTN4July20_2SIR'
 	print('\n##### Causal inference of %s #####' %file_tmp)
 	# diff gene: ACP5July20_2SIR, 
