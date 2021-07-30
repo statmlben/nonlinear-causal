@@ -1,6 +1,9 @@
 ![Pypi](https://badge.fury.io/py/nl-causal.svg)
 [![Python](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
+<<<<<<< HEAD
 [![image](https://pepy.tech/badge/leafmap)](https://pepy.tech/project/leafmap)
+=======
+>>>>>>> fe0bcbba53408c71f2a05a081773a52d5e5c2111
 [![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="https://bendai.org"><img src="https://img.shields.io/badge/Powered%20by-cuhk%40dAI-purple.svg"/></a>
 
@@ -9,8 +12,13 @@
 ![Downloads](https://static.pepy.tech/badge/nl-causal)
 ![MonthDownloads](https://pepy.tech/badge/nl-causal/month)
 [![Conda](https://img.shields.io/conda/vn/conda-forge/???.svg)]() -->
+<<<<<<< HEAD
 <!-- [![image](https://github.com/statmlben/nonlinear-causal/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild) -->
 
+=======
+<!-- [![image](https://pepy.tech/badge/leafmap)](https://pepy.tech/project/leafmap) -->
+<!-- [![image](https://github.com/giswqs/leafmap/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild) -->
+>>>>>>> fe0bcbba53408c71f2a05a081773a52d5e5c2111
 
 # 🧬 nonlinear-causal
 
@@ -21,9 +29,9 @@
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
 
 - GitHub repo: [https://github.com/statmlben/nonlinear-causal](https://github.com/statmlben/nonlinear-causal)
-- Documentation: [https://dnn-inference.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/)
-- PyPi: [https://pypi.org/project/nl-causal](https://pypi.org/project/dnn-inference/0.10/)
-- Open Source: [MIT license]()
+- Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/)
+- PyPi: [https://pypi.org/project/nl-causal](https://pypi.org/project/nonlinear-causal)
+- Open Source: [MIT license](https://opensource.org/licenses/MIT)
 - Paper: [pdf]()
 
 
@@ -32,9 +40,9 @@ src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLor
 https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 
 The proposed model is:
-<center>
-<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="300">
-</center>
+<p align="center">
+<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
+</p>
 
 <!-- $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
@@ -82,21 +90,11 @@ git clone https://github.com/statmlben/nonlinear-causal.git
 
 - Notebook 1: [Simulation for HT and CI with standard setup](sim_main.ipynb)
 - Notebook 2: [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
-- Notebook 3: [Simulation for HT and CI with categorical IVs](sim_main.ipynb)
+- Notebook 3: [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
 - Notebook 4: [Real application]()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- This project was created by [Ben Dai](www.bendai.org), [Chunlin Li](https://github.com/chunlinli) and [Haoran Xue](https://xue-hr.github.io/).  If there is any problem and suggestion please contact me via <bdai@umn.edu>. -->
-
+## Contributors
+<a href = "https://github.com/statmlben/nonlinear-causal/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=statmlben/nonlinear-causal"/>
+</a>
