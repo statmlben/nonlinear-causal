@@ -22,14 +22,18 @@ copyright = '2021, Ben Dai, Chunlin Li, Haoran Xue'
 author = 'Ben Dai, Chunlin Li, Haoran Xue'
 
 
-
+import sys, os
+sys.path.append(os.path.abspath('../nl_causal'))
+sys.path.append('../..')
+sys.path.append('..')
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-	'sphinx.ext.autodoc'
+	'sphinx.ext.autodoc',
+	'numpydoc'
 	]
 
 # Add any paths that contain templates here, relative to this directory.

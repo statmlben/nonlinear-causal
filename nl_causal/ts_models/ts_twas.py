@@ -9,17 +9,16 @@ import pandas as pd
 
 class _2SLS(object):
 	"""
-	Two-Stage least squares (2SLS)
-
-	Two-Stage least squares (2SLS) regression is a statistical technique that is used in the analysis of structural equations.
-	(stage 1) x = z^T \theta + \omega; 		(Stage 2) y = \beta x + z^T \alpha + \epsilon
+	Two-Stage least squares (2SLS) regression is a statistical technique that is used in the analysis of structural equations::
+	
+		(stage 1) x = z^T theta + omega; 		(Stage 2) y = beta x + z^T alpha + epsilon
 
 	Note that data is expected to be centered, and y is normarlized as sd(y) = 1.
 
 	Parameters
-	----------
+	-----------
 	normalize: bool, default=True
-		Whether to normalize the resulting $\theta$ in Stage 1.
+		Whether to normalize the resulting `theta` in Stage 1.
 	
 	fit_flag: bool, default=False
 		A flag to indicate if the estimation is done.
@@ -28,24 +27,25 @@ class _2SLS(object):
 		A sparse regression used in the Stage 2. If set to None, we will use OLS in for the Stage 2.
 	
 	Attributes
-	----------
+	-----------
 	p_value: float
-		P-value for hypothesis testing H_0: \beta = 0; H_a: \beta \neq 0.
+		P-value for hypothesis testing:: 
+			H_0: `beta` = 0;		 H_a: `beta` neq 0.
 	
 	theta: array of shape (n_features, )
 		Estimated linear coefficients for the linear regression in Stage 1.
 
 	beta: float
-		The marginal causal effect $\beta$ in Stage 2.  
+		The marginal causal effect `beta` in Stage 2.  
 	
 	alpha: array of shape (n_features, )
 		Estimated linear coefficients for Invalid IVs in Stage 2.
 
 	CI: array of shape (2, )
-		Estimated confidence interval for marginal causal effect (\beta).
+		Estimated confidence interval for marginal causal effect (`beta`).
 	
 	Examples
-    --------
+	--------
 	>>> import numpy as np
 	>>> from nl_causal import ts_models
 	>>> from sklearn.preprocessing import StandardScaler
@@ -59,41 +59,36 @@ class _2SLS(object):
 	>>> beta0 = .5
 	>>> X = np.dot(Z, theta0) + U**2 + eps
 	>>> y = beta0 * X + U + gamma
-	>>> ## normalize Z, X, y
-	>>>	center = StandardScaler(with_std=False)
-	>>>	mean_X, mean_y = X.mean(), y.mean()
+	>>> center = StandardScaler(with_std=False)
+	>>> mean_X, mean_y = X.mean(), y.mean()
 	>>> y_scale = y.std()
 	>>> y = y / y_scale
-	>>>	Z, X, y = center.fit_transform(Z), X - mean_X, y - mean_y
-	>>>	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=.5, random_state=42)
-	>>>	n1, n2 = len(Z1), len(Z2)
-	>>>	LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
-	>>>	LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
-	>>> ## Define 2SLS 
+	>>> Z, X, y = center.fit_transform(Z), X - mean_X, y - mean_y
+	>>> Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=.5, random_state=42)
+	>>> n1, n2 = len(Z1), len(Z2)
+	>>> LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
+	>>> LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 	>>> LS = ts_models._2SLS(sparse_reg=None)
-	>>> ## Estimate theta in Stage 1
 	>>> LS.fit_theta(LD_Z1, cov_ZX1)
 	>>> LS.theta
-	>>> array([ 0.07268042, -0.06393631, -0.34863568, -0.04453319, -0.10313442,
-        0.09284717,  0.13514061,  0.24597997,  0.08304104,  0.02459302,
-       -0.06349473,  0.21502581,  0.21177209, -0.08895919,  0.08082504,
-       -0.13174606,  0.04644996,  0.23102817, -0.05635546,  0.08286319,
-        0.20736079, -0.07574444, -0.20129764,  0.20311458, -0.15965619,
-       -0.02148001,  0.01761156,  0.10617795,  0.02028776, -0.00221961,
-       -0.11686226, -0.09116777,  0.08004126,  0.00663467, -0.13549927,
-       -0.12674926,  0.09331474, -0.24688913, -0.18701941,  0.02714403,
-        0.0854651 ,  0.30291367,  0.08926479,  0.023272  , -0.04798961,
-        0.26668035, -0.16051689,  0.01169355, -0.08651508, -0.1342292 ])
-	>>> ## Estimate beta in Stage 2
+	array([ 0.07268042, -0.06393631, -0.34863568, -0.04453319, -0.10313442,
+		0.09284717,  0.13514061,  0.24597997,  0.08304104,  0.02459302,
+		-0.06349473,  0.21502581,  0.21177209, -0.08895919,  0.08082504,
+		-0.13174606,  0.04644996,  0.23102817, -0.05635546,  0.08286319,
+		0.20736079, -0.07574444, -0.20129764,  0.20311458, -0.15965619,
+		-0.02148001,  0.01761156,  0.10617795,  0.02028776, -0.00221961,
+		-0.11686226, -0.09116777,  0.08004126,  0.00663467, -0.13549927,
+		-0.12674926,  0.09331474, -0.24688913, -0.18701941,  0.02714403,
+		0.0854651 ,  0.30291367,  0.08926479,  0.023272  , -0.04798961,
+		0.26668035, -0.16051689,  0.01169355, -0.08651508, -0.1342292 ])
 	>>> LS.fit_beta(LD_Z2, cov_ZY2, n2=n2)
 	>>> LS.beta
-	>>> 0.47526913304288304
-	>>> ## p-value for infer if causal effect is zero
+	0.47526913304288304
 	>>> LS.test_effect(n2, LD_Z2, cov_ZY2)
 	>>> LS.p_value
-	>>> 1.2114293989960872e-59
+	1.2114293989960872e-59
 	>>> LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95)
-	>>> array([0.38869162, 0.56184665])
+	array([0.38869162, 0.56184665])
 	"""
 
 	def __init__(self, normalize=True, sparse_reg=None):
@@ -113,10 +108,10 @@ class _2SLS(object):
 		Parameters
 		----------
 		LD_Z1: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the first sample: LD_Z1 = np.dot(Z1.T, Z1)
+			LD matrix of Z based on the first sample: ``LD_Z1 = np.dot(Z1.T, Z1)``
 
 		cov_ZX1: {array-like, float} of shape (n_features, )
-			Cov(Z1, X1); cov_ZX1 = np.dot(Z1.T, X1)
+			Cov(Z1, X1); ``cov_ZX1 = np.dot(Z1.T, X1)``
 		
 		Returns
 		-------
@@ -130,22 +125,22 @@ class _2SLS(object):
 
 	def fit_beta(self, LD_Z2, cov_ZY2, n2):
 		"""
-		Fit the linear model in Stage 2 based on GWAS data.
+		Fit the linear model in Stage 2 based on *GWAS* data.
 
 		Parameters
 		----------
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		n2: int
-			The number of sample in the second GWAS dataset.
+			The number of sample in the second *GWAS* dataset.
 
 		Returns
 		-------
-		self: returns \beta of self.
+		self: returns `beta` of self.
 		"""
 
 		eps64 = np.finfo('float64').eps
@@ -226,7 +221,7 @@ class _2SLS(object):
 		-------
 
 		df: dataframe
-			dataframe with columns: "candidate_model", "criteria", and "mse".
+			dataframe with columns: ``candidate_model``, ``criteria``, and ``mse``.
 
 		"""
 		d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
@@ -272,10 +267,10 @@ class _2SLS(object):
 			The number of sample on the second dataset.
 
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		Returns
 		-------
@@ -288,7 +283,7 @@ class _2SLS(object):
 
 	def fit(self, LD_Z1, cov_ZX1, LD_Z2, cov_ZY2, n2):
 		"""
-		Fit the linear model in Stage 2 based on GWAS data.
+		Fit the linear model in Stage 2 based on **GWAS** data.
 
 		Parameters
 		----------
@@ -296,25 +291,25 @@ class _2SLS(object):
 		Parameters
 		----------
 		LD_Z1: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the first sample: LD_Z1 = np.dot(Z1.T, Z1)
+			LD matrix of Z based on the first sample: ``LD_Z1 = np.dot(Z1.T, Z1)``
 
 		cov_ZX1: {array-like, float} of shape (n_features, )
-			Cov(Z1, X1); cov_ZX1 = np.dot(Z1.T, X1)
+			Cov(Z1, X1); ``cov_ZX1 = np.dot(Z1.T, X1)``
 
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		n2: int
-			The number of sample in the second GWAS dataset.
+			The number of sample in the second *GWAS* dataset.
 
 		Returns
 		-------
-		self: return \theta of self.
+		self: return `theta` of self.
 
-		self: returns \beta of self.
+		self: returns `beta` of self.
 		"""
 		self.fit_theta(LD_Z1, cov_ZX1)
 		self.fit_beta(LD_Z2, cov_ZY2, n2)
@@ -322,7 +317,7 @@ class _2SLS(object):
 	
 	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=0.95):
 		"""
-		Estimated confidence interval (CI) for the causal effect \beta
+		Estimated confidence interval (CI) for the causal effect `beta`.
 
 		Parameters
 		----------
@@ -333,16 +328,16 @@ class _2SLS(object):
 			The number of sample on the second dataset.
 
 		Z1: {array-like, float} of shape (n_sample, n_features)
-			Samples of Z in the first dataset, where n_sample = n1 is the number of samples in the first dataset, and n_feature is the number of features.
+			Samples of Z in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset, and n_feature is the number of features.
 
 		X1: {array-like, float} of shape (n_sample)
-			Samples of X in the first dataset, where n_sample = n1 is the number of samples in the first dataset.
+			Samples of X in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset.
 
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		level: float, default=0.95
 			The confidence level to compute, which must be between 0 and 1 inclusive.
@@ -385,7 +380,9 @@ class _2SLS(object):
 	
 	def test_effect(self, n2, LD_Z2, cov_ZY2):
 		"""
-		Causal inference for the marginal causal effect.
+		Causal inference for the marginal causal effect `beta`.
+		P-value for hypothesis testing:: 
+			H0: `beta` = 0; 		Ha: `beta` neq 0.
 
 		Parameters
 		----------
@@ -393,10 +390,10 @@ class _2SLS(object):
 			The number of samples in the second dataset.
 
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		Returns
 		-------
@@ -425,8 +422,9 @@ class _2SLS(object):
 class _2SIR(object):
 	"""Two-stage instrumental regression (2SIR): sliced inverse regression + least sqaure
 
-	Two-stage instrumental regression (2SIR) is a statistical technique used in the analysis of structural equations.
-	(stage 1) \phi(x) = z^T \theta + \omega; 		(Stage 2) y = \beta \phi(x) + z^T \alpha + \epsilon
+	Two-stage instrumental regression (2SIR) is a statistical technique used in the analysis of structural equations::
+	
+	(stage 1) phi(x) = z^T theta + omega; 		(Stage 2) y = beta phi(x) + z^T alpha + epsilon
 
 	Note that data is expected to be centered, and y is normarlized as sd(y) = 1.
 
@@ -436,16 +434,16 @@ class _2SIR(object):
 		A number of directions for sliced inverse regression (SIR). Currently, we only focus on 1-dimensional case.
 
 	n_slices: int, default='auto'
-		A number of slices for SIR, if `n_slices='auto'`, then it is determined by int(n_sample / data_in_slice).
+		A number of slices for SIR, if `n_slices='auto'`, then it is determined by ``int(n_sample/data_in_slice)``.
 	
 	data_in_slice: int, default=100
-		A number of samples in a slice for SIR. If data_in_slice is not None, then n_slices = int(n_sample / data_in_slice).
+		A number of samples in a slice for SIR. If data_in_slice is not None, then ``n_slices=int(n_sample/data_in_slice)``.
 
 	cond_mean: class, default=KNeighborsRegressor(n_neighbors=10)
 		A nonparameteric regression model for estimate link function.
 
 	if_fit_link: bool, default=True
-		Whether to calculate the link function $\phi$ for this model.
+		Whether to calculate the link function `phi` for this model.
 
 	fit_flag: bool, default=False
 		A flag to indicate if the estimation is done.
@@ -456,13 +454,14 @@ class _2SIR(object):
 	Attributes
 	----------
 	p_value: float
-		P-value for hypothesis testing H_0: \beta = 0; H_a: \beta \neq 0.
+		P-value for hypothesis testing:: 
+			H0: `beta` = 0; 		Ha: `beta` neq 0.
 	
 	theta: array of shape (n_features, )
 		Estimated linear coefficients for the linear regression in Stage 1.
 
 	beta: float
-		The marginal causal effect $\beta$ in Stage 2.  
+		The marginal causal effect `beta` in Stage 2.  
 	
 	alpha: array of shape (n_features, )
 		Estimated linear coefficients for Invalid IVs in Stage 2.
@@ -471,10 +470,10 @@ class _2SIR(object):
 		A correction ratio for the link estimation.
 
 	CI: array of shape (2, )
-		Estimated confidence interval for marginal causal effect (\beta).
+		Estimated confidence interval for marginal causal effect (`beta`).
 
 	Examples
-    --------
+	--------
 	>>> import numpy as np
 	>>> from nl_causal import ts_models
 	>>> from sklearn.preprocessing import StandardScaler
@@ -490,30 +489,30 @@ class _2SIR(object):
 	>>> phi = 1. / X
 	>>> y = beta0 * phi + U + gamma
 	>>> ## normalize Z, X, y
-	>>>	center = StandardScaler(with_std=False)
-	>>>	mean_X, mean_y = X.mean(), y.mean()
-	>>>	Z, X, y = center.fit_transform(Z), X - mean_X, y - mean_y
+	>>> center = StandardScaler(with_std=False)
+	>>> mean_X, mean_y = X.mean(), y.mean()
+	>>> Z, X, y = center.fit_transform(Z), X - mean_X, y - mean_y
 	>>> y_scale = y.std()
 	>>> y = y / y_scale
-	>>>	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=.5, random_state=42)
-	>>>	n1, n2 = len(Z1), len(Z2)
-	>>>	LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
-	>>>	LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
+	>>> Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=.5, random_state=42)
+	>>> n1, n2 = len(Z1), len(Z2)
+	>>> LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
+	>>> LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 	>>> ## Define 2SLS
 	>>> nl_twas = ts_models._2SIR(sparse_reg=None)
 	>>> ## Estimate theta in Stage 1
 	>>> nl_twas.fit_theta(Z1, X1)
 	>>> nl_twas.theta
 	>>> array([-0.31331769, -0.10041349, -0.0068858 ,  0.01292981, -0.06329046,
-       -0.16037138, -0.16804225,  0.21417387,  0.03366815,  0.06368144,
-       -0.24217008,  0.05969993,  0.10396408,  0.1464862 , -0.08197703,
-        0.06766957,  0.0663083 , -0.11894489,  0.01675101,  0.29531242,
-        0.1923396 , -0.02299256,  0.14921243, -0.01075526, -0.04526044,
-       -0.03111288,  0.05537396, -0.02358006,  0.12615653,  0.03938541,
-       -0.09100911,  0.12907855,  0.19518874, -0.23574715, -0.12036349,
-       -0.04914323, -0.03463147,  0.01019404,  0.15832153, -0.0180269 ,
-        0.05225932,  0.33307795,  0.1104155 , -0.21012056, -0.16505056,
-        0.16029017,  0.04530822,  0.24969932,  0.13906269,  0.13336765])
+		-0.16037138, -0.16804225,  0.21417387,  0.03366815,  0.06368144,
+		-0.24217008,  0.05969993,  0.10396408,  0.1464862 , -0.08197703,
+		0.06766957,  0.0663083 , -0.11894489,  0.01675101,  0.29531242,
+		0.1923396 , -0.02299256,  0.14921243, -0.01075526, -0.04526044,
+		-0.03111288,  0.05537396, -0.02358006,  0.12615653,  0.03938541,
+		-0.09100911,  0.12907855,  0.19518874, -0.23574715, -0.12036349,
+		-0.04914323, -0.03463147,  0.01019404,  0.15832153, -0.0180269 ,
+		0.05225932,  0.33307795,  0.1104155 , -0.21012056, -0.16505056,
+		0.16029017,  0.04530822,  0.24969932,  0.13906269,  0.13336765])
 	>>> ## Estimate beta in Stage 2
 	>>> nl_twas.fit_beta(LD_Z2, cov_ZY2, n2)
 	>>> nl_twas.beta*y_scale
@@ -546,19 +545,19 @@ class _2SIR(object):
 
 	def fit_theta(self, Z1, X1):
 		"""
-		Estimate \theta in Stage 1 by using sliced inverse regression (SIR). 
+		Estimate `theta` in Stage 1 by using sliced inverse regression (SIR). 
 
 		Parameters
 		----------
 		Z1: {array-like, float} of shape (n_sample, n_features)
-			Samples of Z in the first dataset, where n_sample = n1 is the number of samples in the first dataset, and n_feature is the number of features.
+			Samples of Z in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset, and n_feature is the number of features.
 
 		X1: {array-like, float} of shape (n_sample)
-			Samples of X in the first dataset, where n_sample = n1 is the number of samples in the first dataset.
+			Samples of X in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset.
 		
 		Returns
 		-------
-		self: returns \theta of self.
+		self: returns `theta` of self.
 		"""
 
 		if self.n_slices == 'auto':
@@ -573,22 +572,22 @@ class _2SIR(object):
 
 	def fit_beta(self, LD_Z2, cov_ZY2, n2):
 		"""
-		Fit the linear model in Stage 2 based on GWAS data.
+		Fit the linear model in Stage 2 based on *GWAS* data.
 
 		Parameters
 		----------
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		n2: int
-			The number of samples in the second GWAS dataset, which will be used for model selection in sparse regerssion.
+			The number of samples in the second *GWAS* dataset, which will be used for model selection in sparse regerssion.
 
 		Returns
 		-------
-		self: returns \beta of self.
+		self: returns `beta` of self.
 		"""
 
 		eps64 = np.finfo('float64').eps
@@ -662,7 +661,7 @@ class _2SIR(object):
 		-------
 
 		df: dataframe
-			dataframe with columns: "candidate_model", "criteria", and "mse".
+			dataframe with columns: ``candidate_model``, ``criteria``, and ``mse``.
 
 		"""
 		d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
@@ -682,20 +681,20 @@ class _2SIR(object):
 		
 	def fit_link(self, Z1, X1):
 		"""
-		Estimate nonlinear link (\phi) in Stage 1.
+		Estimate nonlinear link (`phi`) in Stage 1.
 
 		Parameters
 		----------
 		Z1: {array-like, float} of shape (n_sample, n_features)
-			Samples of Z in the first dataset, where n_sample = n1 is the number of samples in the first dataset, and n_feature is the number of features.
+			Samples of Z in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset, and ``n_feature`` is the number of features.
 
 		X1: {array-like, float} of shape (n_sample)
-			Samples of X in the first dataset, where n_sample = n1 is the number of samples in the first dataset.
+			Samples of X in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset.
 		
 		Returns
 		-------
 		self: returns cond_mean of self.
-			Returns estimated conditional mean of z^T \theta conditional on X1
+			Returns estimated conditional mean of z^T `theta` conditional on X1
 
 		self: returns rho of self.
 			Return estimated correction ratio of conditional mean. 
@@ -711,35 +710,35 @@ class _2SIR(object):
 
 	def fit(self, Z1, X1, LD_Z2, cov_ZY2, n2):
 		"""
-		Fit \theta, \beta, (and \phi) in the causal model.
+		Fit `theta`, `beta`, (and `phi`) in the causal model.
 
 		Parameters
 		----------
 		Z1: {array-like, float} of shape (n_sample, n_features)
-			Samples of Z in the first dataset, where n_sample = n1 is the number of samples in the first dataset, and n_feature is the number of features.
+			Samples of Z in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset, and n_feature is the number of features.
 
 		X1: {array-like, float} of shape (n_sample)
-			Samples of X in the first dataset, where n_sample = n1 is the number of samples in the first dataset.
+			Samples of X in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset.
 		
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		n2: int
-			The number of samples in the second GWAS dataset, which will be used for model selection in sparse regerssion.
+			The number of samples in the second *GWAS* dataset, which will be used for model selection in sparse regerssion.
 
 		Returns
 		-------
-		self: returns \theta of self.
+		self: returns `theta` of self.
 
-		self: returns \beta of self.
+		self: returns `beta` of self.
 
 		self: returns cond_mean of self.
-			Returns estimated conditional mean of z^T \theta conditional on X1
+			Returns estimated conditional mean of z^T `theta` conditional on X1
 
-		self: returns rho of self.
+		self: returns `rho` of self.
 			Return estimated correction ratio of conditional mean. 
 
 		"""
@@ -782,10 +781,10 @@ class _2SIR(object):
 			The number of sample on the second dataset.
 
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		Returns
 		-------
@@ -797,7 +796,7 @@ class _2SIR(object):
 
 	def CI_beta(self, n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95):
 		"""
-		Estimated confidence interval (CI) for the causal effect \beta
+		Estimated confidence interval (CI) for the causal effect `beta`
 
 		Parameters
 		----------
@@ -808,16 +807,16 @@ class _2SIR(object):
 			The number of sample on the second dataset.
 
 		Z1: {array-like, float} of shape (n_sample, n_features)
-			Samples of Z in the first dataset, where n_sample = n1 is the number of samples in the first dataset, and n_feature is the number of features.
+			Samples of Z in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset, and n_feature is the number of features.
 
 		X1: {array-like, float} of shape (n_sample)
-			Samples of X in the first dataset, where n_sample = n1 is the number of samples in the first dataset.
+			Samples of X in the first dataset, where ``n_sample = n1`` is the number of samples in the first dataset.
 
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		B_sample: int, default=1000
 			The number of bootstrap for estimate CI.
@@ -872,10 +871,10 @@ class _2SIR(object):
 			The number of samples in the second dataset.
 
 		LD_Z2: {array-like, float} of shape (n_features, n_features)
-			LD matrix of Z based on the second sample: LD_Z2 = np.dot(Z2.T, Z2)
+			LD matrix of Z based on the second sample: ``LD_Z2 = np.dot(Z2.T, Z2)``
 
 		cov_ZY2: {array-like, float} of shape (n_features, )
-			Matrix product of Z2 and Y2; cov_ZX2 = np.dot(Z2.T, Y2)
+			Matrix product of Z2 and Y2; ``cov_ZX2 = np.dot(Z2.T, Y2)``
 
 		Returns
 		-------
