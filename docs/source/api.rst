@@ -1,10 +1,8 @@
 API Reference
 =============
 
-.. toctree::
-   :maxdepth: 3
-
-   api
+.. contents::
+	:depth: 3
 
 nl_causal.linear_reg.sparse_reg
 -------------------------------

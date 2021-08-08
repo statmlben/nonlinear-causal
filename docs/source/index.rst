@@ -47,7 +47,7 @@ The proposed model is:
 
 
 🎯 What We Can Do
---------------
+-----------------
 
 - Estimate `marginal causal effect` :math:`\beta`
 - *Hypothesis testing (HT)* and *confidence interval (CI)* for marginal causal effect :math:`\beta`.
@@ -59,7 +59,7 @@ The proposed model is:
 .. </p>
 
 📒 Contents
---------
+-----------
 
 .. toctree::
    :maxdepth: 2
