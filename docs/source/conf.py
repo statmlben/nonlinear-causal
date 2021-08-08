@@ -20,7 +20,7 @@ import hachibee_sphinx_theme
 project = 'nonlinear-causal'
 copyright = '2021, Ben Dai, Chunlin Li, Haoran Xue'
 author = 'Ben Dai, Chunlin Li, Haoran Xue'
-
+master_doc = 'index'
 
 import sys, os
 # sys.path.append(os.path.abspath('../nl_causal'))
