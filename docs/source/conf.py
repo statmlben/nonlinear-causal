@@ -23,8 +23,9 @@ author = 'Ben Dai, Chunlin Li, Haoran Xue'
 
 
 import sys, os
-sys.path.append(os.path.abspath('../nl_causal'))
-sys.path.append('../..')
+# sys.path.append(os.path.abspath('../nl_causal'))
+# sys.path.append(os.path.abspath('../../nonlinear-causal/nl_causal'))
+# sys.path.append('../..')
 sys.path.append('..')
 # -- General configuration ---------------------------------------------------
 
