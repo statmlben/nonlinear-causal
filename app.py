@@ -11,6 +11,7 @@ from sklearn.preprocessing import power_transform, quantile_transform
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.3f}".format(x)})
 df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'CI': []}
+
 gene_files = ['A1BGJuly20_2SIR', 'ABCA7July20_2SIR', 'ABHD8July20_2SIR', 'ACER1July20_2SIR', 'ACP5July20_2SIR', 
 			'ACPTJuly20_2SIR', 'ACSBG2July20_2SIR', 'ACTL9July20_2SIR', 'ACTN4July20_2SIR', 'ADAMTS10July20_2SIR']
 
