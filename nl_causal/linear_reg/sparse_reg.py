@@ -1,3 +1,6 @@
+## Partial functions and docs are adapted from sklearn.linear_model._base.LinearModel
+## Author: Ben Dai
+
 from sklearn.base import RegressorMixin
 from sklearn.linear_model import Lasso, LinearRegression, LassoLarsIC, LassoCV
 from sklearn.linear_model._base import LinearModel
@@ -5,112 +8,112 @@ from sklearn.linear_model._coordinate_descent import LinearModelCV
 import numpy as np
 import pandas as pd
 
+
 class WLasso(RegressorMixin, LinearModel):
-	"""
+	"""	
 	Linear Model trained with Weighted L1 prior as regularizer (aka the weighted-Lasso)
 	The optimization objective for Lasso is::
 		(1 / (2 * n_samples)) * ||y - Xw||^2_2 + alpha * sum_{j=1}^d weight_j * |w_j|
 	Technically the Weighted Lasso model is optimizing the same objective function as
 	the Lasso with X = X / ada_weight[None,:].
-	
-	Parameters
-	----------
 
-	alpha : float, default=1.0
+	Parameters
+	===========
+	alpha: float, default=1.0
 		Constant that multiplies the L1 term. Defaults to 1.0.
 		``alpha = 0`` is equivalent to an ordinary least square, solved
 		by the :class:`LinearRegression` object. For numerical
 		reasons, using ``alpha = 0`` with the ``Lasso`` object is not advised.
 		Given this, you should use the :class:`LinearRegression` object.
-	
+
 	ada_weight: ndarray of shape (n_features,)
 		Weight that multiplies the L1 term for each coefficient. Defaults to 1.0.
-	
-	fit_intercept : bool, default=True
+
+	fit_intercept: bool, default=True
 		Whether to calculate the intercept for this model. If set
 		to False, no intercept will be used in calculations
 		(i.e. data is expected to be centered).
-	
-	normalize : bool, default=False
+
+	normalize: bool, default=False
 		This parameter is ignored when ``fit_intercept`` is set to False.
 		If True, the regressors X will be normalized before regression by
 		subtracting the mean and dividing by the l2-norm.
 		If you wish to standardize, please use
 		:class:`~sklearn.preprocessing.StandardScaler` before calling ``fit``
 		on an estimator with ``normalize=False``.
-	
-	precompute : 'auto', bool or array-like of shape (n_features, n_features),\
-				 default=False
+
+	precompute: 'auto', bool or array-like of shape (n_features, n_features),\
+					default=False
 		Whether to use a precomputed Gram matrix to speed up
 		calculations. If set to ``'auto'`` let us decide. The Gram
 		matrix can also be passed as argument. For sparse input
 		this option is always ``True`` to preserve sparsity.
-	
-	copy_X : bool, default=True
+
+	copy_X: bool, default=True
 		If ``True``, X will be copied; else, it may be overwritten.
-	
-	max_iter : int, default=1000
+
+	max_iter: int, default=1000
 		The maximum number of iterations.
-	
-	tol : float, default=1e-4
+
+	tol: float, default=1e-4
 		The tolerance for the optimization: if the updates are
 		smaller than ``tol``, the optimization code checks the
 		dual gap for optimality and continues until it is smaller
 		than ``tol``.
-	
-	warm_start : bool, default=False
+
+	warm_start: bool, default=False
 		When set to True, reuse the solution of the previous call to fit as
 		initialization, otherwise, just erase the previous solution.
 		See :term:`the Glossary <warm_start>`.
-	
-	positive : bool, default=False
+
+	positive: bool, default=False
 		When set to ``True``, forces the coefficients to be positive.
-	
-	random_state : int, RandomState instance, default=None
+
+	random_state: int, RandomState instance, default=None
 		The seed of the pseudo random number generator that selects a random
 		feature to update. Used when ``selection`` == 'random'.
 		Pass an int for reproducible output across multiple function calls.
 		See :term:`Glossary <random_state>`.
-	
-	selection : {'cyclic', 'random'}, default='cyclic'
+
+	selection: {'cyclic', 'random'}, default='cyclic'
 		If set to 'random', a random coefficient is updated every iteration
 		rather than looping over features sequentially by default. This
 		(setting to 'random') often leads to significantly faster convergence
 		especially when tol is higher than 1e-4.
-	
+
 	Attributes
-	----------
-	coef_ : ndarray of shape (n_features,) or (n_targets, n_features)
+	===========
+	coef_: ndarray of shape (n_features,) or (n_targets, n_features)
 		Parameter vector (w in the cost function formula).
-	
-	dual_gap_ : float or ndarray of shape (n_targets,)
+
+	dual_gap_: float or ndarray of shape (n_targets,)
 		Given param alpha, the dual gaps at the end of the optimization,
 		same shape as each observation of y.
-	
-	sparse_coef_ : sparse matrix of shape (n_features, 1) or \
+
+	sparse_coef_: sparse matrix of shape (n_features, 1) or \
 			(n_targets, n_features)
 		Readonly property derived from ``coef_``.
-	
-	intercept_ : float or ndarray of shape (n_targets,)
+
+	intercept_: float or ndarray of shape (n_targets,)
 		Independent term in decision function.
-	
-	n_iter_ : int or list of int
+
+	n_iter_: int or list of int
 		Number of iterations run by the coordinate descent solver to reach
 		the specified tolerance.
-	
+
 	Examples
-	--------
-	>>> from nl-causal import sparse_reg
+	==========
+	>>> from nl_causal import sparse_reg
 	>>> clf = sparse_reg.WLasso(alpha=0.1, ada_weight=[1.,0.])
 	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
 	>>> print(clf.coef_)
-	[0.        , 0.99999998]
+	[0.		, 0.99999998]
 	>>> print(clf.intercept_)
 	1.7881393254981504e-08
 	>>> clf = sparse_reg.WLasso(alpha=0.1, ada_weight=[0.,1.])
 	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
 	>>> print(clf.coef_)
-	[0.99999998 0.        ]
+	[0.99999998 0.		]
 	>>> print(clf.intercept_)
 	1.7881393254981504e-08
 	"""
@@ -134,10 +137,20 @@ class WLasso(RegressorMixin, LinearModel):
 
 	def fit(self, X, y, sample_weight=None):
 		"""
-		fit the linear coeff based on feature and summary statistics.
+		Fit linear model.
 
 		Parameters
-		----------
+		-----------
+		X: {array-like, sparse matrix} of shape (n_samples, n_features)
+			Training data
+		y: array-like of shape (n_samples,) or (n_samples, n_targets)
+			Target values. Will be cast to X's dtype if necessary
+		sample_weight: array-like of shape (n_samples,), default=None
+			Individual weights for each sample
+
+		Returns
+		--------
+		self: returns an instance of self.
 		"""
 		X, y = np.array(X), np.array(y)
 		n_feature = X.shape[1]
@@ -167,8 +180,8 @@ class SCAD(RegressorMixin, LinearModel):
 		(1 / (2 * n_samples)) * ||y - Xw||^2_2 + alpha * sum_{j=1}^d weight_j * SCAD(|w_j|)
 	
 	Parameters
-	----------
-	alpha : float, default=1.0
+	-----------
+	alpha: float, default=1.0
 		Constant that multiplies the SCAD penalty. Defaults to 1.0.
 		``alpha = 0`` is equivalent to an ordinary least square, solved
 		by the :class:`LinearRegression` object. For numerical
@@ -178,12 +191,12 @@ class SCAD(RegressorMixin, LinearModel):
 	ada_weight: ndarray of shape (n_features,)
 		Weight that multiplies the L1 term for each coefficient. Defaults to 1.0.
 	
-	fit_intercept : bool, default=True
+	fit_intercept: bool, default=True
 		Whether to calculate the intercept for this model. If set
 		to False, no intercept will be used in calculations
 		(i.e. data is expected to be centered).
 	
-	normalize : bool, default=False
+	normalize: bool, default=False
 		This parameter is ignored when ``fit_intercept`` is set to False.
 		If True, the regressors X will be normalized before regression by
 		subtracting the mean and dividing by the l2-norm.
@@ -191,71 +204,72 @@ class SCAD(RegressorMixin, LinearModel):
 		:class:`~sklearn.preprocessing.StandardScaler` before calling ``fit``
 		on an estimator with ``normalize=False``.
 	
-	precompute : 'auto', bool or array-like of shape (n_features, n_features),\
+	precompute: 'auto', bool or array-like of shape (n_features, n_features),\
 				 default=False
 		Whether to use a precomputed Gram matrix to speed up
 		calculations. If set to ``'auto'`` let us decide. The Gram
 		matrix can also be passed as argument. For sparse input
 		this option is always ``True`` to preserve sparsity.
 	
-	copy_X : bool, default=True
+	copy_X: bool, default=True
 		If ``True``, X will be copied; else, it may be overwritten.
 	
-	max_iter : int, default=1000
+	max_iter: int, default=1000
 		The maximum number of iterations.
 	
-	tol : float, default=1e-4
+	tol: float, default=1e-4
 		The tolerance for the optimization: if the updates are
 		smaller than ``tol``, the optimization code checks the
 		dual gap for optimality and continues until it is smaller
 		than ``tol``.
 	
-	warm_start : bool, default=False
+	warm_start: bool, default=False
 		When set to True, reuse the solution of the previous call to fit as
 		initialization, otherwise, just erase the previous solution.
 		See :term:`the Glossary <warm_start>`.
 	
-	positive : bool, default=False
+	positive: bool, default=False
 		When set to ``True``, forces the coefficients to be positive.
 	
-	random_state : int, RandomState instance, default=None
+	random_state: int, RandomState instance, default=None
 		The seed of the pseudo random number generator that selects a random
 		feature to update. Used when ``selection`` == 'random'.
 		Pass an int for reproducible output across multiple function calls.
 		See :term:`Glossary <random_state>`.
 	
-	selection : {'cyclic', 'random'}, default='cyclic'
+	selection: {'cyclic', 'random'}, default='cyclic'
 		If set to 'random', a random coefficient is updated every iteration
 		rather than looping over features sequentially by default. This
 		(setting to 'random') often leads to significantly faster convergence
 		especially when tol is higher than 1e-4.
+
 	Attributes
-	----------
-	coef_ : ndarray of shape (n_features,) or (n_targets, n_features)
+	-----------
+	coef_: ndarray of shape (n_features,) or (n_targets, n_features)
 		Parameter vector (w in the cost function formula).
 	
-	dual_gap_ : float or ndarray of shape (n_targets,)
+	dual_gap_: float or ndarray of shape (n_targets,)
 		Given param alpha, the dual gaps at the end of the optimization,
 		same shape as each observation of y.
 	
-	sparse_coef_ : sparse matrix of shape (n_features, 1) or \
+	sparse_coef_: sparse matrix of shape (n_features, 1) or \
 			(n_targets, n_features)
 		Readonly property derived from ``coef_``.
 	
-	intercept_ : float or ndarray of shape (n_targets,)
+	intercept_: float or ndarray of shape (n_targets,)
 		Independent term in decision function.
 	
-	n_iter_ : int or list of int
+	n_iter_: int or list of int
 		Number of iterations run by the coordinate descent solver to reach
 		the specified tolerance.
 	
 	Examples
-	--------
-	>>> from nl-causal import sparse_reg
+	---------
+	>>> from nl_causal import sparse_reg
 	>>> clf = sparse_reg.SCAD(alpha=0.1)
 	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
 	>>> print(clf.coef_)
-	[0.99999998 0.        ]
+	[0.99999998 0.		]
 	>>> print(clf.intercept_)
 	1.7881393254981504e-08
 	"""
@@ -280,10 +294,20 @@ class SCAD(RegressorMixin, LinearModel):
 
 	def fit(self, X, y, sample_weight=None):
 		"""
-		fit the linear coeff based on feature and summary statistics.
+		Fit linear model.
 
 		Parameters
-		----------
+		-----------
+		X: {array-like, sparse matrix} of shape (n_samples, n_features)
+			Training data
+		y: array-like of shape (n_samples,) or (n_samples, n_targets)
+			Target values. Will be cast to X's dtype if necessary
+		sample_weight: array-like of shape (n_samples,), default=None
+			Individual weights for each sample
+
+		Returns
+		--------
+		self: returns an instance of self.
 		"""
 		Wlasso_tmp = WLasso(alpha=self.alpha, ada_weight=self.ada_weight, fit_intercept=self.fit_intercept, 
 						   normalize=self.normalize, precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
@@ -308,6 +332,9 @@ class SCAD(RegressorMixin, LinearModel):
 			coef_old = Wlasso_tmp.coef_
 	
 	def grad_SCAD_(self, a=3.7):
+		"""
+		Compute first-order gradient of SCAD
+		"""
 		abs_coef = abs(self.coef_)
 		return self.alpha*(abs_coef <= self.alpha) + np.maximum(a*self.alpha - abs_coef, 0.) / (a - 1) * (abs_coef > self.alpha)
 
@@ -318,19 +345,19 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		(1 / (2 * n_samples)) * ||y - Xw||^2_2 + alpha * sum_{j=1}^d weight_j * SCAD(|w_j|)
 	
 	Parameters
-	----------
-	alphas : float, default=1.0
+	-----------
+	alphas: float, default=1.0
 		List of alphas where to compute the SCAD. default=np.arange(-3,3,.1)
 	
 	mask: ndarray of shape (n_features,); dtype = bool
 		Indicator to count the variable in L0 term. default = 'full'
 	
-	fit_intercept : bool, default=True
+	fit_intercept: bool, default=True
 		Whether to calculate the intercept for this model. If set
 		to False, no intercept will be used in calculations
 		(i.e. data is expected to be centered).
 	
-	normalize : bool, default=False
+	normalize: bool, default=False
 		This parameter is ignored when ``fit_intercept`` is set to False.
 		If True, the regressors X will be normalized before regression by
 		subtracting the mean and dividing by the l2-norm.
@@ -338,68 +365,68 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		:class:`~sklearn.preprocessing.StandardScaler` before calling ``fit``
 		on an estimator with ``normalize=False``.
 	
-	precompute : 'auto', bool or array-like of shape (n_features, n_features),\
+	precompute: 'auto', bool or array-like of shape (n_features, n_features),\
 				 default=False
 		Whether to use a precomputed Gram matrix to speed up
 		calculations. If set to ``'auto'`` let us decide. The Gram
 		matrix can also be passed as argument. For sparse input
 		this option is always ``True`` to preserve sparsity.
 	
-	copy_X : bool, default=True
+	copy_X: bool, default=True
 		If ``True``, X will be copied; else, it may be overwritten.
 	
-	max_iter : int, default=1000
+	max_iter: int, default=1000
 		The maximum number of iterations.
 	
-	tol : float, default=1e-4
+	tol: float, default=1e-4
 		The tolerance for the optimization: if the updates are
 		smaller than ``tol``, the optimization code checks the
 		dual gap for optimality and continues until it is smaller
 		than ``tol``.
 	
-	warm_start : bool, default=False
+	warm_start: bool, default=False
 		When set to True, reuse the solution of the previous call to fit as
 		initialization, otherwise, just erase the previous solution.
 		See :term:`the Glossary <warm_start>`.
 	
-	positive : bool, default=False
+	positive: bool, default=False
 		When set to ``True``, forces the coefficients to be positive.
 	
-	random_state : int, RandomState instance, default=None
+	random_state: int, RandomState instance, default=None
 		The seed of the pseudo random number generator that selects a random
 		feature to update. Used when ``selection`` == 'random'.
 		Pass an int for reproducible output across multiple function calls.
 		See :term:`Glossary <random_state>`.
 	
-	selection : {'cyclic', 'random'}, default='cyclic'
+	selection: {'cyclic', 'random'}, default='cyclic'
 		If set to 'random', a random coefficient is updated every iteration
 		rather than looping over features sequentially by default. This
 		(setting to 'random') often leads to significantly faster convergence
 		especially when tol is higher than 1e-4.
 	
 	Attributes
-	----------
+	-----------
 	
-	coef_ : ndarray of shape (n_features,) or (n_targets, n_features)
+	coef_: ndarray of shape (n_features,) or (n_targets, n_features)
 		Parameter vector (w in the cost function formula).
 	
-	dual_gap_ : float or ndarray of shape (n_targets,)
+	dual_gap_: float or ndarray of shape (n_targets,)
 		Given param alpha, the dual gaps at the end of the optimization,
 		same shape as each observation of y.
 	
-	sparse_coef_ : sparse matrix of shape (n_features, 1) or \
+	sparse_coef_: sparse matrix of shape (n_features, 1) or \
 			(n_targets, n_features)
 		Readonly property derived from ``coef_``.
 	
-	intercept_ : float or ndarray of shape (n_targets,)
+	intercept_: float or ndarray of shape (n_targets,)
 		Independent term in decision function.
 	
-	n_iter_ : int or list of int
+	n_iter_: int or list of int
 		Number of iterations run by the coordinate descent solver to reach
 		the specified tolerance.
 	
 	Examples
-	--------
+	---------
 	>>> from nl_causal import sparse_reg
 	>>> clf = sparse_reg.SCAD_IC(alphas=[.001, .01, .1, 1.])
 	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
@@ -408,14 +435,14 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 	>>> print(clf.intercept_)
 	1.7881396363605973e-10
 	>>> clf.selection_summary()
-   		alpha 	model      criteria           mse
+   		alpha 	model	  criteria		   mse
 	0  	0.001   [0]  	3.663001e-01  2.131628e-20
 	1  	0.010   [0]  	3.758041e-01  2.131628e-18
 	2  	0.100   [0]  	1.326204e+00  2.131628e-16
-	3  	1.000    []  	3.002400e+15  6.666667e-01
+	3  	1.000	[]  	3.002400e+15  6.666667e-01
 	"""
 
-	def __init__(self, *, criterion='bic', alphas=10**np.arange(-3,3,.1), ada_weight=1.0, fit_intercept=True, normalize=False,
+	def __init__(self, alphas, *, criterion='bic', ada_weight=1.0, fit_intercept=True, normalize=False,
 				precompute=False, copy_X=True, max_iter=1000, var_res = None,
 				tol=1e-4, warm_start=False, positive=False,
 				random_state=None, selection='cyclic'):
@@ -437,6 +464,23 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		self.fit_flag = False
 
 	def fit(self, X, y, sample_weight=None):
+		"""
+		Fit linear model.
+
+		Parameters
+		-----------
+
+		X: {array-like, sparse matrix} of shape (n_samples, n_features)
+			Training data
+		y: array-like of shape (n_samples,) or (n_samples, n_targets)
+			Target values. Will be cast to X's dtype if necessary
+		sample_weight: array-like of shape (n_samples,), default=None
+			Individual weights for each sample
+
+		Returns
+		--------
+		self: returns an instance of self.
+		"""
 		X, y = np.array(X), np.array(y)
 		n_sample, n_feature = X.shape
 		eps64 = np.finfo('float64').eps
@@ -489,6 +533,14 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		return {'multioutput': False}
 	
 	def selection_summary(self):
+		"""
+		A summary for the result of model selection of the sparse regression in Stage 2.
+
+		Returns
+		--------
+		df: dataframe
+			dataframe with columns: "candidate_model", "criteria", and "mse".
+		"""
 		d = {'alpha': self.alphas, 'model': self.model_lst_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
 		df = pd.DataFrame(data=d)
 		# print(df)
@@ -506,18 +558,18 @@ class L0_IC(LassoLarsIC):
 	Ks: range of int, default=range(1,10)
 		Number of nonzero coef to be tuned.
 	
-	alphas : float, default=1.0
+	alphas: float, default=1.0
 		List of alphas where to compute the SCAD. default=np.arange(-3,3,.1)
 	
 	mask: ndarray of shape (n_features,); dtype = bool
 		Indicator to count the variable in L0 term. default = 'full'
 	
-	fit_intercept : bool, default=True
+	fit_intercept: bool, default=True
 		Whether to calculate the intercept for this model. If set
 		to False, no intercept will be used in calculations
 		(i.e. data is expected to be centered).
 	
-	normalize : bool, default=False
+	normalize: bool, default=False
 		This parameter is ignored when ``fit_intercept`` is set to False.
 		If True, the regressors X will be normalized before regression by
 		subtracting the mean and dividing by the l2-norm.
@@ -525,40 +577,40 @@ class L0_IC(LassoLarsIC):
 		:class:`~sklearn.preprocessing.StandardScaler` before calling ``fit``
 		on an estimator with ``normalize=False``.
 	
-	precompute : 'auto', bool or array-like of shape (n_features, n_features),\
+	precompute: 'auto', bool or array-like of shape (n_features, n_features),\
 				 default=False
 		Whether to use a precomputed Gram matrix to speed up
 		calculations. If set to ``'auto'`` let us decide. The Gram
 		matrix can also be passed as argument. For sparse input
 		this option is always ``True`` to preserve sparsity.
 	
-	copy_X : bool, default=True
+	copy_X: bool, default=True
 		If ``True``, X will be copied; else, it may be overwritten.
 	
-	max_iter : int, default=1000
+	max_iter: int, default=1000
 		The maximum number of iterations.
 	
-	tol : float, default=1e-4
+	tol: float, default=1e-4
 		The tolerance for the optimization: if the updates are
 		smaller than ``tol``, the optimization code checks the
 		dual gap for optimality and continues until it is smaller
 		than ``tol``.
 	
-	warm_start : bool, default=False
+	warm_start: bool, default=False
 		When set to True, reuse the solution of the previous call to fit as
 		initialization, otherwise, just erase the previous solution.
 		See :term:`the Glossary <warm_start>`.
 	
-	positive : bool, default=False
+	positive: bool, default=False
 		When set to ``True``, forces the coefficients to be positive.
 	
-	random_state : int, RandomState instance, default=None
+	random_state: int, RandomState instance, default=None
 		The seed of the pseudo random number generator that selects a random
 		feature to update. Used when ``selection`` == 'random'.
 		Pass an int for reproducible output across multiple function calls.
 		See :term:`Glossary <random_state>`.
 	
-	selection : {'cyclic', 'random'}, default='cyclic'
+	selection: {'cyclic', 'random'}, default='cyclic'
 		If set to 'random', a random coefficient is updated every iteration
 		rather than looping over features sequentially by default. This
 		(setting to 'random') often leads to significantly faster convergence
@@ -567,21 +619,21 @@ class L0_IC(LassoLarsIC):
 	Attributes
 	----------
 	
-	coef_ : ndarray of shape (n_features,) or (n_targets, n_features)
+	coef_: ndarray of shape (n_features,) or (n_targets, n_features)
 		Parameter vector (w in the cost function formula).
 	
-	dual_gap_ : float or ndarray of shape (n_targets,)
+	dual_gap_: float or ndarray of shape (n_targets,)
 		Given param alpha, the dual gaps at the end of the optimization,
 		same shape as each observation of y.
 	
-	sparse_coef_ : sparse matrix of shape (n_features, 1) or \
+	sparse_coef_: sparse matrix of shape (n_features, 1) or \
 			(n_targets, n_features)
 		Readonly property derived from ``coef_``.
 	
-	intercept_ : float or ndarray of shape (n_targets,)
+	intercept_: float or ndarray of shape (n_targets,)
 		Independent term in decision function.
 	
-	n_iter_ : int or list of int
+	n_iter_: int or list of int
 		Number of iterations run by the coordinate descent solver to reach
 		the specified tolerance.
 	
@@ -595,12 +647,12 @@ class L0_IC(LassoLarsIC):
 	>>> print(clf.intercept_)
 	2.220446049250313e-16
 	>>> clf.selection_summary()
-		model     	criteria           mse
-	0    (0,)  		3.662041e-01  3.286920e-32
-	1    ()  		3.002400e+15  6.666667e-01
+		model	 	criteria		   mse
+	0	(0,)  		3.662041e-01  3.286920e-32
+	1	()  		3.002400e+15  6.666667e-01
 	"""
 
-	def __init__(self, criterion='bic', *, Ks=range(10), alphas=10**np.arange(-3,3,.1), ada_weight=True, fit_intercept=True, normalize=False,
+	def __init__(self, alphas, criterion='bic', *, Ks=range(10), ada_weight=True, fit_intercept=True, normalize=False,
 				precompute=False, copy_X=True, max_iter=1000, verbose=False, eps=np.finfo(float).eps,
 				tol=1e-4, warm_start=False, positive=False, var_res = None, refit = True, find_best=True,
 				random_state=None, selection='cyclic'):
@@ -628,6 +680,22 @@ class L0_IC(LassoLarsIC):
 		self.mse_lst_ = []
 
 	def fit(self, X, y, sample_weight=None):
+		"""
+		Fit linear model.
+
+		Parameters
+		----------
+		X: {array-like, sparse matrix} of shape (n_samples, n_features)
+			Training data
+		y: array-like of shape (n_samples,) or (n_samples, n_targets)
+			Target values. Will be cast to X's dtype if necessary
+		sample_weight: array-like of shape (n_samples,), default=None
+			Individual weights for each sample
+
+		Returns
+		-------
+		self: returns an instance of self.
+		"""
 		X, y = np.array(X), np.array(y)
 		n_sample, n_feature = X.shape
 		eps64 = np.finfo('float64').eps
@@ -719,7 +787,7 @@ class L0_IC(LassoLarsIC):
 		A summary for the result of model selection of the sparse regression in Stage 2.
 
 		Returns
-		-------
+		--------
 
 		df: dataframe
 			dataframe with columns: "candidate_model", "criteria", and "mse".
