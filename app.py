@@ -8,18 +8,24 @@ from sklearn.preprocessing import StandardScaler
 from scipy import stats
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import power_transform, quantile_transform
-np.random.seed(0)
-np.set_printoptions(formatter={'float': lambda x: "{0:0.3f}".format(x)})
-df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'CI': []}
-gene_files = ['A1BGJuly20_2SIR', 'ABCA7July20_2SIR', 'ABHD8July20_2SIR', 'ACER1July20_2SIR', 'ACP5July20_2SIR', 
-			'ACPTJuly20_2SIR', 'ACSBG2July20_2SIR', 'ACTL9July20_2SIR', 'ACTN4July20_2SIR', 'ADAMTS10July20_2SIR']
+import random
+from os import listdir
+from os.path import isfile, join, isdir
 
-for file_tmp in gene_files:
+mypath = '/home/ben/GenesToAnalyze'
+gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
+# gene_folders = random.sample(gene_folders, 50)
+
+np.random.seed(0)
+np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
+df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'CI': []}
+
+for folder_tmp in gene_folders:
 # for file_tmp in ['ABHD8July20_2SIR']:
-	gene_code = file_tmp.replace('July20_2SIR', '')
+	gene_code = folder_tmp.replace('July20_2SIR', '')
 	print('\n##### Causal inference of %s #####' %gene_code)
 	## load data
-	dir_name = '~/GenesToAnalyze/'+file_tmp
+	dir_name = mypath+'/'+folder_tmp
 	sum_stat = pd.read_csv(dir_name+"/sum_stat.csv", sep=' ', index_col=0)
 	gene_exp = -pd.read_csv(dir_name+"/gene_exp.csv", sep=' ', index_col=0)
 	snp = pd.read_csv(dir_name+"/snp.csv", sep=' ', index_col=0)
@@ -109,7 +115,7 @@ for file_tmp in gene_files:
 	df['CI'].append(SIR.CI)
 
 df = pd.DataFrame.from_dict(df)
-
+df.to_csv(index=False)
 # ## stage_two = False: 1min 4s
 # ## stage_two = True: 8min 36s
 

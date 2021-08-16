@@ -376,6 +376,7 @@ class _2SLS(object):
 				mid_mat = self.theta.dot(reduced_cov).dot(np.linalg.inv(np.dot(Z1.T, Z1) / n1)).dot(reduced_cov).dot(self.theta)
 				var_beta = omega_x * var_res + ratio * self.beta**2 * omega_x**2 * var_x * mid_mat
 			# CI
+			var_beta = max(np.finfo('float32').eps, var_beta)
 			delta_tmp = abs(norm.ppf((1. - level)/2)) * np.sqrt(var_beta) / np.sqrt(n2)
 			beta_low = self.beta - delta_tmp
 			beta_high = self.beta + delta_tmp
