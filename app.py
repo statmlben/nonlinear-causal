@@ -11,17 +11,44 @@ from sklearn.preprocessing import power_transform, quantile_transform
 import random
 from os import listdir
 from os.path import isfile, join, isdir
+import statsmodels.api as sm
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 mypath = '/home/ben/GenesToAnalyze'
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
-# gene_folders = random.sample(gene_folders, 50)
+# gene_folders = random.sample(gene_folders, 10)
+
+def calculate_vif_(X, thresh=5.0, verbose=0):
+	cols = X.columns
+	variables = list(range(X.shape[1]))
+	dropped = True
+	while dropped:
+		dropped = False
+		vif = [variance_inflation_factor(X.iloc[:, variables].values, ix)
+				for ix in range(X.iloc[:, variables].shape[1])]
+
+		maxloc = vif.index(max(vif))
+		if max(vif) > thresh:
+			if verbose:
+				print('dropping \'' + X.iloc[:, variables].columns[maxloc] +
+						'\' at index: ' + str(maxloc))
+			del variables[maxloc]
+			dropped = True
+	if verbose:
+		print('Remaining variables:')
+		print(X.columns[variables])
+	cols_new = cols[variables]
+	return X.iloc[:, variables], cols_new
 
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'CI': []}
+# NMNAT3July20_2SIR
 
 for folder_tmp in gene_folders:
 # for file_tmp in ['ABHD8July20_2SIR']:
+	if 'July20_2SIR' not in folder_tmp:
+		continue
 	gene_code = folder_tmp.replace('July20_2SIR', '')
 	print('\n##### Causal inference of %s #####' %gene_code)
 	## load data
@@ -29,10 +56,18 @@ for folder_tmp in gene_folders:
 	sum_stat = pd.read_csv(dir_name+"/sum_stat.csv", sep=' ', index_col=0)
 	gene_exp = -pd.read_csv(dir_name+"/gene_exp.csv", sep=' ', index_col=0)
 	snp = pd.read_csv(dir_name+"/snp.csv", sep=' ', index_col=0)
+	if not all(sum_stat.index == snp.columns):
+		print('The cols in sum_stat is not corresponding to snp, we rename the sum_stat!')
+		sum_stat.index = snp.columns
+	## remove the collinear features
+	snp, valid_cols = calculate_vif_(snp)
+	sum_stat = sum_stat.loc[valid_cols]
 	## n1 and n2 is pre-given
 	n1, n2, p = len(gene_exp), 54162, snp.shape[1]
 	LD_Z1, cov_ZX1 = np.dot(snp.values.T, snp.values), np.dot(snp.values.T, gene_exp.values.flatten())
 	LD_Z2, cov_ZY2 = LD_Z1/n1*n2, sum_stat.values.flatten()*n2
+	# LD_Z1 = LD_Z1 + 0. * np.finfo(np.float32).eps * np.eye(p)
+	# LD_Z2 = LD_Z2 + 0. * np.finfo(np.float32).eps * np.eye(p)
 
 	Ks = range(int(p/2))
 	## 2SLS
@@ -59,7 +94,7 @@ for folder_tmp in gene_folders:
 	df['method'].append('2SLS')
 	df['p-value'].append(LS.p_value)
 	df['beta'].append(LS.beta)
-	df['CI'].append(LS.CI)
+	df['CI'].append(list(LS.CI))
 
 
 	## PT-2SLS
@@ -90,8 +125,7 @@ for folder_tmp in gene_folders:
 	df['method'].append('PT-2SLS')
 	df['p-value'].append(PT_LS.p_value)
 	df['beta'].append(PT_LS.beta)
-	df['CI'].append(PT_LS.CI)
-
+	df['CI'].append(list(PT_LS.CI))
 
 	## 2SIR
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
@@ -107,30 +141,15 @@ for folder_tmp in gene_folders:
 	print('2SIR beta: %.3f' %SIR.beta)
 	print('p-value based on 2SIR: %.5f' %SIR.p_value)
 	print('CI based on 2SIR: %s' %(SIR.CI))
+			
 	## save the record
 	df['gene'].append(gene_code)
 	df['method'].append('2SIR')
 	df['p-value'].append(SIR.p_value)
 	df['beta'].append(SIR.beta)
-	df['CI'].append(SIR.CI)
+	df['CI'].append(list(SIR.CI))
 
 df = pd.DataFrame.from_dict(df)
-df.to_csv(index=False)
+df.to_csv('result.csv', index=False)
 # ## stage_two = False: 1min 4s
 # ## stage_two = True: 8min 36s
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-sns.set_theme(style="whitegrid")
-
-# Draw a nested barplot by species and sex
-g = sns.catplot(
-    data=df, kind="bar",
-    x="gene", y="p-value", hue="method", palette="dark", alpha=.5, height=6, legend=False
-)
-plt.axhline(.05, ls='--', color='r', alpha=.8)
-g.despine(left=True)
-g.set_axis_labels("gene", "p-value")
-# g.legend.set_title("")
-plt.legend(loc='upper right')
-plt.show()

@@ -833,14 +833,20 @@ class _2SIR(object):
 			self.fit_theta(Z1, X1)
 			self.fit_beta(LD_Z2, cov_ZY2)
 		var_eps = self.est_var_res(n2, LD_Z2, cov_ZY2)
+		if var_eps <= 0:
+			print('We get negative variance for eps: %.3f, and we correct it as eps.' %var_eps)
+			var_eps = np.finfo('float32').eps
 		## compute the variance of beta
 		invalid_iv = np.where(abs(self.alpha) > np.finfo('float32').eps)[0]
 		select_mat_inv = np.linalg.inv(LD_Z2[invalid_iv[:,None], invalid_iv])
 		select_cov = LD_Z2[:,invalid_iv].dot(select_mat_inv).dot(LD_Z2[invalid_iv,:])
 		mid_cov = (LD_Z2 - select_cov) / n2
-		omega_x = 1. / (self.theta.dot(mid_cov).dot(self.theta.T))
+		omega_x = 1. / ((self.theta.dot(mid_cov).dot(self.theta.T)) + np.finfo('float32').eps)
 		var_beta = var_eps * omega_x  + np.finfo('float64').eps
 		## resampling
+		if var_beta <= 0:
+			print('We get negative variance for beta: %.3f, and we correct it as eps.' %var_beta)
+			var_beta = np.finfo('float32').eps
 		zeta = np.sqrt(var_beta)*np.random.randn(B_sample)
 		eta, beta_B = [], []
 		left_tmp = np.sqrt(n2/n1)*self.beta*omega_x*self.theta.dot(mid_cov)
@@ -883,9 +889,15 @@ class _2SIR(object):
 		"""
 		if self.fit_flag:
 			var_eps = self.est_var_res(n2, LD_Z2, cov_ZY2)
+			if var_eps < 0:
+				print('variance of eps is negative: %.3f, correct it as np.eps.' %var_eps)
+				var_eps = np.finfo('float32').eps
 			if np.max(abs(self.alpha)) < np.finfo('float32').eps:
-				var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T) + np.finfo('float32').eps
+				var_beta = var_eps / self.theta.dot(LD_Z2).dot(self.theta.T)
 				## we only test for absolute value
+				if var_beta < 0:
+					print('variance of beta is negative: %.3f, correct it as np.eps.' %var_beta)
+					var_beta = np.finfo('float32').eps
 				Z = abs(self.beta) / np.sqrt(var_beta)
 				self.p_value = 1. - norm.cdf(Z)  + norm.cdf(-Z)
 			else:
