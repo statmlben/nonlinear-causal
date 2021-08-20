@@ -45,8 +45,8 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'CI': []}
 # NMNAT3July20_2SIR
 
-for folder_tmp in gene_folders:
-# for file_tmp in ['ABHD8July20_2SIR']:
+# for folder_tmp in gene_folders:
+for folder_tmp in ['APOEJuly20_2SIR', 'TOMM40July20_2SIR']:
 	if 'July20_2SIR' not in folder_tmp:
 		continue
 	gene_code = folder_tmp.replace('July20_2SIR', '')
@@ -56,6 +56,9 @@ for folder_tmp in gene_folders:
 	sum_stat = pd.read_csv(dir_name+"/sum_stat.csv", sep=' ', index_col=0)
 	gene_exp = -pd.read_csv(dir_name+"/gene_exp.csv", sep=' ', index_col=0)
 	snp = pd.read_csv(dir_name+"/snp.csv", sep=' ', index_col=0)
+	## exclude the gene with nan in the dataset
+	if sum_stat.isnull().sum().sum() + snp.isnull().sum().sum() + gene_exp.isnull().sum().sum() > 0:
+		continue
 	if not all(sum_stat.index == snp.columns):
 		print('The cols in sum_stat is not corresponding to snp, we rename the sum_stat!')
 		sum_stat.index = snp.columns
@@ -130,7 +133,7 @@ for folder_tmp in gene_folders:
 	## 2SIR
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
 					Ks=Ks, max_iter=50000, refit=False, find_best=False)
-	SIR = _2SIR(sparse_reg=None, data_in_slice=0.1*n1)
+	SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
 	## Stage-1 fit theta
 	SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
 	## Stage-2 fit beta
@@ -150,6 +153,7 @@ for folder_tmp in gene_folders:
 	df['CI'].append(list(SIR.CI))
 
 df = pd.DataFrame.from_dict(df)
-df.to_csv('result.csv', index=False)
+# df.to_csv('result.csv', index=False)
+
 # ## stage_two = False: 1min 4s
 # ## stage_two = True: 8min 36s
