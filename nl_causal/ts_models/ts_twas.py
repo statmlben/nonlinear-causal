@@ -868,7 +868,7 @@ class _2SIR(object):
 		self.CI = np.array([beta_low, beta_up])
 
 
-	def test_effect(self, n2, LD_Z2, cov_ZY2):
+	def test_effect(self, n2, LD_Z2, cov_ZY2, ):
 		"""
 		Causal inference for the marginal causal effect.
 

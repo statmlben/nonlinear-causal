@@ -42,7 +42,7 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
-df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'CI': []}
+df = {'gene': [], 'p-value': [], 'beta': [], 'method': []}
 # NMNAT3July20_2SIR
 
 for folder_tmp in gene_folders:
@@ -83,21 +83,13 @@ for folder_tmp in gene_folders:
 	LS.fit_beta(LD_Z2, cov_ZY2, n2)
 	## produce p_value and CI for beta
 	LS.test_effect(n2, LD_Z2, cov_ZY2)
-	if LS.beta > 0:
-		LS.CI_beta(n1=n1, n2=n2, Z1=snp.values, X1=gene_exp.values.flatten(), LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
-	else:
-		LS.theta = -LS.theta
-		LS.beta = -LS.beta
-		LS.CI_beta(n1=n1, n2=n2, Z1=-snp.values, X1=gene_exp.values.flatten(), LD_Z2=LD_Z2, cov_ZY2=-cov_ZY2)
 	print('LS beta: %.3f' %LS.beta)
 	print('p-value based on 2SLS: %.5f' %LS.p_value)
-	print('CI based on 2SLS: %s' %(LS.CI))
 	## save the record
 	df['gene'].append(gene_code)
 	df['method'].append('2SLS')
 	df['p-value'].append(LS.p_value)
 	df['beta'].append(LS.beta)
-	df['CI'].append(list(LS.CI))
 
 
 	## PT-2SLS
@@ -112,23 +104,16 @@ for folder_tmp in gene_folders:
 	PT_LS.fit_beta(LD_Z2, cov_ZY2, n2)
 	## produce p-value and CI for beta
 	PT_LS.test_effect(n2, LD_Z2, cov_ZY2)
-	if PT_LS.beta > 0:
-		PT_LS.CI_beta(n1=n1, n2=n2, Z1=snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
-	else:
-		PT_LS.theta = -PT_LS.theta
-		PT_LS.beta = -PT_LS.beta
-		PT_LS.CI_beta(n1=n1, n2=n2, Z1=-snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=-cov_ZY2)
+
 	# gene_exp.values.flatten()
 	PT_LS.CI_beta(n1, n2, Z1=snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
 	print('PT-LS beta: %.3f' %PT_LS.beta)
 	print('p-value based on PT-2SLS: %.5f' %PT_LS.p_value)
-	print('CI based on 2SLS: %s' %(PT_LS.CI))
 	## save the record
 	df['gene'].append(gene_code)
 	df['method'].append('PT-2SLS')
 	df['p-value'].append(PT_LS.p_value)
 	df['beta'].append(PT_LS.beta)
-	df['CI'].append(list(PT_LS.CI))
 
 	## 2SIR
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
@@ -140,20 +125,43 @@ for folder_tmp in gene_folders:
 	SIR.fit_beta(LD_Z2, cov_ZY2, n2)
 	## generate CI for beta
 	SIR.test_effect(n2, LD_Z2, cov_ZY2)
-	SIR.CI_beta(n1, n2, Z1=snp.values, X1=gene_exp.values.flatten(), LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
 	print('2SIR beta: %.3f' %SIR.beta)
 	print('p-value based on 2SIR: %.5f' %SIR.p_value)
-	print('CI based on 2SIR: %s' %(SIR.CI))
 			
 	## save the record
 	df['gene'].append(gene_code)
 	df['method'].append('2SIR')
 	df['p-value'].append(SIR.p_value)
 	df['beta'].append(SIR.beta)
-	df['CI'].append(list(SIR.CI))
+
+
+	## Comb-2SIR
+	data_in_slice_lst = [.1*n1, .2*n1, .3*n1, .4*n1, .5*n1]
+	comb_pvalue, comb_beta = [], []
+	for data_in_slice_tmp in data_in_slice_lst:
+		reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
+						Ks=Ks, max_iter=50000, refit=False, find_best=False)
+		SIR = _2SIR(sparse_reg=None, data_in_slice=data_in_slice_tmp)
+		## Stage-1 fit theta
+		SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
+		## Stage-2 fit beta
+		SIR.fit_beta(LD_Z2, cov_ZY2, n2)
+		## generate CI for beta
+		SIR.test_effect(n2, LD_Z2, cov_ZY2)
+		comb_beta.append(SIR.beta)
+		comb_pvalue.append(SIR.p_value)
+	correct_pvalue = min(len(data_in_slice_lst)*np.min(comb_pvalue), 1.0)
+	print('Comb-2SIR beta: %.3f' %np.mean(comb_beta))
+	print('p-value based on Comb-2SIR: %.5f' %correct_pvalue)
+			
+	## save the record
+	df['gene'].append(gene_code)
+	df['method'].append('Comb-2SIR')
+	df['p-value'].append(correct_pvalue)
+	df['beta'].append(np.mean(comb_beta))
 
 df = pd.DataFrame.from_dict(df)
-# df.to_csv('result.csv', index=False)
+df.to_csv('result.csv', index=False)
 
 # ## stage_two = False: 1min 4s
 # ## stage_two = True: 8min 36s

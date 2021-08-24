@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv("result.csv") 
+df = pd.read_csv("aug24_ben_test.csv") 
 num_gen = df.shape[0]
 level = 0.05 / num_gen
 ## refine the genes
@@ -27,7 +27,7 @@ g = sns.catplot(
 )
 plt.axhline(-np.log10(level), ls='--', color='r', alpha=.8)
 g.despine(left=True)
-g.set_axis_labels("gene", "p-value")
+g.set_axis_labels("gene", "-log(p-value)")
 plt.legend(loc='upper right')
 # plt.savefig('result.png', bbox_inches='tight')
 plt.show()
