@@ -702,12 +702,12 @@ class _2SIR(object):
 
 		"""
 		X_sir = self.sir.transform(Z1).flatten()
-		self.cond_mean.fit(X1=X1[:,None], y=X_sir)
+		self.cond_mean.fit(X=X1[:,None], y=X_sir)
 		pred_mean = self.cond_mean.predict(X1[:,None])
 		LD_Z_sum = np.sum(Z1[:, :, np.newaxis] * Z1[:, np.newaxis, :], axis=0)
 		cross_mean_Z = np.sum(Z1 * pred_mean[:,None], axis=0)
 		self.rho = (self.theta.dot(LD_Z_sum).dot(self.theta)) / np.dot( self.theta, cross_mean_Z )
-		self.fit_link = True
+		self.if_fit_link = True
 
 	def fit(self, Z1, X1, LD_Z2, cov_ZY2, n2):
 		"""

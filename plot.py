@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv("aug24_ben_test.csv") 
+df = pd.read_csv("aug24_ben_test.csv")
 num_gen = df.shape[0]
 level = 0.05 / num_gen
 ## refine the genes
