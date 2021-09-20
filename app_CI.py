@@ -69,7 +69,8 @@ mypath = '/home/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
-df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'CI': []}
+df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 
+		'CI': [], 'Lower': [], 'Upper': []}
 
 for gene_code in interest_genes:
 	folder_tmp = gene_code + 'July20_2SIR'
@@ -122,7 +123,8 @@ for gene_code in interest_genes:
 	df['p-value'].append(LS.p_value)
 	df['beta'].append(LS.beta)
 	df['CI'].append(list(LS.CI))
-
+	df['Lower'].append(LS.CI[0])
+	df['Upper'].append(LS.CI[1])
 
 	## PT-2SLS
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
@@ -153,6 +155,8 @@ for gene_code in interest_genes:
 	df['p-value'].append(PT_LS.p_value)
 	df['beta'].append(PT_LS.beta)
 	df['CI'].append(list(PT_LS.CI))
+	df['Lower'].append(PT_LS.CI[0])
+	df['Upper'].append(PT_LS.CI[1])
 
 	## 2SIR
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
@@ -176,6 +180,43 @@ for gene_code in interest_genes:
 	df['p-value'].append(SIR.p_value)
 	df['beta'].append(SIR.beta)
 	df['CI'].append(list(SIR.CI))
+	df['Lower'].append(SIR.CI[0])
+	df['Upper'].append(SIR.CI[1])
+
 
 df = pd.DataFrame.from_dict(df)
-# df.to_csv('result.csv', index=False)
+df.to_csv('CI_result.csv', index=False)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+sns.set_theme(style="whitegrid")
+ax = sns.pointplot(x="beta", y="gene", hue='method', data=df, 
+			join=False, palette="Set1", ci=df['CI'])
+
+# ax = sns.pointplot(x="gene", y="Lower", hue='method', data=df, 
+# 			join=False, palette="Set1", ci=df['CI'])
+
+# ax = sns.pointplot(x="gene", y="Upper", hue='method', data=df, 
+# 			join=False, palette="Set1", ci=df['CI'])
+
+
+f, ax = plt.subplots()
+sns.despine(bottom=True, left=True)
+
+# Show each observation with a scatterplot
+sns.stripplot(x="beta", y="gene", hue="method",
+              data=df, dodge=True, alpha=.25, zorder=1)
+
+# Show the conditional means, aligning each pointplot in the
+# center of the strips by adjusting the width allotted to each
+# category (.8 by default) by the number of hue levels
+sns.pointplot(x="beta", y="gene", hue="method",
+              data=df, dodge=.8 - .8 / 3,
+              join=False, palette="dark",
+              markers="d", scale=.75, ci=None)
+
+# Improve the legend
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(handles[3:], labels[3:], title="method",
+          handletextpad=0, columnspacing=1,
+          loc="lower right", ncol=3, frameon=True)

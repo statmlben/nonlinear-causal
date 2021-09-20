@@ -12,18 +12,18 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
-n, p = 10000, 50
+n, p = 5000, 50
 for beta0 in [.05]:
 # for beta0 in [.00, 1/np.sqrt(n), .05, .10, .15]:
 	beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 	len_LS, len_RT_LS, len_SIR = [], [], []
 	cover_LS, cover_RT_LS, cover_SIR = 0, 0, 0
-	n_sim = 1000
+	n_sim = 100
 	for i in range(n_sim):
 		theta0 = np.random.randn(p)
 		# theta0 = np.ones(p)
 		theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-		Z, X, y, phi = sim(n, p, theta0, beta0, case='inverse', feat='normal')
+		Z, X, y, phi = sim(n, p, theta0, beta0, case='cube-root', feat='normal')
 		if abs(X).max() > 1e+8:
 			i = i - 1
 			continue
@@ -69,7 +69,7 @@ for beta0 in [.05]:
 		## Stage-2 fit beta
 		RT_LS.fit_beta(LD_Z2, cov_ZY2, n2)
 		## generate CI for beta
-		RT_LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, level=.95)
+		RT_LS.CI_beta(n1, n2, Z1, RT_X1, LD_Z2, cov_ZY2, level=.95)
 		RT_LS.CI[0] = max(RT_LS.CI[0], 0.)
 		len_tmp = (RT_LS.CI[1] - RT_LS.CI[0])*y_scale
 		if ( (beta0 >= RT_LS.CI[0]*y_scale) and (beta0 <= RT_LS.CI[1]*y_scale) ):
@@ -115,4 +115,4 @@ for beta0 in [.05]:
 
 	print('2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_LS, np.mean(len_LS)))
 	print('PT-2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_RT_LS, np.mean(len_RT_LS)))
-	# print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_SIR, np.mean(len_SIR)))
+	print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'%(beta0, cover_SIR, np.mean(len_SIR)))
