@@ -874,16 +874,29 @@ class _2SIR(object):
 			beta_up = self.beta + delta
 		## bootstrap over beta
 		elif boot_over == 'beta':
-			beta_B = []
+			zeta = np.sqrt(var_beta)*np.random.randn(B_sample)
+			eta, beta_B = [], []
+			left_full = np.sqrt(n2/n1)*self.beta*omega_x*self.theta.dot(mid_cov)
+			score_full = np.sqrt(n1)*left_full.dot(self.theta)
 			for i in range(B_sample):
 				B_ind = np.random.choice(n1, n1)
 				Z1_B, X1_B = Z1[B_ind], X1[B_ind]
 				_2SIR_tmp = _2SIR(sparse_reg=self.sparse_reg, data_in_slice=self.data_in_slice)
 				_2SIR_tmp.fit_theta(Z1_B, X1_B)
+				_2SIR_tmp.theta = np.sign(np.dot(self.theta, _2SIR_tmp.theta)) * _2SIR_tmp.theta
 				_2SIR_tmp.fit_beta(LD_Z2, cov_ZY2, n2)
-				beta_B.append(_2SIR_tmp.beta)
-			beta_low = np.quantile(beta_B, 1 - level/2)
-			beta_up = np.quantile(beta_B, (1+level)/2 )
+				# xi_tmp = np.sqrt(n1)*(_2SIR_tmp.theta - self.theta)
+				left_tmp = np.sqrt(n2/n1)*_2SIR_tmp.beta*omega_x*_2SIR_tmp.theta.dot(mid_cov)
+				score_tmp = np.sqrt(n1)*left_tmp.dot(_2SIR_tmp.theta)
+				eta_tmp = score_tmp - score_full
+				# eta_tmp = left_tmp.dot(xi_tmp)
+				eta.append(eta_tmp)
+			eta = np.array(eta)
+			err = np.abs(zeta - eta)
+			delta = np.quantile(err, level) / np.sqrt(n2)
+			beta_low = self.beta - delta
+			beta_low = max(0., beta_low)
+			beta_up = self.beta + delta
 		else:
 			print('boot_over must be beta or theta!')
 		self.CI = np.array([beta_low, beta_up])

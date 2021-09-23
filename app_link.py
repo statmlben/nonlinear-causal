@@ -46,21 +46,24 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	cols_new = cols[variables]
 	return X.iloc[:, variables], cols_new
 
-interest_genes = ['CBLC',
-				'APOE',
-				'BCL3',
-				'CLPTM1',
-				'HLA-DRB5',
-				'BCAM',
-				'BIN1',
+interest_genes = ['APOC1',
 				'APOC1P1',
-				'TOMM40',
+				'APOE',
+				'BCAM',
+				'BCL3',
+				'BIN1',
+				'CBLC',
+				'CEACAM19',
+				'CHRNA2',
+				'CLPTM1',
 				'CYP27C1',
-				'MTCH2',
+				'HLA-DRB5',
 				'MS4A4A',
-				'APOC1',
+				'MS4A6A',
+				'MTCH2',
 				'NKPD1',
-				'MS4A6A']
+				'TOMM40',
+				'ZNF296']
 
 mypath = '/home/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]

@@ -15,7 +15,7 @@ import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 # df = pd.read_csv("aug24_ben_test.csv")
-# num_gen = df.shape[0]
+# num_gen = 17198
 # level = 0.05 / num_gen
 # ## refine the genes
 # # find all gene names
@@ -26,6 +26,8 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 # 	if df.loc[index_tmp]['p-value'].min() > level:
 # 		df.drop(index_tmp, inplace=True)
 # df['log-p-value'] = - np.log10( df['p-value'] )
+num_gen = 17198
+CI_level = 1 - 0.05 / num_gen
 
 def calculate_vif_(X, thresh=5.0, verbose=0):
 	cols = X.columns
@@ -49,21 +51,24 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	cols_new = cols[variables]
 	return X.iloc[:, variables], cols_new
 	
-interest_genes = ['CBLC',
-				'APOE',
-				'BCL3',
-				'CLPTM1',
-				'HLA-DRB5',
-				'BCAM',
-				'BIN1',
+interest_genes = ['APOC1',
 				'APOC1P1',
-				'TOMM40',
+				'APOE',
+				'BCAM',
+				'BCL3',
+				'BIN1',
+				'CBLC',
+				'CEACAM19',
+				'CHRNA2',
+				'CLPTM1',
 				'CYP27C1',
-				'MTCH2',
+				'HLA-DRB5',
 				'MS4A4A',
-				'APOC1',
+				'MS4A6A',
+				'MTCH2',
 				'NKPD1',
-				'MS4A6A']
+				'TOMM40',
+				'ZNF296']
 
 mypath = '/home/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
@@ -109,11 +114,17 @@ for gene_code in interest_genes:
 	## produce p_value and CI for beta
 	LS.test_effect(n2, LD_Z2, cov_ZY2)
 	if LS.beta > 0:
-		LS.CI_beta(n1=n1, n2=n2, Z1=snp.values, X1=gene_exp.values.flatten(), LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
+		LS.CI_beta(n1=n1, n2=n2, Z1=snp.values, 
+				X1=gene_exp.values.flatten(), 
+				LD_Z2=LD_Z2, cov_ZY2=cov_ZY2,
+				level=CI_level)
 	else:
 		LS.theta = -LS.theta
 		LS.beta = -LS.beta
-		LS.CI_beta(n1=n1, n2=n2, Z1=-snp.values, X1=gene_exp.values.flatten(), LD_Z2=LD_Z2, cov_ZY2=-cov_ZY2)
+		LS.CI_beta(n1=n1, n2=n2, Z1=-snp.values, 
+				X1=gene_exp.values.flatten(), 
+				LD_Z2=LD_Z2, cov_ZY2=-cov_ZY2,
+				level=CI_level)
 	print('LS beta: %.3f' %LS.beta)
 	print('p-value based on 2SLS: %.5f' %LS.p_value)
 	print('CI based on 2SLS: %s' %(LS.CI))
@@ -139,13 +150,22 @@ for gene_code in interest_genes:
 	## produce p-value and CI for beta
 	PT_LS.test_effect(n2, LD_Z2, cov_ZY2)
 	if PT_LS.beta > 0:
-		PT_LS.CI_beta(n1=n1, n2=n2, Z1=snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
+		PT_LS.CI_beta(n1=n1, n2=n2, Z1=snp.values, 
+				X1=PT_X1, LD_Z2=LD_Z2, 
+				cov_ZY2=cov_ZY2,
+				level=CI_level)
 	else:
 		PT_LS.theta = -PT_LS.theta
 		PT_LS.beta = -PT_LS.beta
-		PT_LS.CI_beta(n1=n1, n2=n2, Z1=-snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=-cov_ZY2)
+		PT_LS.CI_beta(n1=n1, n2=n2, Z1=-snp.values, 
+					X1=PT_X1, LD_Z2=LD_Z2, 
+					cov_ZY2=-cov_ZY2,
+					level=CI_level)
 	# gene_exp.values.flatten()
-	PT_LS.CI_beta(n1, n2, Z1=snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
+	PT_LS.CI_beta(n1, n2, Z1=snp.values, X1=PT_X1, 
+				LD_Z2=LD_Z2, 
+				cov_ZY2=cov_ZY2,
+				level=CI_level)
 	print('PT-LS beta: %.3f' %PT_LS.beta)
 	print('p-value based on PT-2SLS: %.5f' %PT_LS.p_value)
 	print('CI based on 2SLS: %s' %(PT_LS.CI))
@@ -169,7 +189,9 @@ for gene_code in interest_genes:
 	## generate CI for beta
 	SIR.test_effect(n2, LD_Z2, cov_ZY2)
 	SIR.CI_beta(n1, n2, Z1=snp.values, X1=gene_exp.values.flatten(), 
-						LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
+						LD_Z2=LD_Z2, cov_ZY2=cov_ZY2,
+						boot_over='theta',
+						level=CI_level)
 	print('2SIR beta: %.3f' %SIR.beta)
 	print('p-value based on 2SIR: %.5f' %SIR.p_value)
 	print('CI based on 2SIR: %s' %(SIR.CI))
@@ -185,38 +207,6 @@ for gene_code in interest_genes:
 
 
 df = pd.DataFrame.from_dict(df)
-df.to_csv('CI_result.csv', index=False)
+# df.to_csv('sep23_ben_app_CI.csv', index=False)
 
-import seaborn as sns
-import matplotlib.pyplot as plt
-sns.set_theme(style="whitegrid")
-ax = sns.pointplot(x="beta", y="gene", hue='method', data=df, 
-			join=False, palette="Set1", ci=df['CI'])
-
-# ax = sns.pointplot(x="gene", y="Lower", hue='method', data=df, 
-# 			join=False, palette="Set1", ci=df['CI'])
-
-# ax = sns.pointplot(x="gene", y="Upper", hue='method', data=df, 
-# 			join=False, palette="Set1", ci=df['CI'])
-
-
-f, ax = plt.subplots()
-sns.despine(bottom=True, left=True)
-
-# Show each observation with a scatterplot
-sns.stripplot(x="beta", y="gene", hue="method",
-              data=df, dodge=True, alpha=.25, zorder=1)
-
-# Show the conditional means, aligning each pointplot in the
-# center of the strips by adjusting the width allotted to each
-# category (.8 by default) by the number of hue levels
-sns.pointplot(x="beta", y="gene", hue="method",
-              data=df, dodge=.8 - .8 / 3,
-              join=False, palette="dark",
-              markers="d", scale=.75, ci=None)
-
-# Improve the legend
-handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles[3:], labels[3:], title="method",
-          handletextpad=0, columnspacing=1,
-          loc="lower right", ncol=3, frameon=True)
+print(df[['gene', 'p-value', 'method', 'Lower', 'Upper']])
