@@ -901,7 +901,7 @@ class _2SIR(object):
 			print('boot_over must be beta or theta!')
 		self.CI = np.array([beta_low, beta_up])
 
-	def test_effect(self, n2, LD_Z2, cov_ZY2, ):
+	def test_effect(self, n2, LD_Z2, cov_ZY2):
 		"""
 		Causal inference for the marginal causal effect.
 
@@ -920,6 +920,7 @@ class _2SIR(object):
 		-------
 		self: returns p-value of self.
 		"""
+		
 		if self.fit_flag:
 			var_eps = self.est_var_res(n2, LD_Z2, cov_ZY2)
 			if var_eps < 0:
@@ -944,5 +945,4 @@ class _2SIR(object):
 			self.var_beta_ = var_beta
 		else:
 			raise NameError('Testing can only be conducted after fit!')
-
 

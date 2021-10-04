@@ -17,7 +17,7 @@ for i in range(n_sim):
 	theta0 = np.ones(p)
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	beta0 = 1.
-	for case in ['linear', 'exp', 'cubic', 'inverse']:
+	for case in ['linear', 'log', 'exp', 'cubic', 'inverse']:
 		Z, X, y = sim(n, p, theta0, beta0, case=case, feat='normal', range=.06)
 		## normalize Z, X, y
 		center = StandardScaler(with_std=False)
