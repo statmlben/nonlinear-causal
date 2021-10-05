@@ -45,11 +45,32 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 df = {'gene': [], 'p-value': [], 'beta': [], 'method': []}
 # NMNAT3July20_2SIR
 
+interest_genes = ['APOC1',
+				'APOC1P1',
+				'APOE',
+				'BCAM',
+				'BCL3',
+				'BIN1',
+				'CBLC',
+				'CEACAM19',
+				'CHRNA2',
+				'CLPTM1',
+				'CYP27C1',
+				'HLA-DRB5',
+				'MS4A4A',
+				'MS4A6A',
+				'MTCH2',
+				'NKPD1',
+				'TOMM40',
+				'ZNF296']
+
 for folder_tmp in gene_folders:
 # for folder_tmp in ['APOEJuly20_2SIR', 'TOMM40July20_2SIR']:
 	if 'July20_2SIR' not in folder_tmp:
 		continue
 	gene_code = folder_tmp.replace('July20_2SIR', '')
+	if gene_code not in interest_genes:
+		continue
 	print('\n##### Causal inference of %s #####' %gene_code)
 	## load data
 	dir_name = mypath+'/'+folder_tmp
@@ -150,7 +171,9 @@ for folder_tmp in gene_folders:
 		SIR.test_effect(n2, LD_Z2, cov_ZY2)
 		comb_beta.append(SIR.beta)
 		comb_pvalue.append(SIR.p_value)
-	correct_pvalue = min(len(data_in_slice_lst)*np.min(comb_pvalue), 1.0)
+	comb_T = np.tan((0.5 - np.array(comb_pvalue))*np.pi).mean()
+	correct_pvalue = min( max(.5 - np.arctan(comb_T)/np.pi, np.finfo(np.float64).eps), 1.0)
+	# correct_pvalue = min(len(data_in_slice_lst)*np.min(comb_pvalue), 1.0)
 	print('Comb-2SIR beta: %.3f' %np.mean(comb_beta))
 	print('p-value based on Comb-2SIR: %.5f' %correct_pvalue)
 			
@@ -161,7 +184,7 @@ for folder_tmp in gene_folders:
 	df['beta'].append(np.mean(comb_beta))
 
 df = pd.DataFrame.from_dict(df)
-df.to_csv('result.csv', index=False)
+# df.to_csv('oct04_ben_test.csv', index=False)
 
 # ## stage_two = False: 1min 4s
 # ## stage_two = True: 8min 36s

@@ -17,7 +17,8 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.preprocessing import PowerTransformer, QuantileTransformer
 from sklearn.neighbors import KNeighborsRegressor
 
-df = pd.read_csv("sep18_ben_test_refined_genes.csv")
+df = pd.read_csv("oct04_ben_test_refined_genes.csv")
+df['log-p-value'] = - np.log10( df['p-value'] )
 
 mse_air, mse_mean, ue_air, ue_mean = [], [], [], []
 mse_RT_LS, mse_LS, ue_RT_LS, ue_LS = [], [], [], []

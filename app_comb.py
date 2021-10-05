@@ -66,6 +66,8 @@ interest_genes = ['APOC1',
 				'TOMM40',
 				'ZNF296']
 
+# interest_genes = ['APOE']
+
 for folder_tmp in gene_folders:
 # for folder_tmp in ['APOEJuly20_2SIR', 'TOMM40July20_2SIR']:
 	if 'July20_2SIR' not in folder_tmp:
@@ -111,7 +113,9 @@ for folder_tmp in gene_folders:
 		df['num_slice'].append(num_slice)
 		df['p-value'].append(SIR.p_value)
 		df['beta'].append(SIR.beta)
-	correct_pvalue = min(len(data_in_slice_lst)*np.min(comb_pvalue), 1.0)
+	# correct_pvalue = min(len(data_in_slice_lst)*np.min(comb_pvalue), 1.0)
+	comb_T = np.tan((0.5 - np.array(comb_pvalue))*np.pi).mean()
+	correct_pvalue = min( max(.5 - np.arctan(comb_T)/np.pi, np.finfo(np.float64).eps), 1.0)
 	print('Comb-2SIR beta: %.3f' %np.mean(comb_beta))
 	print('p-value based on Comb-2SIR: %.5f' %correct_pvalue)
 			
@@ -126,12 +130,21 @@ df = pd.DataFrame.from_dict(df)
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+num_gen = 17198
+level = 0.05 / num_gen
+
 df['neg-log-p-value'] = - np.log10( df['p-value'] )
+
+gene_set = set(df['gene'])
+gene_set = list(gene_set)
+gene_set.sort()
 
 plt.rcParams["figure.figsize"] = (16,6)
 sns.set_theme(style="whitegrid")
-ax = sns.barplot(x="gene", y="neg-log-p-value", hue="num_slice",
+ax = sns.barplot(x="gene", y="neg-log-p-value", hue="num_slice", order=gene_set,
                  data=df, alpha=.7)
 ax.set(xlabel="gene", ylabel="-log(p-value)")
-plt.savefig('./figs/'+'sep30_ben_app_comb.png', dpi=500)
+plt.axhline(-np.log10(level), ls='--', color='r', alpha=.8)
+
+plt.savefig('./figs/'+'oct04_ben_app_comb.png', dpi=500)
 plt.show()

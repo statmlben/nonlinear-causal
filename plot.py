@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 
 # df = pd.read_csv("aug24_ben_test.csv")
-df = pd.read_csv("sep23_ben_test_refined_genes.csv")
+# df = pd.read_csv("sep23_ben_test_refined_genes.csv")
+df = pd.read_csv("oct04_ben_test_refined_genes.csv")
+
 num_gen = 17198
 level = 0.05 / num_gen
 ## refine the genes
@@ -23,6 +25,8 @@ gene_set.sort()
 ## plot for the final results
 sns.set_theme(style="whitegrid")
 # Draw a nested barplot by species and sex
+plt.rcParams["figure.figsize"] = (16,6)
+
 g = sns.catplot(
     data=df, kind="bar", order=gene_set,
     x="gene", y="log-p-value", hue="method", palette="dark", 
@@ -33,4 +37,5 @@ g.despine(left=True)
 g.set_axis_labels("gene", "-log(p-value)")
 plt.legend(loc='upper right')
 # plt.savefig('result.png', bbox_inches='tight')
+plt.savefig('./figs/'+'oct04_ben_app_test.png', dpi=500)
 plt.show()

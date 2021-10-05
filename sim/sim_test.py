@@ -10,7 +10,7 @@ from nl_causal.ts_models import _2SLS, _2SIR
 from nl_causal.linear_reg import L0_IC
 from sklearn.preprocessing import power_transform, quantile_transform
 
-n, p = 5000, 50
+n, p = 5000, 100
 # for beta0 in [.05, .10, .15]:
 for beta0 in [.00, .05, .10, .15]:
 	for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
