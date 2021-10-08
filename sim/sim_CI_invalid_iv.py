@@ -27,7 +27,7 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
 			alpha0 = np.zeros(p)
 			alpha0[:5] = 1.
 			# alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
-			Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case=case, feat='normal')
+			Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case=case, feat='AP-normal')
 			if abs(X).max() > 1e+8:
 				bad_case = bad_case + 1
 				continue
@@ -108,7 +108,9 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
 
 			# if sorted(echo.best_model_) != sorted([0,1,2,3,4,50]):
 			# 	bad_select += 1
-		
+		print('#'*40)
+		print('simulation setting: case: %s, n: %d, p: %d, beta0: %.3f' 
+				%(case,n,p,beta0))
 		print('2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'
 				%(beta0, cover_LS, np.mean(len_LS)))
 		print('PT-2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f'
