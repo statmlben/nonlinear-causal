@@ -35,7 +35,8 @@ from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsI
 n, p = 10000, 50
 # theta0 = np.random.randn(p)
 for beta0 in [.0, .03, .05, .10]:
-	for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
+	# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
+	for case in ['quad']:
 		bad_select = 0
 		p_value = []
 		n_sim = 1000
@@ -47,7 +48,7 @@ for beta0 in [.0, .03, .05, .10]:
 			alpha0 = np.zeros(p)
 			alpha0[:5] = 1.
 			# alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
-			Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case=case, feat='normal')
+			Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case=case, feat='AP-normal')
 			if abs(X).max() > 1e+8:
 				continue
 			## normalize Z, X, y

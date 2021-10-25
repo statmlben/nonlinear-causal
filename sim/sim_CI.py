@@ -13,7 +13,8 @@ from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
 n, p = 10000, 50
-for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
+# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
+for case in ['quad']:
 	for beta0 in [.05]:
 		beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 		len_LS, len_RT_LS, len_SIR = [], [], []

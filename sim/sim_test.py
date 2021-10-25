@@ -10,7 +10,7 @@ from nl_causal.ts_models import _2SLS, _2SIR
 from nl_causal.linear_reg import L0_IC
 from sklearn.preprocessing import power_transform, quantile_transform
 
-n, p = 5000, 50
+n, p = 5000, 100
 # for beta0 in [.05, .10, .15]:
 for beta0 in [.00, .05, .10, .15]:
 	# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
@@ -21,8 +21,8 @@ for beta0 in [.00, .05, .10, .15]:
 		if beta0 > 0:
 			n_sim = 100
 		for i in range(n_sim):
-			# theta0 = np.random.randn(p)
-			theta0 = np.ones(p)
+			theta0 = np.random.randn(p)
+			# theta0 = np.ones(p)
 			theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 			Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='cate')			
 			if abs(X).max() > 1e+7:

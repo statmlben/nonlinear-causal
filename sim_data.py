@@ -36,7 +36,7 @@ def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='log', feat='normal', u_r
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 
 	elif case == 'quad':
-		X = np.sign(np.random.randn(n)) * np.sqrt( np.dot(Z, theta0) + U**2 + .1*eps )
+		X = np.sign(np.random.randn(n)) * np.sqrt(np.dot(Z, theta0) + U**2 + eps + 20)
 		phi = X**2
 		if IoR is not None:
 			phi_ior = IoR**2
