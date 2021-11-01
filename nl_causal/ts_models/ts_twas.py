@@ -100,6 +100,7 @@ class _2SLS(object):
 		self.sparse_reg = sparse_reg
 		self.alpha = None
 		self.p = None
+		self.theta_norm = 1.
 
 	def fit_theta(self, LD_Z1, cov_ZX1):
 		"""
@@ -121,6 +122,7 @@ class _2SLS(object):
 		self.p = len(LD_Z1)
 		self.theta = np.dot(np.linalg.inv( LD_Z1 ), cov_ZX1)
 		if self.normalize:
+			self.theta_norm = np.sqrt(np.sum(self.theta**2))
 			self.theta = normalize(self.theta.reshape(1, -1))[0]
 
 	def fit_beta(self, LD_Z2, cov_ZY2, n2):
@@ -353,7 +355,7 @@ class _2SLS(object):
 			# compute variance
 			var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
 			ratio = n2 / n1
-			var_x = np.mean( (X1 - np.dot(Z1, self.theta))**2 )
+			var_x = np.mean( (X1 - self.theta_norm*np.dot(Z1, self.theta))**2 )
 			invalid_iv = np.where(abs(self.alpha) > np.finfo('float32').eps)[0]
 			if len(invalid_iv) == 0:
 				var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)

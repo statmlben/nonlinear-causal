@@ -12,8 +12,8 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
-n, p = 1000, 50
-for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
+n, p = 10000, 50
+for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
 # for case in ['quad']:
 	for beta0 in [.05]:
 		beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
@@ -24,7 +24,7 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
 			theta0 = np.random.randn(p)
 			# theta0 = np.ones(p)
 			theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-			Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='normal')
+			Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='cate')
 			if abs(X).max() > 1e+8:
 				i = i - 1
 				continue
@@ -77,28 +77,6 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
 				cover_RT_LS = cover_RT_LS + 1 / n_sim
 			len_RT_LS.append(len_tmp)
 			# print('est beta based on RT-2SLS: %.3f; CI: %s; len: %.3f' %(RT_LS.beta*y_scale, RT_LS.CI*y_scale, (RT_LS.CI[1] - RT_LS.CI[0])*y_scale))
-
-
-			# print('est beta based on RT-OLS: %.3f; p-value: %.5f' %(RT_LS.beta*y_scale, RT_LS.p_value))
-
-			# solve by SIR+LS
-			echo = ts_models._2SIR(sparse_reg=None)
-			# echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
-			echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
-			## Stage-1 fit theta
-			echo.fit_theta(Z1, X1)
-			## Stage-2 fit beta
-			echo.fit_beta(LD_Z2, cov_ZY2, n2)
-			# echo.fit_air(Z1, X1)
-			## generate CI for beta
-			echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95)
-			len_tmp = (echo.CI[1] - echo.CI[0])*y_scale
-			# print('est beta based on 2SIR: %.3f; CI: %s; len: %.3f' %(echo.beta*y_scale, echo.CI*y_scale, (echo.CI[1] - echo.CI[0])*y_scale))
-			if ( (beta0 >= echo.CI[0]*y_scale) and (beta0 <= echo.CI[1]*y_scale) ):
-				cover_SIR = cover_SIR + 1 / n_sim
-			len_SIR.append(len_tmp)
-
-
 			# beta_LS.append(LS.beta*y_scale)
 			# beta_RT_LS.append(RT_LS.beta*y_scale)
 			# beta_LS_SIR.append(echo.beta*y_scale)
@@ -118,5 +96,5 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
 				%(beta0, cover_LS, np.mean(len_LS), np.std(len_LS)))
 		print('PT-2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f(%.3f)'
 				%(beta0, cover_RT_LS, np.mean(len_RT_LS), np.std(len_RT_LS)))
-		print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f(%.3f)'
-				%(beta0, cover_SIR, np.mean(len_SIR), np.std(len_SIR)))
+		# print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f(%.3f)'
+		# 		%(beta0, cover_SIR, np.mean(len_SIR), np.std(len_SIR)))

@@ -147,6 +147,7 @@ for folder_tmp in gene_folders:
 	## generate CI for beta
 	SIR.test_effect(n2, LD_Z2, cov_ZY2)
 	print('2SIR beta: %.3f' %SIR.beta)
+	print('2SIR eigenvalues: %.3f' %SIR.sir.eigenvalues_)
 	print('p-value based on 2SIR: %.5f' %SIR.p_value)
 			
 	## save the record
@@ -154,7 +155,6 @@ for folder_tmp in gene_folders:
 	df['method'].append('2SIR')
 	df['p-value'].append(SIR.p_value)
 	df['beta'].append(SIR.beta)
-
 
 	## Comb-2SIR
 	data_in_slice_lst = [.1*n1, .2*n1, .3*n1, .4*n1, .5*n1]

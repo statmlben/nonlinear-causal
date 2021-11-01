@@ -47,24 +47,26 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	cols_new = cols[variables]
 	return X.iloc[:, variables], cols_new
 
-interest_genes = ['APOC1',
-				'APOC1P1',
-				'APOE',
-				'BCAM',
-				'BCL3',
-				'BIN1',
-				'CBLC',
-				'CEACAM19',
-				'CHRNA2',
-				'CLPTM1',
-				'CYP27C1',
-				'HLA-DRB5',
-				'MS4A4A',
-				'MS4A6A',
-				'MTCH2',
-				'NKPD1',
+interest_genes = [
+				# 'APOC1',
+				# 'APOC1P1',
+				# 'APOE',
+				# 'BCAM',
+				# 'BCL3',
+				# 'BIN1',
+				# 'CBLC',
+				# 'CEACAM19',
+				# 'CHRNA2',
+				# 'CLPTM1',
+				# 'CYP27C1',
+				# 'HLA-DRB5',
+				# 'MS4A4A',
+				# 'MS4A6A',
+				# 'MTCH2',
+				# 'NKPD1',
 				'TOMM40',
-				'ZNF296']
+				# 'ZNF296'
+				]
 
 mypath = '/home/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
@@ -93,76 +95,79 @@ for gene_code in interest_genes:
 	## remove the collinear features
 	snp, valid_cols = calculate_vif_(snp)
 	sum_stat = sum_stat.loc[valid_cols]
-	## n1 and n2 is pre-given
+	B_num = 100
 	n1, n2, p = len(gene_exp), 54162, snp.shape[1]
-	LD_Z1 = np.dot(snp.values.T, snp.values)
-	cov_ZX1 = np.dot(snp.values.T, gene_exp.values.flatten())
-	LD_Z2, cov_ZY2 = LD_Z1/n1*n2, sum_stat.values.flatten()*n2
+	for b in range(B_num):
+		ind_tmp = np.random.choice(n1,n1)
+		## n1 and n2 is pre-given
+		X1_B, Z1_B = gene_exp.values.flatten()[ind_tmp], snp.values[ind_tmp]
+		LD_Z1 = np.dot(Z1_B.T, Z1_B)
+		cov_ZX1 = np.dot(Z1_B.T, X1_B)
+		LD_Z2, cov_ZY2 = LD_Z1/n1*n2, sum_stat.values.flatten()*n2
 
-	## 2SLS
-	LS = _2SLS(sparse_reg=None)
-	LS.fit_theta(LD_Z1, cov_ZX1)
-	## Stage-2 fit beta
-	LS.fit_beta(LD_Z2, cov_ZY2, n2)
+		## 2SLS
+		LS = _2SLS(sparse_reg=None)
+		LS.fit_theta(LD_Z1, cov_ZX1)
+		## Stage-2 fit beta
+		LS.fit_beta(LD_Z2, cov_ZY2, n2)
 
-	## PT-2SIR
-	pt = PowerTransformer()
-	# pt = QuantileTransformer()
-	PT_X1 = pt.fit_transform(gene_exp.values).flatten()
-	PT_cor_ZX1 = np.dot(snp.values.T, PT_X1)
-	PT_LS = _2SLS(sparse_reg=None)
-	## Stage-1 fit theta
-	PT_LS.fit_theta(LD_Z1, PT_cor_ZX1)
-	## Stage-2 fit beta
-	PT_LS.fit_beta(LD_Z2, cov_ZY2, n2)
+		## PT-2SIR
+		pt = PowerTransformer()
+		# pt = QuantileTransformer()
+		PT_X1 = pt.fit_transform(X1_B[:,np.newaxis]).flatten()
+		PT_cor_ZX1 = np.dot(Z1_B.T, PT_X1)
+		PT_LS = _2SLS(sparse_reg=None)
+		## Stage-1 fit theta
+		PT_LS.fit_theta(LD_Z1, PT_cor_ZX1)
+		## Stage-2 fit beta
+		PT_LS.fit_beta(LD_Z2, cov_ZY2, n2)
 
-	pred_ior_RT_2SLS = pt.transform(IoR.reshape(-1,1)).flatten()
-	pred_ior_RT_2SLS = np.sign(PT_LS.beta)*pred_ior_RT_2SLS
-	pred_RT_2SLS = pt.transform(gene_exp.values).flatten()
-	pred_RT_2SLS = np.sign(PT_LS.beta)*pred_RT_2SLS
-	pred_ior_RT_2SLS = pred_ior_RT_2SLS - np.mean(pred_RT_2SLS)
-	pred_RT_2SLS = pred_RT_2SLS - np.mean(pred_RT_2SLS)
+		pred_ior_RT_2SLS = pt.transform(IoR.reshape(-1,1)).flatten()
+		pred_ior_RT_2SLS = np.sign(PT_LS.beta)*pred_ior_RT_2SLS
+		pred_RT_2SLS = pt.transform(X1_B[:,np.newaxis]).flatten()
+		pred_RT_2SLS = np.sign(PT_LS.beta)*pred_RT_2SLS
+		pred_ior_RT_2SLS = pred_ior_RT_2SLS - np.mean(pred_RT_2SLS)
+		pred_RT_2SLS = pred_RT_2SLS - np.mean(pred_RT_2SLS)
 
-	## 2SIR
-	SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
-	SIR.cond_mean = KNeighborsRegressor(n_neighbors=5)
-	# SIR.cond_mean = IsotonicRegression(increasing='auto',
-	# 								out_of_bounds='clip')
+		## 2SIR
+		SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
+		SIR.cond_mean = KNeighborsRegressor(n_neighbors=5)
+		# SIR.cond_mean = IsotonicRegression(increasing='auto',
+		# 								out_of_bounds='clip')
 
-	## Stage-1 fit theta
-	SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
-	## Stage-2 fit beta
-	SIR.fit_beta(LD_Z2, cov_ZY2, n2)
-	## AIR to fit link
-	SIR.fit_link(Z1=snp.values, X1=gene_exp.values.flatten())
+		## Stage-1 fit theta
+		SIR.fit_theta(Z1=Z1_B, X1=X1_B)
+		## Stage-2 fit beta
+		SIR.fit_beta(LD_Z2, cov_ZY2, n2)
+		## AIR to fit link
+		SIR.fit_link(Z1=Z1_B, X1=X1_B)
 
-	# print('est beta based on 2SIR: %.3f' %(echo.beta*y_scale))
-	pred_phi = SIR.link(X=gene_exp.values).flatten()
-	pred_mean = SIR.cond_mean.predict(gene_exp.values).flatten()
+		# print('est beta based on 2SIR: %.3f' %(echo.beta*y_scale))
+		pred_phi = SIR.link(X=X1_B[:,np.newaxis]).flatten()
+		pred_mean = SIR.cond_mean.predict(X1_B[:,np.newaxis]).flatten()
 
-	pred_ior = SIR.link(X=IoR[:,None]).flatten()
-	pred_mean_ior = SIR.cond_mean.predict(IoR[:,None]).flatten()
+		pred_ior = SIR.link(X=IoR[:,None]).flatten()
+		pred_mean_ior = SIR.cond_mean.predict(IoR[:,None]).flatten()
 
-	link_plot['gene-code'].extend([gene_code]*len(IoR))
-	link_plot['gene-exp'].extend(IoR)
-	link_plot['phi'].extend(list(pred_ior_RT_2SLS))
-	link_plot['method'].extend(['PT-2SLS']*len(IoR))
-	
-	link_plot['gene-code'].extend([gene_code]*len(IoR))
-	link_plot['gene-exp'].extend(IoR)
-	link_plot['phi'].extend(list(pred_ior))
-	link_plot['method'].extend(['2SIR+AIR']*len(IoR))
+		link_plot['gene-code'].extend([gene_code]*len(IoR))
+		link_plot['gene-exp'].extend(IoR)
+		link_plot['phi'].extend(list(pred_ior_RT_2SLS))
+		link_plot['method'].extend(['PT-2SLS']*len(IoR))
+		
+		link_plot['gene-code'].extend([gene_code]*len(IoR))
+		link_plot['gene-exp'].extend(IoR)
+		link_plot['phi'].extend(list(pred_ior))
+		link_plot['method'].extend(['2SIR+AIR']*len(IoR))
 
-	link_plot['gene-code'].extend([gene_code]*len(IoR))
-	link_plot['gene-exp'].extend(IoR)
-	link_plot['phi'].extend(list(IoR*np.sign(LS.beta)))
-	link_plot['method'].extend(['2SLS']*len(IoR))
+		link_plot['gene-code'].extend([gene_code]*len(IoR))
+		link_plot['gene-exp'].extend(IoR)
+		link_plot['phi'].extend(list(IoR*np.sign(LS.beta)))
+		link_plot['method'].extend(['2SLS']*len(IoR))
 
 	# link_plot['gene-code'].extend([gene_code]*len(IoR))
 	# link_plot['gene-exp'].extend(IoR)
 	# link_plot['phi'].extend(list(pred_mean_ior))
 	# link_plot['method'].extend(['Cond-mean']*len(IoR))
-
 
 link_plot = pd.DataFrame(link_plot)
 
@@ -177,10 +182,10 @@ for gene_code in interest_genes:
 				'2SIR: '+str(test_tmp[test_tmp['method']=='2SIR']['log-p-value'].values)+'; '+\
 				'Comb-2SIR: '+str(test_tmp[test_tmp['method']=='Comb-2SIR']['log-p-value'].values)
 
-	plt.rcParams["figure.figsize"] = (10,6)
+	plt.rcParams["figure.figsize"] = (40,6)
 	sns.set_theme(style="whitegrid")
 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
 				x="gene-exp", y="phi", hue="method", legend = True,
 	style="method", alpha=.7).set_title(title_tmp)
-	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
+	# plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
 	plt.show()
