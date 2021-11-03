@@ -84,7 +84,8 @@ for gene_code in interest_genes:
 	# define interval of interests
 	a = np.quantile(gene_exp.values, 0.05)
 	b = np.quantile(gene_exp.values, 0.95)
-	IoR = np.arange(a, b, (b-a)/100)
+	# IoR = np.arange(a, b, (b-a)/100)
+	IoR = gene_exp.flatten()
 	
 	## exclude the gene with nan in the dataset
 	if sum_stat.isnull().sum().sum() + snp.isnull().sum().sum() + gene_exp.isnull().sum().sum() > 0:

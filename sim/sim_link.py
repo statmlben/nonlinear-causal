@@ -11,7 +11,8 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer, QuantileTransformer
 from sklearn.isotonic import IsotonicRegression
-from nonlinear_causal import _2SCausal
+from nl_causal.ts_models import _2SLS, _2SIR
+
 
 n, p = 2000, 10
 
@@ -21,14 +22,14 @@ mse_RT_LS, mse_LS, ue_RT_LS, ue_LS = [], [], [], []
 
 link_plot = { 'x': [], 'phi': [], 'method': [] }
 
-# 'linear', 'log', 'cube-root', 'inverse', 'sigmoid', 'piecewise_linear'
-n_sim, case = 100, 'piecewise_linear'
+# 'linear', 'log', 'cube-root', 'inverse', 'sigmoid', 'piecewise_linear', 'quad'
+n_sim, case = 100, 'linear'
 for i in range(n_sim):
 	# theta0 = np.random.randn(p)
 	theta0 = np.ones(p)
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	beta0 = 1.
-	Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='normal', range=1., return_phi=True)
+	Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='normal', return_phi=True)
 	## generate true phi function
 	if i == 0:
 		a, b = np.quantile(X, 0.05), np.quantile(X, 0.95)
@@ -42,30 +43,33 @@ for i in range(n_sim):
 	Z1, Z2, X1, X2, y1, y2 = train_test_split(Z, X, y, test_size=0.5, random_state=42)
 	n1, n2 = len(Z1), len(Z2)
 	# LD_Z, cor_ZX, cor_ZY = np.dot(Z.T, Z), np.dot(Z.T, X), np.dot(Z.T, y)
-	LD_Z1, cor_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
-	LD_Z2, cor_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
+	LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
+	LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 	# np.cov( np.dot(Z, theta0), X )
-	print('True beta: %.3f' %beta0)
+	# print('True beta: %.3f' %beta0)
 
 	## solve by SIR+LS
-	echo = _2SCausal._2SIR(sparse_reg=None)		
+	echo = _2SIR(sparse_reg=None)		
 	# echo.cond_mean = KernelRidge(kernel='rbf', alpha=.001, gamma=.1)
-	# echo.cond_mean = KNeighborsRegressor(n_neighbors=100)
-	echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
-	## stage-1: fit sir
-	echo.fit_sir(Z1, X1)
-	## stage-2: fit regression
-	echo.fit_reg(LD_Z2, cor_ZY2)
+	echo.cond_mean = KNeighborsRegressor(n_neighbors=100)
+	# echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
+	## Stage-1 fit theta
+	echo.fit_theta(Z1, X1)
+	## Stage-2 fit beta
+	echo.fit_beta(LD_Z2, cov_ZY2, n2)
 	## fit link function
-	echo.fit_air(Z1, X1)
+	echo.fit_link(Z1, X1)
 
 	# echo.fit(Z, X, cor_ZY)
-	print('est beta based on 2SIR: %.3f' %(echo.beta*y_scale))
+	# print('est beta based on 2SIR: %.3f' %(echo.beta*y_scale))
 	pred_phi = echo.link(X=X[:,None]).flatten()
 	pred_mean = echo.cond_mean.predict(X[:,None]).flatten()
 
-	pred_ior = echo.link(X=IoR[:,None]).flatten()
-	pred_mean_ior = echo.cond_mean.predict(IoR[:,None]).flatten()
+	pred_ior = echo.link(X=IoR[:,None]).flatten() - np.mean(pred_phi)
+	pred_phi = pred_phi - np.mean(pred_phi)
+
+	pred_mean_ior = echo.cond_mean.predict(IoR[:,None]).flatten() - pred_mean.mean()
+	pred_mean = pred_mean - pred_mean.mean()
 
 	## solve by RT-2SLS
 	pt = PowerTransformer()
@@ -126,6 +130,11 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 plt.rcParams["figure.figsize"] = (10,6)
 sns.set_theme(style="whitegrid")
-sns.lineplot(data=link_plot, x="x", y="phi", hue="method",
+if case =='quad':
+	sns.lineplot(data=link_plot, x="x", y="phi", hue="method",
+				style="method", alpha=.7)
+else:
+	sns.lineplot(data=link_plot, x="x", y="phi", hue="method", legend=False,
 			style="method", alpha=.7)
+plt.savefig('./figs/'+case+"-link.png", dpi=500)
 plt.show()
