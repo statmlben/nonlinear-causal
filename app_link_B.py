@@ -68,7 +68,7 @@ interest_genes = [
 				# 'ZNF296'
 				]
 
-mypath = '/home/ben/dataset/GenesToAnalyze'
+mypath = '/home/statmlben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -84,8 +84,8 @@ for gene_code in interest_genes:
 	# define interval of interests
 	a = np.quantile(gene_exp.values, 0.05)
 	b = np.quantile(gene_exp.values, 0.95)
-	# IoR = np.arange(a, b, (b-a)/100)
-	IoR = gene_exp.flatten()
+	IoR = np.arange(a, b, (b-a)/100)
+	# IoR = gene_exp.values.flatten()
 	
 	## exclude the gene with nan in the dataset
 	if sum_stat.isnull().sum().sum() + snp.isnull().sum().sum() + gene_exp.isnull().sum().sum() > 0:
