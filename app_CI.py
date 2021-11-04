@@ -70,7 +70,7 @@ interest_genes = ['APOC1',
 				'TOMM40',
 				'ZNF296']
 
-mypath = '/home/ben/dataset/GenesToAnalyze'
+mypath = '/home/statmlben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -207,6 +207,6 @@ for gene_code in interest_genes:
 
 
 df = pd.DataFrame.from_dict(df)
-# df.to_csv('sep23_ben_app_CI.csv', index=False)
+df.to_csv('nov4_ben_app_CI.csv', index=False)
 
 print(df[['gene', 'p-value', 'method', 'Lower', 'Upper']])
