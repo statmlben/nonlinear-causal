@@ -49,27 +49,27 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	return X.iloc[:, variables], cols_new
 
 interest_genes = [
-				'APOC1',
-				'APOC1P1',
-				'APOE',
-				'BCAM',
-				'BCL3',
-				'BIN1',
-				'CBLC',
-				'CEACAM19',
-				'CHRNA2',
-				'CLPTM1',
-				'CYP27C1',
-				'HLA-DRB5',
-				'MS4A4A',
-				'MS4A6A',
-				'MTCH2',
-				'NKPD1',
+				# 'APOC1',
+				# 'APOC1P1',
+				# 'APOE',
+				# 'BCAM',
+				# 'BCL3',
+				# 'BIN1',
+				# 'CBLC',
+				# 'CEACAM19',
+				# 'CHRNA2',
+				# 'CLPTM1',
+				# 'CYP27C1',
+				# 'HLA-DRB5',
+				# 'MS4A4A',
+				# 'MS4A6A',
+				# 'MTCH2',
+				# 'NKPD1',
 				'TOMM40',
-				'ZNF296'
+				# 'ZNF296'
 				]
 
-mypath = '/home/ben/dataset/GenesToAnalyze'
+mypath = '/home/statmlben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -223,10 +223,14 @@ for gene_code in interest_genes:
 
 	plt.rcParams["figure.figsize"] = (10,6)
 	sns.set_theme(style="whitegrid")
-	sns.lmplot(data=link_plot[link_plot['gene-code'] == gene_code], legend = True, scatter_kws={"s": 5},
-				x="snp_idx", y="phi", hue='method', col="method")
+	lm = sns.lmplot(data=link_plot[link_plot['gene-code'] == gene_code], legend = True, scatter_kws={"s": 5},
+				x="snp_idx", y="phi", hue='method', col="method", sharex=False,sharey=False)
 				# .fig.suptitle(title_tmp)
+	axes = lm.axes
+	axes[0,0].set_ylim(-.75, .75)
+	axes[0,1].set_ylim(-.75, .75)
+	axes[0,2].set_ylim(-.75, .75)
 	plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.8)
 	plt.suptitle(title_tmp)
-	plt.savefig('./figs/'+gene_code+"-S1_r2.png", dpi=700)
-# plt.show()
+	# plt.savefig('./figs/'+gene_code+"-S1_r2.png", dpi=700)
+	plt.show()
