@@ -47,26 +47,28 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	cols_new = cols[variables]
 	return X.iloc[:, variables], cols_new
 
-interest_genes = ['APOC1',
-				'APOC1P1',
-				'APOE',
-				'BCAM',
-				'BCL3',
-				'BIN1',
-				'CBLC',
-				'CEACAM19',
-				'CHRNA2',
-				'CLPTM1',
-				'CYP27C1',
-				'HLA-DRB5',
-				'MS4A4A',
-				'MS4A6A',
-				'MTCH2',
-				'NKPD1',
+interest_genes = [
+				# 'APOC1',
+				# 'APOC1P1',
+				# 'APOE',
+				# 'BCAM',
+				# 'BCL3',
+				# 'BIN1',
+				# 'CBLC',
+				# 'CEACAM19',
+				# 'CHRNA2',
+				# 'CLPTM1',
+				# 'CYP27C1',
+				# 'HLA-DRB5',
+				# 'MS4A4A',
+				# 'MS4A6A',
+				# 'MTCH2',
+				# 'NKPD1',
 				'TOMM40',
-				'ZNF296']
+				# 'ZNF296'
+				]
 
-mypath = '/home/ben/dataset/GenesToAnalyze'
+mypath = '/home/statmlben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -182,5 +184,5 @@ for gene_code in interest_genes:
 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
 				x="gene-exp", y="phi", hue="method", legend = True,
 	style="method", alpha=.7).set_title(title_tmp)
-	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
+	# plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
 	plt.show()

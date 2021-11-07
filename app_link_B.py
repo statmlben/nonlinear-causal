@@ -16,6 +16,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.isotonic import IsotonicRegression
 from sklearn.preprocessing import PowerTransformer, QuantileTransformer
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.kernel_ridge import KernelRidge
 
 df = pd.read_csv("oct04_ben_test_refined_genes.csv")
 df['log-p-value'] = - np.log10( df['p-value'] )
@@ -48,24 +49,24 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	return X.iloc[:, variables], cols_new
 
 interest_genes = [
-				# 'APOC1',
-				# 'APOC1P1',
-				# 'APOE',
-				# 'BCAM',
-				# 'BCL3',
-				# 'BIN1',
-				# 'CBLC',
-				# 'CEACAM19',
-				# 'CHRNA2',
-				# 'CLPTM1',
-				# 'CYP27C1',
-				# 'HLA-DRB5',
-				# 'MS4A4A',
-				# 'MS4A6A',
-				# 'MTCH2',
-				# 'NKPD1',
+				'APOC1',
+				'APOC1P1',
+				'APOE',
+				'BCAM',
+				'BCL3',
+				'BIN1',
+				'CBLC',
+				'CEACAM19',
+				'CHRNA2',
+				'CLPTM1',
+				'CYP27C1',
+				'HLA-DRB5',
+				'MS4A4A',
+				'MS4A6A',
+				'MTCH2',
+				'NKPD1',
 				'TOMM40',
-				# 'ZNF296'
+				'ZNF296'
 				]
 
 mypath = '/home/statmlben/dataset/GenesToAnalyze'
@@ -132,7 +133,8 @@ for gene_code in interest_genes:
 
 		## 2SIR
 		SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
-		SIR.cond_mean = KNeighborsRegressor(n_neighbors=5)
+		# SIR.cond_mean = KNeighborsRegressor(n_neighbors=10)
+		SIR.cond_mean = KernelRidge(kernel='rbf', alpha=1e-8, gamma=120.)
 		# SIR.cond_mean = IsotonicRegression(increasing='auto',
 		# 								out_of_bounds='clip')
 
@@ -183,10 +185,10 @@ for gene_code in interest_genes:
 				'2SIR: '+str(test_tmp[test_tmp['method']=='2SIR']['log-p-value'].values)+'; '+\
 				'Comb-2SIR: '+str(test_tmp[test_tmp['method']=='Comb-2SIR']['log-p-value'].values)
 
-	plt.rcParams["figure.figsize"] = (40,6)
+	plt.rcParams["figure.figsize"] = (10,6)
 	sns.set_theme(style="whitegrid")
 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
 				x="gene-exp", y="phi", hue="method", legend = True,
 	style="method", alpha=.7).set_title(title_tmp)
-	# plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
+	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
 	plt.show()
