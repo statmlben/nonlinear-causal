@@ -14,7 +14,7 @@ from os.path import isfile, join, isdir
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-mypath = '/home/ben/dataset/GenesToAnalyze'
+mypath = '/home/statmlben/dataset/GenesToAnalyze'
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 # gene_folders = random.sample(gene_folders, 10)
 
@@ -95,18 +95,17 @@ for folder_tmp in gene_folders:
 	
 	## 2SIR
 	# top eigenvalues variance
-	# EV_lst = []
-	# for k in range(100):
-	# 	B_ind = np.random.choice(n1, int(n1/3), replace=False)
-	# 	SIR = _2SIR(sparse_reg=None, data_in_slice=0.1*n1)
-	# 	## Stage-1 fit theta
-	# 	SIR.fit_theta(Z1=snp.values[B_ind], X1=gene_exp.values.flatten()[B_ind])
-	# 	EV_lst.append(SIR.sir.eigenvalues_)
-	# 	print('2SIR eigenvalues: %.3f' %SIR.sir.eigenvalues_)
-	# print('All 2SIR eigenvalues: %.3f(%.3f)' %(np.mean(EV_lst), np.std(EV_lst)))
+	EV_lst = []
+	for k in range(100):
+		B_ind = np.random.choice(n1, int(n1/3), replace=False)
+		SIR = _2SIR(sparse_reg=None, data_in_slice=0.1*n1)
+		## Stage-1 fit theta
+		SIR.fit_theta(Z1=snp.values[B_ind], X1=gene_exp.values.flatten()[B_ind])
+		EV_lst.append(SIR.sir.eigenvalues_)
+		# print('2SIR eigenvalues: %.3f' %SIR.sir.eigenvalues_)
+	print('All 2SIR eigenvalues: %.3f(%.3f)' %(np.mean(EV_lst), np.std(EV_lst)))
 	
 	# top-10 eigenvalues
-	SIR = _2SIR(sparse_reg=None, data_in_slice=0.1*n1, n_directions=10)
-	SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
-	print('2SIR eigenvalues: %s' %SIR.sir.eigenvalues_)
-
+	# SIR = _2SIR(sparse_reg=None, data_in_slice=0.1*n1, n_directions=10)
+	# SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
+	# print('2SIR eigenvalues: %s' %SIR.sir.eigenvalues_)

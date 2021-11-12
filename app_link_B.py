@@ -17,6 +17,9 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.preprocessing import PowerTransformer, QuantileTransformer
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.kernel_ridge import KernelRidge
+from sklearn.metrics import pairwise_distances
+from sklearn.model_selection import GridSearchCV
+
 
 df = pd.read_csv("oct04_ben_test_refined_genes.csv")
 df['log-p-value'] = - np.log10( df['p-value'] )
@@ -49,24 +52,24 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	return X.iloc[:, variables], cols_new
 
 interest_genes = [
-				'APOC1',
-				'APOC1P1',
-				'APOE',
-				'BCAM',
-				'BCL3',
-				'BIN1',
-				'CBLC',
-				'CEACAM19',
-				'CHRNA2',
-				'CLPTM1',
-				'CYP27C1',
-				'HLA-DRB5',
-				'MS4A4A',
-				'MS4A6A',
-				'MTCH2',
-				'NKPD1',
+				# 'APOC1',
+				# 'APOC1P1',
+				# 'APOE',
+				# 'BCAM',
+				# 'BCL3',
+				# 'BIN1',
+				# 'CBLC',
+				# 'CEACAM19',
+				# 'CHRNA2',
+				# 'CLPTM1',
+				# 'CYP27C1',
+				# 'HLA-DRB5',
+				# 'MS4A4A',
+				# 'MS4A6A',
+				# 'MTCH2',
+				# 'NKPD1',
 				'TOMM40',
-				'ZNF296'
+				# 'ZNF296'
 				]
 
 mypath = '/home/statmlben/dataset/GenesToAnalyze'
@@ -97,7 +100,7 @@ for gene_code in interest_genes:
 	## remove the collinear features
 	snp, valid_cols = calculate_vif_(snp)
 	sum_stat = sum_stat.loc[valid_cols]
-	B_num = 100
+	B_num = 10
 	n1, n2, p = len(gene_exp), 54162, snp.shape[1]
 	for b in range(B_num):
 		ind_tmp = np.random.choice(n1,n1)
@@ -134,15 +137,30 @@ for gene_code in interest_genes:
 		## 2SIR
 		SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
 		# SIR.cond_mean = KNeighborsRegressor(n_neighbors=10)
-		SIR.cond_mean = KernelRidge(kernel='rbf', alpha=1e-8, gamma=120.)
-		# SIR.cond_mean = IsotonicRegression(increasing='auto',
-		# 								out_of_bounds='clip')
+		# gamma = .5/np.median(pairwise_distances(X1_B[:,np.newaxis]).flatten()**2)
+		# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=1e-8, gamma=gamma)
 
 		## Stage-1 fit theta
 		SIR.fit_theta(Z1=Z1_B, X1=X1_B)
 		## Stage-2 fit beta
 		SIR.fit_beta(LD_Z2, cov_ZY2, n2)
+		
 		## AIR to fit link
+		# params = {'n_neighbors':[10, 30, 50, 70, 90, 110]}
+		# gs_knn = GridSearchCV(KNeighborsRegressor(), params, 
+		# 						scoring='neg_mean_squared_error')
+		# gs_knn.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
+		# # find the best param
+		# SIR.cond_mean = KNeighborsRegressor(n_neighbors=gs_knn.best_params_['n_neighbors'])
+
+		params = {'alpha':10.**np.arange(-4, 4, .3), 'gamma': 10.**np.arange(-4, 4, .3)}
+		gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, 
+								scoring='neg_mean_squared_error')
+		gs_rbf.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
+		# find the best param
+		SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
+									gamma=gs_rbf.best_params_['gamma'])
+
 		SIR.fit_link(Z1=Z1_B, X1=X1_B)
 
 		# print('est beta based on 2SIR: %.3f' %(echo.beta*y_scale))
@@ -190,5 +208,5 @@ for gene_code in interest_genes:
 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
 				x="gene-exp", y="phi", hue="method", legend = True,
 	style="method", alpha=.7).set_title(title_tmp)
-	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
+	# plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
 	plt.show()
