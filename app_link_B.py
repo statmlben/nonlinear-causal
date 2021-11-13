@@ -54,9 +54,9 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 interest_genes = [
 				# 'APOC1',
 				# 'APOC1P1',
-				# 'APOE',
+				'APOE',
 				# 'BCAM',
-				# 'BCL3',
+				'BCL3',
 				# 'BIN1',
 				# 'CBLC',
 				# 'CEACAM19',
@@ -68,7 +68,7 @@ interest_genes = [
 				# 'MS4A6A',
 				# 'MTCH2',
 				# 'NKPD1',
-				'TOMM40',
+				# 'TOMM40',
 				# 'ZNF296'
 				]
 
@@ -100,7 +100,7 @@ for gene_code in interest_genes:
 	## remove the collinear features
 	snp, valid_cols = calculate_vif_(snp)
 	sum_stat = sum_stat.loc[valid_cols]
-	B_num = 10
+	B_num = 100
 	n1, n2, p = len(gene_exp), 54162, snp.shape[1]
 	for b in range(B_num):
 		ind_tmp = np.random.choice(n1,n1)
@@ -150,17 +150,18 @@ for gene_code in interest_genes:
 		# gs_knn = GridSearchCV(KNeighborsRegressor(), params, 
 		# 						scoring='neg_mean_squared_error')
 		# gs_knn.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
+		
 		# # find the best param
-		# SIR.cond_mean = KNeighborsRegressor(n_neighbors=gs_knn.best_params_['n_neighbors'])
-
-		params = {'alpha':10.**np.arange(-4, 4, .3), 'gamma': 10.**np.arange(-4, 4, .3)}
-		gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, 
+		params = {'alpha':10.**np.arange(-3, 3., .4), 'gamma': 10.**np.arange(-3, 3., .4)}
+		gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
 								scoring='neg_mean_squared_error')
 		gs_rbf.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
 		# find the best param
 		SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
 									gamma=gs_rbf.best_params_['gamma'])
 
+		# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=8., 
+		# 							gamma=126.)
 		SIR.fit_link(Z1=Z1_B, X1=X1_B)
 
 		# print('est beta based on 2SIR: %.3f' %(echo.beta*y_scale))
@@ -203,10 +204,10 @@ for gene_code in interest_genes:
 				'2SIR: '+str(test_tmp[test_tmp['method']=='2SIR']['log-p-value'].values)+'; '+\
 				'Comb-2SIR: '+str(test_tmp[test_tmp['method']=='Comb-2SIR']['log-p-value'].values)
 
-	plt.rcParams["figure.figsize"] = (10,6)
+	plt.rcParams["figure.figsize"] = (20,6)
 	sns.set_theme(style="whitegrid")
 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
 				x="gene-exp", y="phi", hue="method", legend = True,
 	style="method", alpha=.7).set_title(title_tmp)
-	# plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
+	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
 	plt.show()
