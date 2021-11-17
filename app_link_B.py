@@ -54,9 +54,9 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 interest_genes = [
 				# 'APOC1',
 				# 'APOC1P1',
-				'APOE',
+				# 'APOE',
 				# 'BCAM',
-				'BCL3',
+				# 'BCL3',
 				# 'BIN1',
 				# 'CBLC',
 				# 'CEACAM19',
@@ -68,11 +68,11 @@ interest_genes = [
 				# 'MS4A6A',
 				# 'MTCH2',
 				# 'NKPD1',
-				# 'TOMM40',
+				'TOMM40',
 				# 'ZNF296'
 				]
 
-mypath = '/home/statmlben/dataset/GenesToAnalyze'
+mypath = '/home/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -137,7 +137,7 @@ for gene_code in interest_genes:
 		## 2SIR
 		SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
 		# SIR.cond_mean = KNeighborsRegressor(n_neighbors=10)
-		# gamma = .5/np.median(pairwise_distances(X1_B[:,np.newaxis]).flatten()**2)
+		# gamma = 1/np.median(pairwise_distances(X1_B[:,np.newaxis]).flatten()**2)
 		# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=1e-8, gamma=gamma)
 
 		## Stage-1 fit theta
@@ -151,17 +151,26 @@ for gene_code in interest_genes:
 		# 						scoring='neg_mean_squared_error')
 		# gs_knn.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
 		
-		# # find the best param
-		params = {'alpha':10.**np.arange(-3, 3., .4), 'gamma': 10.**np.arange(-3, 3., .4)}
+		## tune alpha and gamma
+		# params = {'alpha':10.**np.arange(-3, 3., .3), 'gamma': 10.**np.arange(-3, 3., .3)}
+		# gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
+		# 						scoring='neg_mean_squared_error')
+		# gs_rbf.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
+		# find the best param
+		# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
+		# 							gamma=gs_rbf.best_params_['gamma'])
+
+		## Just tune alpha
+		X_dis = pairwise_distances(X1_B[:,np.newaxis]).flatten()
+		gamma = 1/np.quantile(X_dis**2, .45)
+		# gamma = 2 / np.std(X_dis)**2
+		params = {'alpha':10.**np.arange(-3, 3., .2)}
 		gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
 								scoring='neg_mean_squared_error')
 		gs_rbf.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
-		# find the best param
 		SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
-									gamma=gs_rbf.best_params_['gamma'])
+									gamma=gamma)
 
-		# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=8., 
-		# 							gamma=126.)
 		SIR.fit_link(Z1=Z1_B, X1=X1_B)
 
 		# print('est beta based on 2SIR: %.3f' %(echo.beta*y_scale))
@@ -209,5 +218,5 @@ for gene_code in interest_genes:
 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
 				x="gene-exp", y="phi", hue="method", legend = True,
 	style="method", alpha=.7).set_title(title_tmp)
-	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
+	plt.savefig('./figs/'+gene_code+"-q4-link.png", dpi=500)
 	plt.show()

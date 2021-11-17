@@ -52,27 +52,27 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	return X.iloc[:, variables], cols_new
 
 interest_genes = [
-				'APOC1',
-				'APOC1P1',
-				'APOE',
-				'BCAM',
-				'BCL3',
-				'BIN1',
-				'CBLC',
-				'CEACAM19',
-				'CHRNA2',
-				'CLPTM1',
-				'CYP27C1',
-				'HLA-DRB5',
-				'MS4A4A',
-				'MS4A6A',
-				'MTCH2',
-				'NKPD1',
+				# 'APOC1',
+				# 'APOC1P1',
+				# 'APOE',
+				# 'BCAM',
+				# 'BCL3',
+				# 'BIN1',
+				# 'CBLC',
+				# 'CEACAM19',
+				# 'CHRNA2',
+				# 'CLPTM1',
+				# 'CYP27C1',
+				# 'HLA-DRB5',
+				# 'MS4A4A',
+				# 'MS4A6A',
+				# 'MTCH2',
+				# 'NKPD1',
 				'TOMM40',
-				'ZNF296'
+				# 'ZNF296'
 				]
 
-mypath = '/home/statmlben/dataset/GenesToAnalyze'
+mypath = '/home/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -131,7 +131,7 @@ for gene_code in interest_genes:
 
 	## 2SIR
 	SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
-	SIR.cond_mean = KNeighborsRegressor(n_neighbors=10)
+	# SIR.cond_mean = KNeighborsRegressor(n_neighbors=10)
 	# SIR.cond_mean = KernelRidge(kernel='rbf')
 
 	# SIR.cond_mean = IsotonicRegression(increasing='auto',
@@ -142,15 +142,34 @@ for gene_code in interest_genes:
 	## Stage-2 fit beta
 	SIR.fit_beta(LD_Z2, cov_ZY2, n2)
 	## AIR to fit link
-	## kernel version
-	gamma = 1./np.median(pairwise_distances(gene_exp.values).flatten()**2)
-	params = {'alpha':10.**np.arange(-3, 3, .5), 'gamma': 10.**np.arange(-3, 3, .5)}
+	## kernel version	
+
+	## fix best alpha + gamma
+	# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=15., 
+	# 							gamma=251.)
+	# SIR.cond_mean = KernelRidge(kernel='polynomial', alpha=0.000001, degree=25,
+	# 							gamma=1.)
+
+	## tune alpha + gamma
+	# params = {'alpha':10.**np.arange(-3, 3, .3), 'gamma': 10.**np.arange(-3, 3, .3)}
+	# gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
+	# 						scoring='neg_mean_squared_error')
+	# gs_rbf.fit(gene_exp.values, np.dot(snp.values, SIR.theta))
+	# # find the best param
+	# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
+	# 							gamma=gs_rbf.best_params_['gamma'])
+
+	## tune alpha
+	X_dis = pairwise_distances(gene_exp.values).flatten()
+	# gamma = 1 / np.std(X_dis)**2
+	gamma = 1./np.quantile(X_dis**2, .45)
+	params = {'alpha':10.**np.arange(-4, 3, .1)}
 	gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
 							scoring='neg_mean_squared_error')
 	gs_rbf.fit(gene_exp.values, np.dot(snp.values, SIR.theta))
 	# find the best param
 	SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
-								gamma=gs_rbf.best_params_['gamma'])
+								gamma=gamma)
 
 	## knn version
 	# params = {'n_neighbors':[10, 30, 50, 70, 90, 110]}
@@ -261,5 +280,5 @@ for gene_code in interest_genes:
 	axes[0,2].set_ylim(-.75, .75)
 	plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.8)
 	plt.suptitle(title_tmp)
-	plt.savefig('./figs/'+gene_code+"-S1_r2.png", dpi=500)
+	# plt.savefig('./figs/'+gene_code+"-S1_r2.png", dpi=500)
 	plt.show()
