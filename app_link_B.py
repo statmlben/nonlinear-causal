@@ -19,7 +19,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.metrics import pairwise_distances
 from sklearn.model_selection import GridSearchCV
-
+from sklearn.model_selection import train_test_split
 
 df = pd.read_csv("oct04_ben_test_refined_genes.csv")
 df['log-p-value'] = - np.log10( df['p-value'] )
@@ -69,7 +69,7 @@ interest_genes = [
 				# 'MTCH2',
 				# 'NKPD1',
 				'TOMM40',
-				# 'ZNF296'
+				'ZNF296'
 				]
 
 mypath = '/home/ben/dataset/GenesToAnalyze'
@@ -86,8 +86,8 @@ for gene_code in interest_genes:
 	gene_exp = -pd.read_csv(dir_name+"/gene_exp.csv", sep=' ', index_col=0)
 	snp = pd.read_csv(dir_name+"/snp.csv", sep=' ', index_col=0)
 	# define interval of interests
-	a = np.quantile(gene_exp.values, 0.05)
-	b = np.quantile(gene_exp.values, 0.95)
+	a = np.quantile(gene_exp.values, 0.1)
+	b = np.quantile(gene_exp.values, 0.9)
 	IoR = np.arange(a, b, (b-a)/100)
 	# IoR = gene_exp.values.flatten()
 	
@@ -102,6 +102,34 @@ for gene_code in interest_genes:
 	sum_stat = sum_stat.loc[valid_cols]
 	B_num = 100
 	n1, n2, p = len(gene_exp), 54162, snp.shape[1]
+
+	X1, Z1 = gene_exp.values.flatten(), snp.values
+	X_dis = pairwise_distances(X1[:,np.newaxis]).flatten()
+	gamma = 1/np.quantile(X_dis**2, .5)
+	# params = {'alpha':10.**np.arange(-4, 4., .5), 'gamma': gamma*2.**np.arange(-4, 4, .5)}
+	params = {'alpha':10.**np.arange(-4, 4., .5), 'gamma': [gamma]}
+	Z1_train, Z1_valid, X1_train, X1_valid = train_test_split(Z1, X1, test_size=0.33, random_state=42)	
+	LD_Z1 = np.dot(Z1_train.T, Z1_train)
+	cov_ZX1 = np.dot(Z1_train.T, X1_train)
+	LD_Z2, cov_ZY2 = LD_Z1/len(X1_train)*n2, sum_stat.values.flatten()*n2
+	cv_results = []
+	for alpha_tmp in params['alpha']:
+		for gamma_tmp in params['gamma']:
+			SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
+			SIR.cond_mean = KernelRidge(kernel='rbf', alpha=alpha_tmp, 
+							gamma=gamma_tmp)
+
+			## Stage-1 fit theta
+			SIR.fit_theta(Z1=Z1_train, X1=X1_train)
+			## Stage-2 fit beta
+			SIR.fit_beta(LD_Z2, cov_ZY2, n2)
+			SIR.fit_link(Z1=Z1_train, X1=X1_train)
+			err_tmp = np.mean((SIR.link(X1_valid[:,np.newaxis]) - np.dot(Z1_valid, SIR.theta))**2)
+			cv_results.append([alpha_tmp, gamma_tmp, err_tmp])
+	cv_results = np.array(cv_results)
+	opt_idx = np.argmin(cv_results[:,-1])
+	opt_alpha, opt_gamma = cv_results[opt_idx, 0], cv_results[opt_idx,1]
+
 	for b in range(B_num):
 		ind_tmp = np.random.choice(n1,n1)
 		## n1 and n2 is pre-given
@@ -144,7 +172,8 @@ for gene_code in interest_genes:
 		SIR.fit_theta(Z1=Z1_B, X1=X1_B)
 		## Stage-2 fit beta
 		SIR.fit_beta(LD_Z2, cov_ZY2, n2)
-		
+		SIR.cond_mean = KernelRidge(kernel='rbf', alpha=opt_alpha, 
+									gamma=opt_gamma)
 		## AIR to fit link
 		# params = {'n_neighbors':[10, 30, 50, 70, 90, 110]}
 		# gs_knn = GridSearchCV(KNeighborsRegressor(), params, 
@@ -152,24 +181,20 @@ for gene_code in interest_genes:
 		# gs_knn.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
 		
 		## tune alpha and gamma
-		# params = {'alpha':10.**np.arange(-3, 3., .3), 'gamma': 10.**np.arange(-3, 3., .3)}
+
+		## find the best param
+		
+
+		## Just tune alpha
+		# X_dis = pairwise_distances(X1_B[:,np.newaxis]).flatten()
+		# gamma = 1/np.quantile(X_dis**2, .5)
+		# # gamma = 2 / np.std(X_dis)**2
+		# params = {'alpha':10.**np.arange(-3, 3., .2)}
 		# gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
 		# 						scoring='neg_mean_squared_error')
 		# gs_rbf.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
-		# find the best param
 		# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
-		# 							gamma=gs_rbf.best_params_['gamma'])
-
-		## Just tune alpha
-		X_dis = pairwise_distances(X1_B[:,np.newaxis]).flatten()
-		gamma = 1/np.quantile(X_dis**2, .45)
-		# gamma = 2 / np.std(X_dis)**2
-		params = {'alpha':10.**np.arange(-3, 3., .2)}
-		gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
-								scoring='neg_mean_squared_error')
-		gs_rbf.fit(X1_B[:,np.newaxis], np.dot(Z1_B, SIR.theta))
-		SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
-									gamma=gamma)
+		# 							gamma=gamma)
 
 		SIR.fit_link(Z1=Z1_B, X1=X1_B)
 
@@ -218,5 +243,5 @@ for gene_code in interest_genes:
 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
 				x="gene-exp", y="phi", hue="method", legend = True,
 	style="method", alpha=.7).set_title(title_tmp)
-	plt.savefig('./figs/'+gene_code+"-q4-link.png", dpi=500)
+	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
 	plt.show()

@@ -130,6 +130,34 @@ for gene_code in interest_genes:
 	_, _, r_value_PTLS, _, _ = stats.linregress(left_PTLS, right_PTLS)
 
 	## 2SIR
+	X1, Z1 = gene_exp.values.flatten(), snp.values
+	X_dis = pairwise_distances(X1[:,np.newaxis]).flatten()
+	gamma = 1/np.quantile(X_dis**2, .5)
+	# params = {'alpha':10.**np.arange(-4, 4., .5), 'gamma': gamma*2.**np.arange(-4, 4, .5)}
+	params = {'alpha':10.**np.arange(-4, 4., .5), 'gamma': [gamma]}
+	Z1_train, Z1_valid, X1_train, X1_valid = train_test_split(Z1, X1, test_size=0.33, random_state=42)	
+	LD_Z1 = np.dot(Z1_train.T, Z1_train)
+	cov_ZX1 = np.dot(Z1_train.T, X1_train)
+	LD_Z2, cov_ZY2 = LD_Z1/len(X1_train)*n2, sum_stat.values.flatten()*n2
+	cv_results = []
+	for alpha_tmp in params['alpha']:
+		for gamma_tmp in params['gamma']:
+			SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
+			SIR.cond_mean = KernelRidge(kernel='rbf', alpha=alpha_tmp, 
+							gamma=gamma_tmp)
+
+			## Stage-1 fit theta
+			SIR.fit_theta(Z1=Z1_train, X1=X1_train)
+			## Stage-2 fit beta
+			SIR.fit_beta(LD_Z2, cov_ZY2, n2)
+			SIR.fit_link(Z1=Z1_train, X1=X1_train)
+			err_tmp = np.mean((SIR.link(X1_valid[:,np.newaxis]) - np.dot(Z1_valid, SIR.theta))**2)
+			cv_results.append([alpha_tmp, gamma_tmp, err_tmp])
+	cv_results = np.array(cv_results)
+	opt_idx = np.argmin(cv_results[:,-1])
+	opt_alpha, opt_gamma = cv_results[opt_idx, 0], cv_results[opt_idx,1]
+
+
 	SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
 	# SIR.cond_mean = KNeighborsRegressor(n_neighbors=10)
 	# SIR.cond_mean = KernelRidge(kernel='rbf')
@@ -151,25 +179,21 @@ for gene_code in interest_genes:
 	# 							gamma=1.)
 
 	## tune alpha + gamma
-	# params = {'alpha':10.**np.arange(-3, 3, .3), 'gamma': 10.**np.arange(-3, 3, .3)}
+	# find the best param
+	SIR.cond_mean = KernelRidge(kernel='rbf', alpha=opt_alpha, 
+								gamma=opt_gamma)
+
+	## tune alpha
+	# X_dis = pairwise_distances(gene_exp.values).flatten()
+	# # gamma = 1 / np.std(X_dis)**2
+	# gamma = 2/np.quantile(X_dis**2, .5)
+	# params = {'alpha':10.**np.arange(-4, 3, .1)}
 	# gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
 	# 						scoring='neg_mean_squared_error')
 	# gs_rbf.fit(gene_exp.values, np.dot(snp.values, SIR.theta))
 	# # find the best param
 	# SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
-	# 							gamma=gs_rbf.best_params_['gamma'])
-
-	## tune alpha
-	X_dis = pairwise_distances(gene_exp.values).flatten()
-	# gamma = 1 / np.std(X_dis)**2
-	gamma = 1./np.quantile(X_dis**2, .45)
-	params = {'alpha':10.**np.arange(-4, 3, .1)}
-	gs_rbf = GridSearchCV(KernelRidge(kernel='rbf'), params, cv=3,
-							scoring='neg_mean_squared_error')
-	gs_rbf.fit(gene_exp.values, np.dot(snp.values, SIR.theta))
-	# find the best param
-	SIR.cond_mean = KernelRidge(kernel='rbf', alpha=gs_rbf.best_params_['alpha'], 
-								gamma=gamma)
+	# 							gamma=gamma)
 
 	## knn version
 	# params = {'n_neighbors':[10, 30, 50, 70, 90, 110]}
