@@ -26,8 +26,10 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 # 	if df.loc[index_tmp]['p-value'].min() > level:
 # 		df.drop(index_tmp, inplace=True)
 # df['log-p-value'] = - np.log10( df['p-value'] )
+
 num_gen = 17198
-CI_level = 1 - 0.05 / num_gen
+# CI_level = 1 - 0.05 / num_gen
+CI_level = 0.95
 
 def calculate_vif_(X, thresh=5.0, verbose=0):
 	cols = X.columns
@@ -51,7 +53,8 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 	cols_new = cols[variables]
 	return X.iloc[:, variables], cols_new
 	
-interest_genes = ['APOC1',
+interest_genes = [
+				'APOC1',
 				'APOC1P1',
 				'APOE',
 				'BCAM',
@@ -68,11 +71,12 @@ interest_genes = ['APOC1',
 				'MTCH2',
 				'NKPD1',
 				'TOMM40',
-				'ZNF296']
+				'ZNF296'
+				]
 
-mypath = '/home/statmlben/dataset/GenesToAnalyze'
+mypath = '/home/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
-np.random.seed(0)
+np.random.seed(3)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 
 		'CI': [], 'Lower': [], 'Upper': []}
@@ -188,7 +192,8 @@ for gene_code in interest_genes:
 	SIR.fit_beta(LD_Z2, cov_ZY2, n2)
 	## generate CI for beta
 	SIR.test_effect(n2, LD_Z2, cov_ZY2)
-	SIR.CI_beta(n1, n2, Z1=snp.values, X1=gene_exp.values.flatten(), 
+	SIR.CI_beta(n1, n2, Z1=snp.values, X1=gene_exp.values.flatten(),
+						B_sample=2000,
 						LD_Z2=LD_Z2, cov_ZY2=cov_ZY2,
 						boot_over='theta',
 						level=CI_level)
@@ -207,6 +212,6 @@ for gene_code in interest_genes:
 
 
 df = pd.DataFrame.from_dict(df)
-df.to_csv('nov4_ben_app_CI.csv', index=False)
+df.to_csv('nov22_ben_app_CI95.csv', index=False)
 
 print(df[['gene', 'p-value', 'method', 'Lower', 'Upper']])

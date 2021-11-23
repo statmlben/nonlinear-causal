@@ -867,7 +867,7 @@ class _2SIR(object):
 				score_tmp = np.sqrt(n1)*left_tmp.dot(_2SIR_tmp.theta)
 				eta_tmp = score_tmp - score_full
 				# eta_tmp = left_tmp.dot(xi_tmp)
-				eta.append(eta_tmp)
+				eta.append(eta_tmp / 2)
 			eta = np.array(eta)
 			err = np.abs(zeta - eta)
 			delta = np.quantile(err, level) / np.sqrt(n2)

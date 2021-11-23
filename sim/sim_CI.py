@@ -12,10 +12,10 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
-n, p = 1000, 50
-for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
-# for case in ['quad']:
-	for beta0 in [.05]:
+n, p = 2000, 10
+# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
+for case in ['linear', 'quad']:
+	for beta0 in [.001]:
 		beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 		len_LS, len_RT_LS, len_SIR = [], [], []
 		cover_LS, cover_RT_LS, cover_SIR = 0, 0, 0
@@ -97,7 +97,6 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
 			if ( (beta0 >= echo.CI[0]*y_scale) and (beta0 <= echo.CI[1]*y_scale) ):
 				cover_SIR = cover_SIR + 1 / n_sim
 			len_SIR.append(len_tmp)
-
 
 			# beta_LS.append(LS.beta*y_scale)
 			# beta_RT_LS.append(RT_LS.beta*y_scale)
