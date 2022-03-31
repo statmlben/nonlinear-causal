@@ -6,7 +6,7 @@ import seaborn as sns
 from scipy.stats import rv_continuous
 
 methods = ['2SLS', 'PT-2SLS', '2SIR']
-QQ_plot_dis = "neg_log_uniform"
+QQ_plot_dis = "uniform"
 
 df = pd.read_csv('./aug24_ben_test.csv')
 
@@ -69,7 +69,10 @@ axs[2].get_lines()[0].set(label='2SIR')
 
 # Add on y=x line
 for i in range(3):
-    y_max = (-np.log10(df['p-value'].values)).max()
+    if QQ_plot_dis == 'uniform':
+        y_max = 1
+    else:
+        y_max = (-np.log10(df['p-value'].values)).max()
     axs[i].plot([0, y_max], [0, y_max], c='r', label='45 degree line')
     axs[i].legend()
 
