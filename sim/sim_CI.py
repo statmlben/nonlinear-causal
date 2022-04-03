@@ -13,15 +13,16 @@ from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
 n, p = 2000, 10
-# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
-for case in ['linear', 'quad']:
-	for beta0 in [.001]:
+for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
+# for case in ['linear', 'quad']:
+	for beta0 in [.005]:
 		beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 		len_LS, len_RT_LS, len_SIR = [], [], []
-		cover_LS, cover_RT_LS, cover_SIR = 0, 0, 0
-		n_sim = 100
+		cover_LS, cover_RT_LS, cover_SIR = [], [], []
+		n_sim = 500
 		for i in range(n_sim):
 			theta0 = np.random.randn(p)
+			theta0[:int(.1*p)] = 0.
 			# theta0 = np.ones(p)
 			theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 			Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='normal')
@@ -53,7 +54,9 @@ for case in ['linear', 'quad']:
 			LS.CI[0] = max(LS.CI[0], 0.)
 			len_tmp = (LS.CI[1] - LS.CI[0])*y_scale
 			if ( (beta0 >= LS.CI[0]*y_scale) and (beta0 <= LS.CI[1]*y_scale) ):
-				cover_LS = cover_LS + 1 / n_sim
+				cover_LS.append(1)
+			else:
+				cover_LS.append(0)
 			len_LS.append(len_tmp)
 			# print('est beta based on 2SLS: %.3f; CI: %s; len: %.3f' %(LS.beta*y_scale, LS.CI*y_scale, (LS.CI[1] - LS.CI[0])*y_scale))
 
@@ -74,7 +77,9 @@ for case in ['linear', 'quad']:
 			RT_LS.CI[0] = max(RT_LS.CI[0], 0.)
 			len_tmp = (RT_LS.CI[1] - RT_LS.CI[0])*y_scale
 			if ( (beta0 >= RT_LS.CI[0]*y_scale) and (beta0 <= RT_LS.CI[1]*y_scale) ):
-				cover_RT_LS = cover_RT_LS + 1 / n_sim
+				cover_RT_LS.append(1)
+			else:
+				cover_RT_LS.append(0)
 			len_RT_LS.append(len_tmp)
 			# print('est beta based on RT-2SLS: %.3f; CI: %s; len: %.3f' %(RT_LS.beta*y_scale, RT_LS.CI*y_scale, (RT_LS.CI[1] - RT_LS.CI[0])*y_scale))
 
@@ -95,7 +100,9 @@ for case in ['linear', 'quad']:
 			len_tmp = (echo.CI[1] - echo.CI[0])*y_scale
 			# print('est beta based on 2SIR: %.3f; CI: %s; len: %.3f' %(echo.beta*y_scale, echo.CI*y_scale, (echo.CI[1] - echo.CI[0])*y_scale))
 			if ( (beta0 >= echo.CI[0]*y_scale) and (beta0 <= echo.CI[1]*y_scale) ):
-				cover_SIR = cover_SIR + 1 / n_sim
+				cover_SIR.append(1)
+			else:
+				cover_SIR.append(0)
 			len_SIR.append(len_tmp)
 
 			# beta_LS.append(LS.beta*y_scale)
@@ -114,8 +121,8 @@ for case in ['linear', 'quad']:
 		# 		np.mean(beta_LS_SIR), np.std(beta_LS_SIR)))
 
 		print('2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f(%.3f)'
-				%(beta0, cover_LS, np.mean(len_LS), np.std(len_LS)))
+				%(beta0, np.mean(cover_LS), np.mean(len_LS), np.std(len_LS)))
 		print('PT-2SLS: beta0: %.3f; CI coverage: %.3f; CI len: %.3f(%.3f)'
-				%(beta0, cover_RT_LS, np.mean(len_RT_LS), np.std(len_RT_LS)))
+				%(beta0, np.mean(cover_RT_LS), np.mean(len_RT_LS), np.std(len_RT_LS)))
 		print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f(%.3f)'
-				%(beta0, cover_SIR, np.mean(len_SIR), np.std(len_SIR)))
+				%(beta0, np.mean(cover_SIR), np.mean(len_SIR), np.std(len_SIR)))

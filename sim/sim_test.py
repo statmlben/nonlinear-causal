@@ -9,12 +9,14 @@ from sklearn.model_selection import train_test_split
 from nl_causal.ts_models import _2SLS, _2SIR
 from nl_causal.linear_reg import L0_IC
 from sklearn.preprocessing import power_transform, quantile_transform
+import pandas as pd
 
-n, p = 5000, 100
+n, p = 2000, 10
 # for beta0 in [.05, .10, .15]:
+df = {'true_beta': [], 'case': [], 'method': [], 'pct. of signif': []}
 for beta0 in [.00, .05, .10, .15]:
-	# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
-	for case in ['quad']:
+	for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
+	# for case in ['quad']:
 		beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 		p_value = []
 		n_sim = 1000
@@ -22,9 +24,10 @@ for beta0 in [.00, .05, .10, .15]:
 			n_sim = 100
 		for i in range(n_sim):
 			theta0 = np.random.randn(p)
+			# theta0[:int(.1*p)] = 0.
 			# theta0 = np.ones(p)
 			theta0 = theta0 / np.sqrt(np.sum(theta0**2))
-			Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='cate')			
+			Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='normal')			
 			if abs(X).max() > 1e+7:
 				continue
 			## normalize Z, X, y
@@ -97,7 +100,6 @@ for beta0 in [.00, .05, .10, .15]:
 			# print('Comb-2SIR beta: %.3f' %np.mean(comb_beta))
 			# print('p-value based on Comb-2SIR: %.5f' %correct_pvalue)
 
-
 			beta_LS.append(LS.beta*y_scale)
 			beta_RT_LS.append(RT_LS.beta*y_scale)
 			beta_LS_SIR.append(echo.beta*y_scale)
@@ -114,12 +116,28 @@ for beta0 in [.00, .05, .10, .15]:
 		print('est beta: 2sls: %.3f(%.3f); RT_2sls: %.3f(%.3f); SIR: %.3f(%.3f)'
 				%( np.mean(beta_LS), np.std(beta_LS), np.mean(beta_RT_LS), np.std(beta_RT_LS), 
 				np.mean(beta_LS_SIR), np.std(beta_LS_SIR)))
-
+		
+		rej_2SLS, rej_RT2SLS = len(p_value[p_value[:,0]<.05])/len(p_value), len(p_value[p_value[:,1]<.05])/len(p_value)
+		rej_SIR, rej_CombSIR = len(p_value[p_value[:,2]<.05])/len(p_value), len(p_value[p_value[:,3]<.05])/len(p_value)
+		
+		df['true_beta'].extend([beta0]*5)
+		df['case'].extend([case]*5)
+		df['method'].extend(['2SLS', 'PT_2SLS', '2SIR', 'Comb-2SIR', 'signif level: .05'])
+		df['pct. of signif'].extend([rej_2SLS, rej_RT2SLS, rej_SIR, rej_CombSIR, .05])
+		
 		print('Rejection: 2sls: %.3f; RT_2sls: %.3f; SIR: %.3f; Comb_SIR: %.3f'
 				%( len(p_value[p_value[:,0]<.05])/len(p_value),
 				len(p_value[p_value[:,1]<.05])/len(p_value),
 				len(p_value[p_value[:,2]<.05])/len(p_value),
 				len(p_value[p_value[:,3]<.05])/len(p_value)))
+
+df = pd.DataFrame(df)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+sns.relplot(data=df, x="true_beta", y="pct. of signif", hue='method', style="method", col='case', kind='line', markers=True)
+plt.show()
+
 
 # ## plot estimation accuracy
 # import numpy as np

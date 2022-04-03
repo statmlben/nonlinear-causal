@@ -33,8 +33,8 @@ from sim_data import sim
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
 from sklearn.model_selection import train_test_split
-from nonlinear_causal import _2SCausal
-n, p = 1000, 10
+from nl_causal.ts_models import _2SLS, _2SIR
+n, p = 5000, 50
 
 beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 # MSE_LS, MSE_RT_LS, MSE_LS_SIR = [], [], []
@@ -42,11 +42,12 @@ CI_LS, CI_RT_LS, CI_LS_SIR = [], [], []
 
 n_sim = 500
 for i in range(n_sim):
-	# theta0 = np.random.randn(p)
-	theta0 = np.ones(p)
+	theta0 = np.random.randn(p)
+	theta0[:int(.1*p)] = 0.
+	# theta0 = np.ones(p)
 	theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 	beta0 = 1.
-	Z, X, y = sim(n, p, theta0, beta0, case='linear', feat='normal', range=.01)
+	Z, X, y, _ = sim(n, p, theta0, beta0, case='linear', feat='normal')
 	## normalize Z, X, y
 	center = StandardScaler(with_std=False)
 	Z, X, y = center.fit_transform(Z), X - X.mean(), y - y.mean()
@@ -58,14 +59,14 @@ for i in range(n_sim):
 	LD_Z1, cor_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1)
 	LD_Z2, cor_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 	# np.cov( np.dot(Z, theta0), X )
-	print('True beta: %.3f' %beta0)
+	print('True beta: %.3f' %(beta0/y_scale))
 
 	## solve by 2sls
-	LS = _2SCausal._2SLS(sparse_reg=None)
+	LS = _2SLS(sparse_reg=None)
 	## Stage-1 fit theta 
 	LS.fit_theta(LD_Z1, cor_ZX1)
 	## Stage-2 fit beta
-	LS.fit_beta(LD_Z2, cor_ZY2)
+	LS.fit_beta(LD_Z2, cor_ZY2, n2=n2)
 	## generate CI for beta
 	LS_CI_tmp = LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cor_ZY2, level=.95)
 
@@ -79,11 +80,11 @@ for i in range(n_sim):
 	RT_X1 = power_transform(X1.reshape(-1,1)).flatten()
 	# RT_X = quantile_transform(X.reshape(-1,1), n_quantiles=n/10, output_distribution='normal')
 	RT_cor_ZX1 = np.dot(Z1.T, RT_X1)
-	RT_LS = _2SCausal._2SLS(sparse_reg=None)
+	RT_LS = _2SLS(sparse_reg=None)
 	## Stage-1 fit theta
 	RT_LS.fit_theta(LD_Z1, RT_cor_ZX1)
 	## Stage-2 fit beta
-	RT_LS.fit_beta(LD_Z2, cor_ZY2)
+	RT_LS.fit_beta(LD_Z2, cor_ZY2, n2=n2)
 	## generate CI for beta
 	RT_LS_CI_tmp = RT_LS.CI_beta(n1, n2, Z1, X1, LD_Z2, cor_ZY2, level=.95)
 
@@ -97,11 +98,11 @@ for i in range(n_sim):
 	print('est beta based on RT-OLS: %.3f' %RT_LS.beta)
 
 	## solve by SIR+LS
-	echo = _2SCausal._2SIR(sparse_reg=None)
+	echo = _2SIR(sparse_reg=None)
 	## Stage-1 fit theta
-	echo.fit_sir(Z1, X1)
+	echo.fit_theta(Z1, X1)
 	## Stage-2 fit beta
-	echo.fit_reg(Z2, cor_ZY2)
+	echo.fit_beta(LD_Z2, cor_ZY2, n2=n2)
 	## generate CI for beta
 	SIR_CI_tmp = echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cor_ZY2, level=.95)
 	## One sample method
@@ -135,6 +136,7 @@ print('simulation setting: n: %d, p: %d, beta0: %.3f' %(n,p, beta0))
 print('est beta: 2sls: %.3f(%.3f); RT_2sls: %.3f(%.3f); SIR: %.3f(%.3f)'
 		%( np.mean(beta_LS), np.std(beta_LS), np.mean(beta_RT_LS), np.std(beta_RT_LS), 
 		np.mean(beta_LS_SIR), np.std(beta_LS_SIR)))
+
 ## confidence Interval
 CI_LS, CI_RT_LS, CI_LS_SIR = np.array(CI_LS)*y_scale, np.array(CI_RT_LS)*y_scale, np.array(CI_LS_SIR)*y_scale
 cover_LS = np.sum([(tmp[0] <= beta0) and (tmp[1] >= beta0) for tmp in CI_LS]) / n_sim
