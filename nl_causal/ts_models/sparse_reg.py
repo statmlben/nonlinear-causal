@@ -114,14 +114,14 @@ class WLasso(RegressorMixin, LinearModel):
 	should be directly passed as a Fortran-contiguous numpy array.
 	"""
 	
-	def __init__(self, alpha=1.0, *, ada_weight=1.0, fit_intercept=True, normalize=False,
+	def __init__(self, alpha=1.0, *, ada_weight=1.0, fit_intercept=True,
 				 precompute=False, copy_X=True, max_iter=1000,
 				 tol=1e-4, warm_start=False, positive=False,
 				 random_state=None, selection='cyclic'):
 		self.alpha = alpha
 		self.ada_weight = ada_weight
 		self.fit_intercept = fit_intercept
-		self.normalize = normalize
+		# self.normalize = normalize
 		self.precompute = precompute
 		self.max_iter = max_iter
 		self.copy_X = copy_X
@@ -139,7 +139,7 @@ class WLasso(RegressorMixin, LinearModel):
 		----------
 		"""
 		n_feature = X.shape[1]
-		lasso_tmp = Lasso(alpha=self.alpha, fit_intercept=self.fit_intercept, normalize=self.normalize,
+		lasso_tmp = Lasso(alpha=self.alpha, fit_intercept=self.fit_intercept,
 						  precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
 				 		  tol=self.tol, warm_start=self.warm_start, positive=self.positive,
 				 		  random_state=self.random_state, selection=self.selection)
@@ -180,14 +180,6 @@ class SCAD(RegressorMixin, LinearModel):
 		Whether to calculate the intercept for this model. If set
 		to False, no intercept will be used in calculations
 		(i.e. data is expected to be centered).
-	
-	normalize : bool, default=False
-		This parameter is ignored when ``fit_intercept`` is set to False.
-		If True, the regressors X will be normalized before regression by
-		subtracting the mean and dividing by the l2-norm.
-		If you wish to standardize, please use
-		:class:`~sklearn.preprocessing.StandardScaler` before calling ``fit``
-		on an estimator with ``normalize=False``.
 	
 	precompute : 'auto', bool or array-like of shape (n_features, n_features),\
 				 default=False
@@ -262,14 +254,13 @@ class SCAD(RegressorMixin, LinearModel):
 	should be directly passed as a Fortran-contiguous numpy array.
 	"""
 	
-	def __init__(self, alpha=1.0, *, ada_weight=1.0, fit_intercept=True, normalize=False,
+	def __init__(self, alpha=1.0, *, ada_weight=1.0, fit_intercept=True,
 				 precompute=False, copy_X=True, max_iter=1000,
 				 tol=1e-4, warm_start=False, positive=False,
 				 random_state=None, selection='cyclic'):
 		self.alpha = alpha
 		self.ada_weight = ada_weight
 		self.fit_intercept = fit_intercept
-		self.normalize = normalize
 		self.precompute = precompute
 		self.max_iter = max_iter
 		self.copy_X = copy_X
@@ -288,7 +279,7 @@ class SCAD(RegressorMixin, LinearModel):
 		----------
 		"""
 		Wlasso_tmp = WLasso(alpha=self.alpha, ada_weight=self.ada_weight, fit_intercept=self.fit_intercept, 
-						   normalize=self.normalize, precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
+						   precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
 						   tol=self.tol, warm_start=self.warm_start, positive=self.positive,
 						   random_state=self.random_state, selection=self.selection)
 		Wlasso_tmp.fit(X, y, sample_weight)
@@ -314,7 +305,7 @@ class SCAD(RegressorMixin, LinearModel):
 		return self.alpha*(abs_coef <= self.alpha) + np.maximum(a*self.alpha - abs_coef, 0.) / (a - 1) * (abs_coef > self.alpha)
 
 class SCAD_IC(RegressorMixin, LinearModelCV):
-	def __init__(self, *, criterion='bic', alphas=10**np.arange(-3,3,.1), ada_weight=1.0, fit_intercept=True, normalize=False,
+	def __init__(self, *, criterion='bic', alphas=10**np.arange(-3,3,.1), ada_weight=1.0, fit_intercept=True,
 				precompute=False, copy_X=True, max_iter=1000, var_res = None,
 				tol=1e-4, warm_start=False, positive=False,
 				random_state=None, selection='cyclic'):
@@ -322,7 +313,7 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		self.criterion = criterion
 		self.ada_weight = ada_weight
 		self.fit_intercept = fit_intercept
-		self.normalize = normalize
+		# self.normalize = normalize
 		self.precompute = precompute
 		self.max_iter = max_iter
 		self.copy_X = copy_X
@@ -339,7 +330,7 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		n_sample, n_feature = X.shape
 		eps64 = np.finfo('float64').eps
 		self.ada_weight = self.ada_weight * np.ones(n_feature)
-		scad_tmp = SCAD(ada_weight=self.ada_weight, fit_intercept=self.fit_intercept, normalize=self.normalize, 
+		scad_tmp = SCAD(ada_weight=self.ada_weight, fit_intercept=self.fit_intercept, 
 						precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
 						tol=self.tol, warm_start=self.warm_start, positive=self.positive, 
 						random_state=self.random_state, selection=self.selection)
@@ -415,14 +406,6 @@ class L0_IC(LassoLarsIC):
 		to False, no intercept will be used in calculations
 		(i.e. data is expected to be centered).
 	
-	normalize : bool, default=False
-		This parameter is ignored when ``fit_intercept`` is set to False.
-		If True, the regressors X will be normalized before regression by
-		subtracting the mean and dividing by the l2-norm.
-		If you wish to standardize, please use
-		:class:`~sklearn.preprocessing.StandardScaler` before calling ``fit``
-		on an estimator with ``normalize=False``.
-	
 	precompute : 'auto', bool or array-like of shape (n_features, n_features),\
 				 default=False
 		Whether to use a precomputed Gram matrix to speed up
@@ -495,7 +478,7 @@ class L0_IC(LassoLarsIC):
 	0.15...
 	"""
 
-	def __init__(self, criterion='bic', *, Ks=range(10), alphas=10**np.arange(-3,3,.1), ada_weight=True, fit_intercept=True, normalize=False,
+	def __init__(self, criterion='bic', *, Ks=range(10), alphas=10**np.arange(-3,3,.1), ada_weight=True, fit_intercept=True,
 				precompute=False, copy_X=True, max_iter=1000, verbose=False, eps=np.finfo(float).eps,
 				tol=1e-4, warm_start=False, positive=False, var_res = None, refit = True, find_best=True,
 				random_state=None, selection='cyclic'):
@@ -504,7 +487,7 @@ class L0_IC(LassoLarsIC):
 		self.alphas = alphas
 		self.ada_weight = ada_weight
 		self.fit_intercept = fit_intercept
-		self.normalize = normalize
+		# self.normalize = normalize
 		self.precompute = precompute
 		self.max_iter = max_iter
 		self.verbose = verbose
@@ -526,13 +509,13 @@ class L0_IC(LassoLarsIC):
 		pre_select = list(np.where(self.ada_weight==False)[0])
 		self.ada_weight = self.ada_weight * np.ones(n_feature, dtype=bool)
 		if all(self.ada_weight):
-			scad_tmp = SCAD(fit_intercept=self.fit_intercept, normalize=self.normalize, precompute=self.precompute, 
+			scad_tmp = SCAD(fit_intercept=self.fit_intercept, precompute=self.precompute, 
 							copy_X=self.copy_X, max_iter=self.max_iter,
 							tol=self.tol, warm_start=self.warm_start, positive=self.positive,
 							random_state=self.random_state, selection=self.selection)
 		else:
 			scad_tmp = SCAD(ada_weight=1.*self.ada_weight, fit_intercept=self.fit_intercept, 
-							normalize=self.normalize, precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
+							precompute=self.precompute, copy_X=self.copy_X, max_iter=self.max_iter,
 							tol=self.tol, warm_start=self.warm_start, positive=self.positive,
 							random_state=self.random_state, selection=self.selection)
 		candidate_model = []

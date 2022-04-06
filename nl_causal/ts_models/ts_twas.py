@@ -1,6 +1,6 @@
 import numpy as np
 # from sklearn.base import BaseEstimator
-from sklearn.preprocessing import normalize
+import sklearn.preprocessing as pps
 from sliced import SlicedInverseRegression
 from sklearn.neighbors import KNeighborsRegressor
 from scipy.stats import norm
@@ -123,7 +123,7 @@ class _2SLS(object):
 		self.theta = np.dot(np.linalg.inv( LD_Z1 ), cov_ZX1)
 		if self.normalize:
 			self.theta_norm = np.sqrt(np.sum(self.theta**2))
-			self.theta = normalize(self.theta.reshape(1, -1))[0]
+			self.theta = pps.normalize(self.theta.reshape(1, -1))[0]
 
 	def fit_beta(self, LD_Z2, cov_ZY2, n2):
 		"""

@@ -1,6 +1,6 @@
 ## Test invalid IVs
 import numpy as np
-from sklearn.preprocessing import normalize
+# from sklearn.preprocessing import normalize
 from sim_data import sim
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
@@ -33,10 +33,11 @@ from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsI
 # Rejection: 2sls: 0.055; RT_2sls: 0.057; SIR: 0.058
 
 n, p = 10000, 50
+df = {'true_beta': [], 'case': [], 'method': [], 'pct. of signif': []}
+
 # theta0 = np.random.randn(p)
 for beta0 in [.0, .03, .05, .10]:
-	# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear']:
-	for case in ['quad']:
+	for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
 		bad_select = 0
 		p_value = []
 		n_sim = 1000
@@ -48,7 +49,7 @@ for beta0 in [.0, .03, .05, .10]:
 			alpha0 = np.zeros(p)
 			alpha0[:5] = 1.
 			# alpha0 = alpha0 / np.sqrt(np.sum(alpha0**2))
-			Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case=case, feat='AP-normal')
+			Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=alpha0, case=case, feat='normal')
 			if abs(X).max() > 1e+8:
 				continue
 			## normalize Z, X, y
@@ -135,6 +136,14 @@ for beta0 in [.0, .03, .05, .10]:
 			p_value.append([LS.p_value, RT_LS.p_value, echo.p_value, correct_pvalue])
 		p_value = np.array(p_value)
 
+		rej_2SLS, rej_RT2SLS = len(p_value[p_value[:,0]<.05])/len(p_value), len(p_value[p_value[:,1]<.05])/len(p_value)
+		rej_SIR, rej_CombSIR = len(p_value[p_value[:,2]<.05])/len(p_value), len(p_value[p_value[:,3]<.05])/len(p_value)
+
+		df['true_beta'].extend([beta0]*5)
+		df['case'].extend([case]*5)
+		df['method'].extend(['2SLS', 'PT_2SLS', '2SIR', 'Comb-2SIR', 'signif level: .05'])
+		df['pct. of signif'].extend([rej_2SLS, rej_RT2SLS, rej_SIR, rej_CombSIR, .05])
+
 		print('='*40)
 		print('case: %s; beta0: %.3f, n: %d, p: %d, bad_select: %d'%(case, beta0, n, p, bad_select))
 		print('Rejection: 2sls: %.3f; RT_2sls: %.3f; SIR: %.3f; Comb-SIR: %.3f'
@@ -142,3 +151,11 @@ for beta0 in [.0, .03, .05, .10]:
 				len(p_value[p_value[:,1]<.05])/len(p_value),
 				len(p_value[p_value[:,2]<.05])/len(p_value),
 				len(p_value[p_value[:,3]<.05])/len(p_value)))
+
+import pandas as pd
+df = pd.DataFrame(df)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+sns.relplot(data=df, x="true_beta", y="pct. of signif", hue='method', style="method", col='case', kind='line', markers=True)
+plt.show()

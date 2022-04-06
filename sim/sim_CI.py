@@ -12,9 +12,9 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 # simulation for CI
-n, p = 2000, 10
+n, p = 5000, 50
 for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
-# for case in ['linear', 'quad']:
+# for case in ['linear']:
 	for beta0 in [.005]:
 		beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 		len_LS, len_RT_LS, len_SIR = [], [], []
@@ -22,7 +22,7 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad'
 		n_sim = 500
 		for i in range(n_sim):
 			theta0 = np.random.randn(p)
-			theta0[:int(.1*p)] = 0.
+			theta0[:int(.3*p)] = 0.
 			# theta0 = np.ones(p)
 			theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 			Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='normal')
@@ -59,8 +59,6 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad'
 				cover_LS.append(0)
 			len_LS.append(len_tmp)
 			# print('est beta based on 2SLS: %.3f; CI: %s; len: %.3f' %(LS.beta*y_scale, LS.CI*y_scale, (LS.CI[1] - LS.CI[0])*y_scale))
-
-
 			# print('est beta based on OLS: %.3f; p-value: %.5f' %(LS.beta*y_scale, LS.p_value))
 
 			## solve by RT-2SLS
@@ -82,21 +80,18 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad'
 				cover_RT_LS.append(0)
 			len_RT_LS.append(len_tmp)
 			# print('est beta based on RT-2SLS: %.3f; CI: %s; len: %.3f' %(RT_LS.beta*y_scale, RT_LS.CI*y_scale, (RT_LS.CI[1] - RT_LS.CI[0])*y_scale))
-
-
 			# print('est beta based on RT-OLS: %.3f; p-value: %.5f' %(RT_LS.beta*y_scale, RT_LS.p_value))
 
 			# solve by SIR+LS
 			echo = ts_models._2SIR(sparse_reg=None)
-			# echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
-			echo.cond_mean = IsotonicRegression(increasing='auto',out_of_bounds='clip')
+			echo.cond_mean = KNeighborsRegressor(n_neighbors=20)
 			## Stage-1 fit theta
 			echo.fit_theta(Z1, X1)
 			## Stage-2 fit beta
 			echo.fit_beta(LD_Z2, cov_ZY2, n2)
 			# echo.fit_air(Z1, X1)
 			## generate CI for beta
-			echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=1000, level=.95)
+			echo.CI_beta(n1, n2, Z1, X1, LD_Z2, cov_ZY2, B_sample=100, level=.95)
 			len_tmp = (echo.CI[1] - echo.CI[0])*y_scale
 			# print('est beta based on 2SIR: %.3f; CI: %s; len: %.3f' %(echo.beta*y_scale, echo.CI*y_scale, (echo.CI[1] - echo.CI[0])*y_scale))
 			if ( (beta0 >= echo.CI[0]*y_scale) and (beta0 <= echo.CI[1]*y_scale) ):

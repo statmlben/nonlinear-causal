@@ -24,7 +24,7 @@ for beta0 in [.00, .05, .10, .15]:
 			n_sim = 100
 		for i in range(n_sim):
 			theta0 = np.random.randn(p)
-			# theta0[:int(.1*p)] = 0.
+			# theta0[:int(.3*p)] = 0.
 			# theta0 = np.ones(p)
 			theta0 = theta0 / np.sqrt(np.sum(theta0**2))
 			Z, X, y, phi = sim(n, p, theta0, beta0, case=case, feat='normal')			
