@@ -81,6 +81,95 @@ def sim(n, p, theta0, beta0, alpha0=0., IoR=None, case='linear', feat='normal', 
 			phi_ior = 1.*(IoR<=0.)*IoR + 2*IoR*(IoR>0.)
 		y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 	
+	elif case == 'quad+exp':
+		right = np.dot(Z, theta0) + U**2 + eps + np.e
+		# right = np.dot(Z, theta0) + U**2 + eps
+		# Z, U, gamma = Z[right > 0], U[right>0], gamma[right>0]
+		X = np.sign(np.random.randn(len(Z))) * np.sqrt(np.abs(right))
+		phi = X**2
+		if IoR is not None:
+			phi_ior = IoR**2
+		y = beta0 * np.exp(X) + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'quad+linear':
+		right = np.dot(Z, theta0) + U**2 + eps + np.e
+		# right = np.dot(Z, theta0) + U**2 + eps
+		# Z, U, gamma = Z[right > 0], U[right>0], gamma[right>0]
+		X = np.sign(np.random.randn(len(Z))) * np.sqrt(np.abs(right))
+		phi = X**2
+		if IoR is not None:
+			phi_ior = IoR**2
+		y = beta0 * X + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'quad+log':
+		right = np.dot(Z, theta0) + U**2 + eps + np.e
+		# right = np.dot(Z, theta0) + U**2 + eps
+		# Z, U, gamma = Z[right > 0], U[right>0], gamma[right>0]
+		X = np.sign(np.random.randn(len(Z))) * np.sqrt(np.abs(right))
+		phi = X**2
+		if IoR is not None:
+			phi_ior = IoR**2
+		y = beta0 * np.log(np.abs(X)) + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'quad+inverse':
+		right = np.dot(Z, theta0) + U**2 + eps + np.e
+		# right = np.dot(Z, theta0) + U**2 + eps
+		# Z, U, gamma = Z[right > 0], U[right>0], gamma[right>0]
+		X = np.sign(np.random.randn(len(Z))) * np.sqrt(np.abs(right))
+		phi = X**2
+		if IoR is not None:
+			phi_ior = IoR**2
+		y = beta0 * 1 / X + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'quad+abs':
+		right = np.dot(Z, theta0) + U**2 + eps + np.e
+		# right = np.dot(Z, theta0) + U**2 + eps
+		# Z, U, gamma = Z[right > 0], U[right>0], gamma[right>0]
+		X = np.sign(np.random.randn(len(Z))) * np.sqrt(np.abs(right))
+		phi = X**2
+		if IoR is not None:
+			phi_ior = IoR**2
+		y = beta0 * np.abs(X) + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'inverse+linear':
+		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
+		phi = 1. / X
+		if IoR is not None:
+			phi_ior = 1. / IoR
+		y = beta0 * X + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'inverse+exp':
+		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
+		phi = 1. / X
+		Z = Z[X<10]
+		U = U[X<10]
+		gamma = gamma[X<10]
+		X = X[X<10]
+		if IoR is not None:
+			phi_ior = 1. / IoR
+		y = beta0 * np.exp(X) + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'inverse+quad':
+		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
+		phi = 1. / X
+		if IoR is not None:
+			phi_ior = 1. / IoR
+		y = beta0 * X**2 + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'inverse+abs':
+		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
+		phi = 1. / X
+		if IoR is not None:
+			phi_ior = 1. / IoR
+		y = beta0 * np.abs(X) + np.dot(Z, alpha0) + U + gamma
+
+	elif case == 'inverse+log':
+		X = 1. / (np.dot(Z, theta0) + U**2 + eps)
+		phi = 1. / X
+		if IoR is not None:
+			phi_ior = 1. / IoR
+		y = beta0 * np.log(np.abs(X)) + np.dot(Z, alpha0) + U + gamma
+
 	else:
 		raise NameError('Sorry, no build-in case.')
 	

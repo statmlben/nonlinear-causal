@@ -401,6 +401,78 @@
 
 ## Invalid IVs (Testing; n=10000; p=50)
 
+### v = 0.0
+    ========================================
+    case: log; beta0: 0.000, n: 10000, p: 50, bad_select: 106
+    Rejection: 2sls: 0.062; RT_2sls: 0.048; SIR: 0.052; Comb-SIR: 0.051
+    ========================================
+    case: cube-root; beta0: 0.000, n: 10000, p: 50, bad_select: 147
+    Rejection: 2sls: 0.056; RT_2sls: 0.052; SIR: 0.048; Comb-SIR: 0.053
+    ========================================
+    case: inverse; beta0: 0.000, n: 10000, p: 50, bad_select: 137
+    Rejection: 2sls: 0.054; RT_2sls: 0.047; SIR: 0.053; Comb-SIR: 0.048
+    ========================================
+    case: piecewise_linear; beta0: 0.000, n: 10000, p: 50, bad_select: 150
+    Rejection: 2sls: 0.057; RT_2sls: 0.058; SIR: 0.063; Comb-SIR: 0.063
+    ========================================
+    case: quad; beta0: 0.000, n: 10000, p: 50, bad_select: 140
+    Rejection: 2sls: 0.065; RT_2sls: 0.067; SIR: 0.058; Comb-SIR: 0.067
+    ========================================
+    case: linear; beta0: 0.030, n: 10000, p: 50, bad_select: 13
+    Rejection: 2sls: 0.300; RT_2sls: 0.310; SIR: 0.330; Comb-SIR: 0.330
+    ========================================
+    case: log; beta0: 0.030, n: 10000, p: 50, bad_select: 8
+    Rejection: 2sls: 0.080; RT_2sls: 0.267; SIR: 0.293; Comb-SIR: 0.253
+    ========================================
+    case: cube-root; beta0: 0.030, n: 10000, p: 50, bad_select: 12
+    Rejection: 2sls: 0.210; RT_2sls: 0.270; SIR: 0.290; Comb-SIR: 0.280
+    ========================================
+    case: inverse; beta0: 0.030, n: 10000, p: 50, bad_select: 14
+    Rejection: 2sls: 0.030; RT_2sls: 0.030; SIR: 0.340; Comb-SIR: 0.350
+    ========================================
+    case: piecewise_linear; beta0: 0.030, n: 10000, p: 50, bad_select: 14
+    Rejection: 2sls: 0.360; RT_2sls: 0.370; SIR: 0.380; Comb-SIR: 0.350
+    ========================================
+    case: quad; beta0: 0.030, n: 10000, p: 50, bad_select: 13
+    Rejection: 2sls: 0.030; RT_2sls: 0.030; SIR: 0.260; Comb-SIR: 0.200
+    ========================================
+    case: linear; beta0: 0.050, n: 10000, p: 50, bad_select: 17
+    Rejection: 2sls: 0.690; RT_2sls: 0.690; SIR: 0.670; Comb-SIR: 0.700
+    ========================================
+    case: log; beta0: 0.050, n: 10000, p: 50, bad_select: 15
+    Rejection: 2sls: 0.091; RT_2sls: 0.534; SIR: 0.591; Comb-SIR: 0.580
+    ========================================
+    case: cube-root; beta0: 0.050, n: 10000, p: 50, bad_select: 20
+    Rejection: 2sls: 0.430; RT_2sls: 0.480; SIR: 0.520; Comb-SIR: 0.520
+    ========================================
+    case: inverse; beta0: 0.050, n: 10000, p: 50, bad_select: 17
+    Rejection: 2sls: 0.120; RT_2sls: 0.100; SIR: 0.670; Comb-SIR: 0.670
+    ========================================
+    case: piecewise_linear; beta0: 0.050, n: 10000, p: 50, bad_select: 12
+    Rejection: 2sls: 0.600; RT_2sls: 0.600; SIR: 0.600; Comb-SIR: 0.610
+    ========================================
+    case: quad; beta0: 0.050, n: 10000, p: 50, bad_select: 12
+    Rejection: 2sls: 0.040; RT_2sls: 0.030; SIR: 0.680; Comb-SIR: 0.580
+    ========================================
+    case: linear; beta0: 0.100, n: 10000, p: 50, bad_select: 24
+    Rejection: 2sls: 0.970; RT_2sls: 0.970; SIR: 0.970; Comb-SIR: 0.970
+    ========================================
+    case: log; beta0: 0.100, n: 10000, p: 50, bad_select: 10
+    Rejection: 2sls: 0.235; RT_2sls: 0.988; SIR: 1.000; Comb-SIR: 1.000
+    ========================================
+    case: cube-root; beta0: 0.100, n: 10000, p: 50, bad_select: 20
+    Rejection: 2sls: 0.960; RT_2sls: 1.000; SIR: 1.000; Comb-SIR: 1.000
+    ========================================
+    case: inverse; beta0: 0.100, n: 10000, p: 50, bad_select: 16
+    Rejection: 2sls: 0.090; RT_2sls: 0.160; SIR: 0.990; Comb-SIR: 0.990
+    ========================================
+    case: piecewise_linear; beta0: 0.100, n: 10000, p: 50, bad_select: 16
+    Rejection: 2sls: 1.000; RT_2sls: 1.000; SIR: 1.000; Comb-SIR: 1.000
+    ========================================
+    case: quad; beta0: 0.100, n: 10000, p: 50, bad_select: 16
+    Rejection: 2sls: 0.110; RT_2sls: 0.110; SIR: 1.000; Comb-SIR: 1.000
+
+
 ### v = 0.5
     ========================================
     case: linear; beta0: 0.000, n: 10000, p: 50, bad_select: 137
@@ -942,3 +1014,69 @@
     2SLS: beta0: 0.005; CI coverage: 0.940; CI len: 0.054(0.027)
     PT-2SLS: beta0: 0.005; CI coverage: 0.938; CI len: 0.054(0.027)
     2SIR: beta0: 0.005; CI coverage: 0.950; CI len: 0.075(0.016)
+
+## misspecified models
+
+### quad function
+
+    Rejection: 2sls: 0.020; RT_2sls: 0.020; SIR: 0.020; Comb_SIR: 0.020
+    ############################################################
+    simulation setting: case: quad+exp, n: 5000, p: 50, beta0: 0.200
+    est beta: 2sls: -0.002(0.036); RT_2sls: -0.002(0.037); SIR: 0.170(0.034)
+    Rejection: 2sls: 0.070; RT_2sls: 0.070; SIR: 0.990; Comb_SIR: 0.990
+    ############################################################
+    simulation setting: case: quad+abs, n: 5000, p: 50, beta0: 0.200
+    est beta: 2sls: -0.003(0.029); RT_2sls: -0.003(0.030); SIR: 0.054(0.027)
+    Rejection: 2sls: 0.060; RT_2sls: 0.060; SIR: 0.450; Comb_SIR: 0.430
+    ############################################################
+    simulation setting: case: quad+inverse, n: 5000, p: 50, beta0: 0.200
+    est beta: 2sls: 0.005(0.028); RT_2sls: 0.004(0.028); SIR: 0.024(0.019)
+    Rejection: 2sls: 0.100; RT_2sls: 0.090; SIR: 0.070; Comb_SIR: 0.070
+    ############################################################
+    simulation setting: case: quad+log, n: 5000, p: 50, beta0: 0.200
+    est beta: 2sls: -0.000(0.027); RT_2sls: -0.000(0.027); SIR: 0.037(0.025)
+    Rejection: 2sls: 0.030; RT_2sls: 0.030; SIR: 0.240; Comb_SIR: 0.210
+    ############################################################
+    simulation setting: case: quad+linear, n: 5000, p: 50, beta0: 0.300
+    est beta: 2sls: 0.000(0.032); RT_2sls: 0.001(0.032); SIR: 0.024(0.019)
+    Rejection: 2sls: 0.060; RT_2sls: 0.070; SIR: 0.040; Comb_SIR: 0.040
+    ############################################################
+    simulation setting: case: quad+exp, n: 5000, p: 50, beta0: 0.300
+    est beta: 2sls: 0.004(0.051); RT_2sls: 0.004(0.052); SIR: 0.261(0.036)
+    Rejection: 2sls: 0.110; RT_2sls: 0.120; SIR: 1.000; Comb_SIR: 1.000
+    ############################################################
+    simulation setting: case: quad+abs, n: 5000, p: 50, beta0: 0.300
+    est beta: 2sls: 0.003(0.030); RT_2sls: 0.003(0.031); SIR: 0.082(0.030)
+    Rejection: 2sls: 0.080; RT_2sls: 0.080; SIR: 0.820; Comb_SIR: 0.760
+    ############################################################
+    simulation setting: case: quad+inverse, n: 5000, p: 50, beta0: 0.300
+    est beta: 2sls: -0.003(0.027); RT_2sls: -0.002(0.027); SIR: 0.022(0.017)
+    Rejection: 2sls: 0.040; RT_2sls: 0.050; SIR: 0.040; Comb_SIR: 0.020
+    ############################################################
+    simulation setting: case: quad+log, n: 5000, p: 50, beta0: 0.300
+    est beta: 2sls: 0.000(0.032); RT_2sls: 0.000(0.032); SIR: 0.055(0.025)
+    Rejection: 2sls: 0.090; RT_2sls: 0.110; SIR: 0.470; Comb_SIR: 0.440
+    ############################################################
+    simulation setting: case: quad+linear, n: 5000, p: 50, beta0: 0.400
+    est beta: 2sls: 0.005(0.032); RT_2sls: 0.005(0.032); SIR: 0.027(0.018)
+    Rejection: 2sls: 0.050; RT_2sls: 0.060; SIR: 0.030; Comb_SIR: 0.040
+    ############################################################
+    simulation setting: case: quad+exp, n: 5000, p: 50, beta0: 0.400
+    est beta: 2sls: -0.012(0.064); RT_2sls: -0.012(0.066); SIR: 0.343(0.049)
+    Rejection: 2sls: 0.180; RT_2sls: 0.170; SIR: 1.000; Comb_SIR: 1.000
+    ############################################################
+    simulation setting: case: quad+abs, n: 5000, p: 50, beta0: 0.400
+    est beta: 2sls: -0.008(0.033); RT_2sls: -0.008(0.034); SIR: 0.109(0.030)
+    Rejection: 2sls: 0.120; RT_2sls: 0.110; SIR: 0.990; Comb_SIR: 0.970
+    ############################################################
+    simulation setting: case: quad+inverse, n: 5000, p: 50, beta0: 0.400
+    est beta: 2sls: 0.003(0.029); RT_2sls: 0.003(0.029); SIR: 0.027(0.021)
+    Rejection: 2sls: 0.060; RT_2sls: 0.060; SIR: 0.070; Comb_SIR: 0.080
+    ############################################################
+    simulation setting: case: quad+log, n: 5000, p: 50, beta0: 0.400
+    est beta: 2sls: -0.001(0.027); RT_2sls: -0.001(0.028); SIR: 0.072(0.029)
+    Rejection: 2sls: 0.030; RT_2sls: 0.030; SIR: 0.770; Comb_SIR: 0.690
+
+### inverse function
+
+
