@@ -2,9 +2,10 @@
 # All rights reserved.
 # This software is licensed under the BSD 3-Clause License.
 
-from . import linear_reg, ts_models
+from . import linear_reg, ts_models, base
 
 __all__ = [
 	"linear_reg", 
-	"ts_models"
+	"ts_models",
+	"base"
 	]
