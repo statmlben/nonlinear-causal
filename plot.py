@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 # df = pd.read_csv("aug24_ben_test.csv")
-# df = pd.read_csv("sep23_ben_test_refined_genes.csv")
-df = pd.read_csv("oct04_ben_test_refined_genes.csv")
+# df = pd.read_csv("oct04_ben_test_refined_genes.csv")
+df = pd.read_csv("Apr9_22_app_test.csv")
 
 num_gen = 17198
 level = 0.05 / num_gen
@@ -14,13 +14,15 @@ level = 0.05 / num_gen
 gene_set = set(df['gene'])
 gene_set = list(gene_set)
 # take the gene with at least one siginificant p-value
-# for gene_tmp in gene_set:
-# 	index_tmp = df[df['gene'] == gene_tmp].index
-# 	if df.loc[index_tmp]['p-value'].min() > level:
-# 		df.drop(index_tmp, inplace=True)
+for gene_tmp in gene_set:
+	index_tmp = df[df['gene'] == gene_tmp].index
+	if df.loc[index_tmp]['p-value'].min() > level:
+		df.drop(index_tmp, inplace=True)
 
 df['log-p-value'] = - np.log10( df['p-value'] )
 
+gene_set = set(df['gene'])
+gene_set = list(gene_set)
 gene_set.sort()
 ## plot for the final results
 sns.set_theme(style="whitegrid")

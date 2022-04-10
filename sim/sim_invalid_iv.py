@@ -36,8 +36,10 @@ n, p = 10000, 50
 df = {'true_beta': [], 'case': [], 'method': [], 'pct. of signif': []}
 
 # theta0 = np.random.randn(p)
-for beta0 in [.0, .03, .05, .10]:
-	for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
+# for beta0 in [.0, .03, .05, .10]:
+for beta0 in [.0]:
+	# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
+	for case in ['linear']:
 		bad_select = 0
 		p_value = []
 		n_sim = 1000
@@ -69,10 +71,10 @@ for beta0 in [.0, .03, .05, .10]:
 			LD_Z2, cor_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 			# print('True beta: %.3f' %beta0)
 
-			Ks = range(p)
+			Ks = range(int(p/2))
 			## solve by 2sls
 			reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-1,3,.3),
-							Ks=Ks, max_iter=10000, refit=False, find_best=False)
+							Ks=Ks, max_iter=50000, refit=False, find_best=False)
 			LS = _2SLS(sparse_reg=reg_model)
 			# LS = _2SCausal._2SLS(sparse_reg = SCAD_IC(fit_intercept=False, max_iter=10000))
 			## Stage-1 fit theta
@@ -87,7 +89,7 @@ for beta0 in [.0, .03, .05, .10]:
 			RT_X1 = power_transform(X1.reshape(-1,1)).flatten()
 			# RT_X1 = quantile_transform(X1.reshape(-1,1), output_distribution='normal')
 			reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-1,3,.3), 
-						Ks=Ks, max_iter=10000, refit=False, find_best=False)
+						Ks=Ks, max_iter=50000, refit=False, find_best=False)
 			RT_cor_ZX1 = np.dot(Z1.T, RT_X1)
 			RT_LS = _2SLS(sparse_reg=reg_model)
 			## Stage-1 fit theta
@@ -100,7 +102,7 @@ for beta0 in [.0, .03, .05, .10]:
 
 			## solve by SIR+LS
 			reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-1,3,.3), 
-					Ks=Ks, max_iter=10000, refit=False, find_best=False)
+					Ks=Ks, max_iter=50000, refit=False, find_best=False)
 			echo = _2SIR(sparse_reg=reg_model)
 			## Stage-1 fit theta
 			echo.fit_theta(Z1, X1)
@@ -115,7 +117,7 @@ for beta0 in [.0, .03, .05, .10]:
 			for data_in_slice_tmp in data_in_slice_lst:
 				num_slice = int(int(n1) / data_in_slice_tmp)
 				reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-1,3,.3), 
-					Ks=Ks, max_iter=10000, refit=False, find_best=False)
+					Ks=Ks, max_iter=50000, refit=False, find_best=False)
 				SIR = _2SIR(sparse_reg=reg_model, data_in_slice=data_in_slice_tmp)
 				## Stage-1 fit theta
 				SIR.fit_theta(Z1=Z1, X1=X1)
@@ -155,7 +157,25 @@ for beta0 in [.0, .03, .05, .10]:
 import pandas as pd
 df = pd.DataFrame(df)
 
-import seaborn as sns
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+# sns.relplot(data=df, x="true_beta", y="pct. of signif", hue='method', style="method", col='case', kind='line', markers=True)
+# plt.show()
+
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-sns.relplot(data=df, x="true_beta", y="pct. of signif", hue='method', style="method", col='case', kind='line', markers=True)
-plt.show()
+import scipy.stats as stats
+import seaborn as sns
+from scipy.stats import rv_continuous
+import statsmodels.api as sm
+import random
+from scipy.stats import beta
+
+class neg_log_uniform(rv_continuous):
+	"negative log uniform distribution"
+	def _cdf(self, x):
+		return 1. - 10**(-x)
+NLU_rv = neg_log_uniform()
+
+sm.qqplot(-np.log10(p_value[:,0]), dist=NLU_rv, line="45")

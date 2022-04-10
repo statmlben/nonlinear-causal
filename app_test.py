@@ -15,7 +15,7 @@ import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 mypath = '/home/ben/dataset/GenesToAnalyze'
-gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
+gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
 # gene_folders = random.sample(gene_folders, 10)
 
 def calculate_vif_(X, thresh=5.0, verbose=0):
@@ -42,7 +42,7 @@ def calculate_vif_(X, thresh=5.0, verbose=0):
 
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
-df = {'gene': [], 'p-value': [], 'beta': [], 'method': []}
+df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'R2': []}
 # NMNAT3July20_2SIR
 
 interest_genes = ['APOC1',
@@ -63,14 +63,15 @@ interest_genes = ['APOC1',
 				'NKPD1',
 				'TOMM40',
 				'ZNF296']
-
+# B3GALT1
 for folder_tmp in gene_folders:
 # for folder_tmp in ['APOEJuly20_2SIR', 'TOMM40July20_2SIR']:
+# for folder_tmp in ['TOMM40July20_2SIR', 'RBFOX1July20_2SIR']:
 	if 'July20_2SIR' not in folder_tmp:
 		continue
 	gene_code = folder_tmp.replace('July20_2SIR', '')
-	if gene_code not in interest_genes:
-		continue
+	# if gene_code not in interest_genes:
+	# 	continue
 	print('\n##### Causal inference of %s #####' %gene_code)
 	## load data
 	dir_name = mypath+'/'+folder_tmp
@@ -93,61 +94,73 @@ for folder_tmp in gene_folders:
 	# LD_Z1 = LD_Z1 + 0. * np.finfo(np.float32).eps * np.eye(p)
 	# LD_Z2 = LD_Z2 + 0. * np.finfo(np.float32).eps * np.eye(p)
 
-	Ks = range(int(p/2))
+	Ks = range(int(p/2)-1)
 	## 2SLS
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
 					Ks=Ks, max_iter=50000, refit=False, find_best=False)
-	LS = _2SLS(sparse_reg=None)
+	LS = _2SLS(sparse_reg=reg_model)
 	## Stage-1 fit theta
 	LS.fit_theta(LD_Z1, cov_ZX1)
 	## Stage-2 fit beta
 	LS.fit_beta(LD_Z2, cov_ZY2, n2)
 	## produce p_value and CI for beta
 	LS.test_effect(n2, LD_Z2, cov_ZY2)
+	LS_R2 = np.var( snp.dot(LS.theta)*LS.theta_norm ) / np.var(np.array(gene_exp))
+	print('-'*20)
+	print('LS stage 1 R2: %.3f' %LS_R2)
 	print('LS beta: %.3f' %LS.beta)
 	print('p-value based on 2SLS: %.5f' %LS.p_value)
+	
+	## compute R2 for the 2SLS
 	## save the record
 	df['gene'].append(gene_code)
 	df['method'].append('2SLS')
 	df['p-value'].append(LS.p_value)
 	df['beta'].append(LS.beta)
-
+	df['R2'].append(LS_R2)
 
 	## PT-2SLS
-	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
+	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-4,3,.3),
 					Ks=Ks, max_iter=50000, refit=False, find_best=False)
 	PT_X1 = power_transform(gene_exp.values.reshape(-1,1), method='yeo-johnson').flatten()
+	PT_X1 = PT_X1 - PT_X1.mean()
 	PT_cor_ZX1 = np.dot(snp.values.T, PT_X1)
-	PT_LS = _2SLS(sparse_reg=None)
+	PT_LS = _2SLS(sparse_reg=reg_model)
 	## Stage-1 fit theta
 	PT_LS.fit_theta(LD_Z1, PT_cor_ZX1)
 	## Stage-2 fit beta
 	PT_LS.fit_beta(LD_Z2, cov_ZY2, n2)
 	## produce p-value and CI for beta
 	PT_LS.test_effect(n2, LD_Z2, cov_ZY2)
+	PT_LS_R2 = np.var( snp.dot(PT_LS.theta)*PT_LS.theta_norm ) / np.var(PT_X1)
 
 	# gene_exp.values.flatten()
-	PT_LS.CI_beta(n1, n2, Z1=snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
+	# PT_LS.CI_beta(n1, n2, Z1=snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
+	print('-'*20)
+	print('PT-LS stage 1 R2: %.3f' %PT_LS_R2)
 	print('PT-LS beta: %.3f' %PT_LS.beta)
 	print('p-value based on PT-2SLS: %.5f' %PT_LS.p_value)
+
 	## save the record
 	df['gene'].append(gene_code)
 	df['method'].append('PT-2SLS')
 	df['p-value'].append(PT_LS.p_value)
 	df['beta'].append(PT_LS.beta)
+	df['R2'].append(PT_LS_R2)
 
 	## 2SIR
-	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
+	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-4,3,.3),
 					Ks=Ks, max_iter=50000, refit=False, find_best=False)
-	SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
+	SIR = _2SIR(sparse_reg=reg_model, data_in_slice=0.3*n1)
 	## Stage-1 fit theta
 	SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
 	## Stage-2 fit beta
 	SIR.fit_beta(LD_Z2, cov_ZY2, n2)
 	## generate CI for beta
 	SIR.test_effect(n2, LD_Z2, cov_ZY2)
-	print('2SIR beta: %.3f' %SIR.beta)
+	print('-'*20)
 	print('2SIR eigenvalues: %.3f' %SIR.sir.eigenvalues_)
+	print('2SIR beta: %.3f' %SIR.beta)
 	print('p-value based on 2SIR: %.5f' %SIR.p_value)
 			
 	## save the record
@@ -155,14 +168,15 @@ for folder_tmp in gene_folders:
 	df['method'].append('2SIR')
 	df['p-value'].append(SIR.p_value)
 	df['beta'].append(SIR.beta)
+	df['R2'].append(SIR.sir.eigenvalues_[0])
 
 	## Comb-2SIR
 	data_in_slice_lst = [.1*n1, .2*n1, .3*n1, .4*n1, .5*n1]
-	comb_pvalue, comb_beta = [], []
+	comb_pvalue, comb_beta, comb_eigenvalue = [], [], []
 	for data_in_slice_tmp in data_in_slice_lst:
-		reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-5,3,.3),
+		reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-4,3,.3),
 						Ks=Ks, max_iter=50000, refit=False, find_best=False)
-		SIR = _2SIR(sparse_reg=None, data_in_slice=data_in_slice_tmp)
+		SIR = _2SIR(sparse_reg=reg_model, data_in_slice=data_in_slice_tmp)
 		## Stage-1 fit theta
 		SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
 		## Stage-2 fit beta
@@ -171,20 +185,20 @@ for folder_tmp in gene_folders:
 		SIR.test_effect(n2, LD_Z2, cov_ZY2)
 		comb_beta.append(SIR.beta)
 		comb_pvalue.append(SIR.p_value)
+		comb_eigenvalue.append(SIR.sir.eigenvalues_[0])
 	comb_T = np.tan((0.5 - np.array(comb_pvalue))*np.pi).mean()
 	correct_pvalue = min( max(.5 - np.arctan(comb_T)/np.pi, np.finfo(np.float64).eps), 1.0)
 	# correct_pvalue = min(len(data_in_slice_lst)*np.min(comb_pvalue), 1.0)
+	print('Comb-2SIR eigenvalues: %.3f' %np.mean(comb_eigenvalue))
 	print('Comb-2SIR beta: %.3f' %np.mean(comb_beta))
 	print('p-value based on Comb-2SIR: %.5f' %correct_pvalue)
-			
+
 	## save the record
 	df['gene'].append(gene_code)
 	df['method'].append('Comb-2SIR')
 	df['p-value'].append(correct_pvalue)
 	df['beta'].append(np.mean(comb_beta))
+	df['R2'].append(np.mean(comb_eigenvalue))
 
 df = pd.DataFrame.from_dict(df)
-# df.to_csv('oct04_ben_test.csv', index=False)
-
-# ## stage_two = False: 1min 4s
-# ## stage_two = True: 8min 36s
+# df.to_csv('Apr10_22_app_test.csv', index=False)

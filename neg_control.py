@@ -12,7 +12,11 @@ ci = 0.95
 methods = ['2SLS', 'PT-2SLS', '2SIR']
 QQ_plot_dis = "neg_log_uniform"
 
-df = pd.read_csv('./aug24_ben_test.csv')
+df = pd.read_csv('./Apr9_22_app_test.csv')
+# df = df.drop(df[(df.R2 < 0.05) & (df.method == '2SIR')].index)
+# df = df.drop(df[(df.R2 < 0.05) & (df.method == 'Comb-2SIR')].index)
+# df = df.drop(df[(df.R2 < 0.1) & (df.method == '2SLS')].index)
+# df = df.drop(df[(df.R2 < 0.1) & (df.method == 'PT-2SLS')].index)
 
 all_genes = list(set(df['gene']))
 
@@ -21,11 +25,12 @@ postive_genes = [
                 'PICALM', 'EPHA1', 'HLA-DRB1', 'INPP5D', 'MEF2C', 'CASS4', 'PTK2B', 'NME8', 'ZCWPW1', 'CELF1', 'FERMT2', 'SLC24A4',
                 'RIN3', 'DSG2', 'PLD3', 'UNC5C', 'AKAP9', 'ADAM10', 'PSEN1', 'HFE', 'NOS3', 'PLAU', 'MPO', 'APP', 'GBA', 'SNCA', 
                 'SNCB', 'TOMM40',
+                'RELB', 'RBFOX1', 'CCDC83', 'ADH6',
                 'APOC1', 'APOC1P1', 'BCAM', 'BIN1', 'CBLC', 'CLPTM1', 'CYP27C1', 'MS4A4A', 'MS4A6A', 'MTCH2', 'NKPD1', 'ZNF296'
 ]
 
-interest_genes = random.sample(set(all_genes) - set(postive_genes), 2000)
-# interest_genes = list(set(all_genes) - set(postive_genes))
+# interest_genes = random.sample(set(all_genes) - set(postive_genes), 5000)
+interest_genes = list(set(all_genes) - set(postive_genes))
 
 num_gene = len(interest_genes)
 low_bound = [beta.ppf((1-ci)/2, a=i, b=num_gene-i+1) for i in range(1,num_gene+1)]
@@ -68,8 +73,7 @@ axs[0].get_lines()[0].set(label='2SLS')
 axs[1].get_lines()[0].set(label='PT-2SLS')
 axs[2].get_lines()[0].set(label='2SIR')
 
-# Add on y=x line
-
+# Add CI
 for i in range(3):
     axs[i].plot(-np.log10(ep_points), -np.log10(low_bound), 'k--', alpha=0.3)
     axs[i].plot(-np.log10(ep_points), -np.log10(up_bound), 'k--', alpha=0.3)
