@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-def calculate_vif_(X, thresh=5.0, verbose=0):
+def calculate_vif_(X, thresh=2.5, verbose=0):
     """
     Remove multicollinearity features.
 

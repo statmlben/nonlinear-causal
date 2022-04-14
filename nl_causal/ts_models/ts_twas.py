@@ -189,8 +189,8 @@ class _2SLS(object):
 				# clf_tmp.fit(pseudo_input_tmp, pseudo_output_tmp)
 				mse_tmp = 1. - 2 * np.dot(coef_aug_tmp, cov_aug_tmp) / n2 + coef_aug_tmp.T.dot(LD_Z_aug_tmp).dot(coef_aug_tmp) / n2
 				# print('mse_tmp: %.3f' %mse_tmp)
-				# criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n2) / n2
-				criterion_tmp = np.log(mse_tmp) + len(model_tmp) * np.log(n2) / n2
+				criterion_tmp = mse_tmp / (self.var_res + eps64) + len(model_tmp) * np.log(n2) / n2
+				# criterion_tmp = np.log(mse_tmp) + len(model_tmp) * np.log(n2) / n2
 				criterion_lst.append(criterion_tmp)
 				mse_lst.append(mse_tmp)
 			self.criterion_lst_ = criterion_lst

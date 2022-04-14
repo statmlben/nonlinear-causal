@@ -11,12 +11,12 @@ from nl_causal.linear_reg import L0_IC
 from sklearn.preprocessing import power_transform, quantile_transform
 import pandas as pd
 
-n, p = 2000, 10
+n, p = 5000, 50
 # for beta0 in [.05, .10, .15]:
 df = {'true_beta': [], 'case': [], 'method': [], 'pct. of signif': []}
-for beta0 in [.00, .05, .10, .15]:
-	for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
-	# for case in ['quad']:
+for beta0 in [.00]:
+	# for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
+	for case in ['linear']:
 		beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
 		p_value = []
 		n_sim = 1000
@@ -138,6 +138,17 @@ import matplotlib.pyplot as plt
 sns.relplot(data=df, x="true_beta", y="pct. of signif", hue='method', style="method", col='case', kind='line', markers=True)
 plt.show()
 
+import scipy.stats as stats
+from scipy.stats import rv_continuous
+import statsmodels.api as sm
+
+class neg_log_uniform(rv_continuous):
+	"negative log uniform distribution"
+	def _cdf(self, x):
+		return 1. - 10**(-x)
+NLU_rv = neg_log_uniform()
+sm.qqplot(-np.log10(p_value[:,2]), dist=NLU_rv, line="45")
+plt.show()
 
 # ## plot estimation accuracy
 # import numpy as np
