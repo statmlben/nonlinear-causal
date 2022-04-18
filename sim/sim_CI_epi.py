@@ -14,16 +14,15 @@ from sklearn.neighbors import KNeighborsRegressor
 # simulation for CI
 n, p = 5000, 50
 for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
-# for case in ['linear']:
-    for beta0 in [.005]:
+    for beta0 in [.05]:
         beta_LS, beta_RT_LS, beta_LS_SIR = [], [], []
         len_LS, len_RT_LS, len_SIR = [], [], []
         cover_LS, cover_RT_LS, cover_SIR = [], [], []
-        n_sim = 500
+        n_sim = 1000
         for i in range(n_sim):
             theta0 = np.random.randn(p)
             # theta0 = np.ones(p)
-            xi0 = np.random.randn(int(.1*p))
+            xi0 = np.random.randn(int(.3*p))
             xi0 = .1*xi0 / np.sqrt(np.sum(xi0**2))
             theta0 = theta0 / np.sqrt(np.sum(theta0**2))
             Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=0., xi0=xi0, case=case, feat='dominant_cate', effect = 'epistasis', dominant_factor=.3)
@@ -122,3 +121,67 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad'
                 %(beta0, np.mean(cover_RT_LS), np.mean(len_RT_LS), np.std(len_RT_LS)))
         print('2SIR: beta0: %.3f; CI coverage: %.3f; CI len: %.3f(%.3f)'
                 %(beta0, np.mean(cover_SIR), np.mean(len_SIR), np.std(len_SIR)))
+
+# lam: 1.5; |J|: 0.1
+# ########################################
+# simulation setting: case: linear n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.948; CI len: 0.115(0.039)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.953; CI len: 0.116(0.038)
+# 2SIR: beta0: 0.050; CI coverage: 0.992; CI len: 0.124(0.028)
+# ########################################
+# simulation setting: case: log n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 1.000; CI len: 188.532(644.923)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.893; CI len: 0.105(0.040)
+# 2SIR: beta0: 0.050; CI coverage: 0.991; CI len: 0.121(0.027)
+# ########################################
+# simulation setting: case: cube-root n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 1.000; CI len: 0.268(0.200)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.917; CI len: 0.112(0.040)
+# 2SIR: beta0: 0.050; CI coverage: 0.986; CI len: 0.123(0.028)
+# ########################################
+# simulation setting: case: inverse n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.977; CI len: 0.334(1.164)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.801; CI len: 0.088(0.042)
+# 2SIR: beta0: 0.050; CI coverage: 0.989; CI len: 0.124(0.028)
+# ########################################
+# simulation setting: case: piecewise_linear n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.944; CI len: 0.115(0.039)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.945; CI len: 0.116(0.038)
+# 2SIR: beta0: 0.050; CI coverage: 0.991; CI len: 0.124(0.027)
+# ########################################
+# simulation setting: case: quad n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.776; CI len: 0.082(0.042)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.773; CI len: 0.082(0.042)
+# 2SIR: beta0: 0.050; CI coverage: 0.988; CI len: 0.124(0.028)
+
+# lam: 1.5; |J|: 0.3
+########################################
+# simulation setting: case: linear n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.931; CI len: 0.114(0.039)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.942; CI len: 0.114(0.039)
+# 2SIR: beta0: 0.050; CI coverage: 0.989; CI len: 0.123(0.028)
+# ########################################
+# simulation setting: case: log n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 1.000; CI len: 210.965(634.625)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.882; CI len: 0.104(0.041)
+# 2SIR: beta0: 0.050; CI coverage: 0.990; CI len: 0.123(0.027)
+# ########################################
+# simulation setting: case: cube-root n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 1.000; CI len: 0.281(0.225)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.942; CI len: 0.114(0.039)
+# 2SIR: beta0: 0.050; CI coverage: 0.995; CI len: 0.124(0.028)
+# ########################################
+# simulation setting: case: inverse n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.974; CI len: 0.583(7.346)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.799; CI len: 0.085(0.045)
+# 2SIR: beta0: 0.050; CI coverage: 0.986; CI len: 0.124(0.028)
+# ########################################
+# simulation setting: case: piecewise_linear n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.926; CI len: 0.114(0.040)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.928; CI len: 0.115(0.039)
+# 2SIR: beta0: 0.050; CI coverage: 0.986; CI len: 0.123(0.028)
+# ########################################
+# simulation setting: case: quad n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.789; CI len: 0.085(0.044)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.788; CI len: 0.085(0.044)
+# 2SIR: beta0: 0.050; CI coverage: 0.990; CI len: 0.123(0.027)
