@@ -22,7 +22,7 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad'
         for i in range(n_sim):
             theta0 = np.random.randn(p)
             # theta0 = np.ones(p)
-            xi0 = np.random.randn(int(.3*p))
+            xi0 = np.random.randn(int(.1*p))
             xi0 = .1*xi0 / np.sqrt(np.sum(xi0**2))
             theta0 = theta0 / np.sqrt(np.sum(theta0**2))
             Z, X, y, phi = sim(n, p, theta0, beta0, alpha0=0., xi0=xi0, case=case, feat='dominant_cate', effect = 'epistasis', dominant_factor=.3)
@@ -185,3 +185,69 @@ for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad'
 # 2SLS: beta0: 0.050; CI coverage: 0.789; CI len: 0.085(0.044)
 # PT-2SLS: beta0: 0.050; CI coverage: 0.788; CI len: 0.085(0.044)
 # 2SIR: beta0: 0.050; CI coverage: 0.990; CI len: 0.123(0.027)
+
+# lam: 1.3; |J|: 0.1
+########################################
+# simulation setting: case: linear n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.945; CI len: 0.115(0.039)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.942; CI len: 0.116(0.038)
+# 2SIR: beta0: 0.050; CI coverage: 0.992; CI len: 0.123(0.028)
+# ########################################
+# simulation setting: case: log n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 1.000; CI len: 221.307(661.058)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.889; CI len: 0.103(0.041)
+# 2SIR: beta0: 0.050; CI coverage: 0.989; CI len: 0.124(0.028)
+# ########################################
+# simulation setting: case: cube-root n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 1.000; CI len: 0.281(0.216)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.915; CI len: 0.115(0.041)
+# 2SIR: beta0: 0.050; CI coverage: 0.987; CI len: 0.125(0.028)
+# ########################################
+# simulation setting: case: inverse n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.979; CI len: 0.331(1.033)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.796; CI len: 0.087(0.044)
+# 2SIR: beta0: 0.050; CI coverage: 0.992; CI len: 0.123(0.028)
+# ########################################
+# simulation setting: case: piecewise_linear n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.937; CI len: 0.115(0.040)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.932; CI len: 0.116(0.039)
+# 2SIR: beta0: 0.050; CI coverage: 0.986; CI len: 0.125(0.029)
+# ########################################
+# simulation setting: case: quad n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.787; CI len: 0.084(0.042)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.780; CI len: 0.084(0.042)
+# 2SIR: beta0: 0.050; CI coverage: 0.988; CI len: 0.125(0.028)
+
+
+# lam: 1.3; |J|: 0.3
+########################################
+# simulation setting: case: linear n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.923; CI len: 0.113(0.041)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.925; CI len: 0.113(0.040)
+# 2SIR: beta0: 0.050; CI coverage: 0.989; CI len: 0.123(0.028)
+# ########################################
+# simulation setting: case: log n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 1.000; CI len: 234.480(761.351)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.892; CI len: 0.103(0.042)
+# 2SIR: beta0: 0.050; CI coverage: 0.992; CI len: 0.124(0.027)
+# ########################################
+# simulation setting: case: cube-root n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 1.000; CI len: 0.275(0.206)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.907; CI len: 0.112(0.042)
+# 2SIR: beta0: 0.050; CI coverage: 0.989; CI len: 0.124(0.028)
+# ########################################
+# simulation setting: case: inverse n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.977; CI len: 1.920(49.401)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.772; CI len: 0.084(0.042)
+# 2SIR: beta0: 0.050; CI coverage: 0.987; CI len: 0.123(0.027)
+# ########################################
+# simulation setting: case: piecewise_linear n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.918; CI len: 0.112(0.040)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.914; CI len: 0.113(0.039)
+# 2SIR: beta0: 0.050; CI coverage: 0.985; CI len: 0.123(0.028)
+# ########################################
+# simulation setting: case: quad n: 5000, p: 50, beta0: 0.050
+# 2SLS: beta0: 0.050; CI coverage: 0.785; CI len: 0.084(0.043)
+# PT-2SLS: beta0: 0.050; CI coverage: 0.784; CI len: 0.083(0.043)
+# 2SIR: beta0: 0.050; CI coverage: 0.990; CI len: 0.123(0.028)
+
