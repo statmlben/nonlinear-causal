@@ -14,6 +14,9 @@ from os.path import isfile, join, isdir
 import statsmodels.api as sm
 from nl_causal.base.preprocessing import calculate_vif_
 
+valid_iv_th = 0.005
+vif_thresh = 500
+
 mypath = '/home/ben/dataset/GenesToAnalyze'
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
 # gene_folders = random.sample(gene_folders, 10)
@@ -23,33 +26,33 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'R2': []}
 # NMNAT3July20_2SIR
 
-interest_genes = ['APOC1',
-				'APOC1P1',
+interest_genes = [
+				# 'APOC1',
+				# 'APOC1P1',
 				'APOE',
-				'BCAM',
-				'BCL3',
-				'BIN1',
-				'CBLC',
-				'CEACAM19',
-				'CHRNA2',
-				'CLPTM1',
-				'CYP27C1',
-				'HLA-DRB5',
-				'MS4A4A',
-				'MS4A6A',
-				'MTCH2',
-				'NKPD1',
+				# 'BCAM',
+				# 'BCL3',
+				# 'BIN1',
+				# 'CBLC',
+				# 'CEACAM19',
+				# 'CHRNA2',
+				# 'CLPTM1',
+				# 'CYP27C1',
+				# 'HLA-DRB5',
+				# 'MS4A4A',
+				# 'MS4A6A',
+				# 'MTCH2',
+				# 'NKPD1',
 				'TOMM40',
-				'ZNF296']
+				# 'ZNF296'
+				]
 # B3GALT1
 for folder_tmp in gene_folders:
-# for folder_tmp in ['APOEJuly20_2SIR']:
-# for folder_tmp in ['TOMM40July20_2SIR', 'RBFOX1July20_2SIR']:
 	if 'July20_2SIR' not in folder_tmp:
 		continue
 	gene_code = folder_tmp.replace('July20_2SIR', '')
-	# if gene_code not in interest_genes:
-	# 	continue
+	if gene_code not in interest_genes:
+		continue
 	print('\n##### Causal inference of %s #####' %gene_code)
 	## load data
 	dir_name = mypath+'/'+folder_tmp
@@ -65,23 +68,24 @@ for folder_tmp in gene_folders:
 	
 	## remove the collinear features
 	# doi:10.1007/s11135-017-0584-6
-	snp, valid_cols = calculate_vif_(snp, thresh=2.5)
+	snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
 	sum_stat = sum_stat.loc[valid_cols]
 	
 	## n1 and n2 is pre-given
 	n1, n2, p = len(gene_exp), 54162, snp.shape[1]
 	LD_Z1, cov_ZX1 = np.dot(snp.values.T, snp.values), np.dot(snp.values.T, gene_exp.values.flatten())
 	LD_Z2, cov_ZY2 = LD_Z1/n1*n2, sum_stat.values.flatten()*n2
-	# LD_Z1 = LD_Z1 + 0. * np.finfo(np.float32).eps * np.eye(p)
-	# LD_Z2 = LD_Z2 + 0. * np.finfo(np.float32).eps * np.eye(p)
 
-	Ks = range(int(p/2)-1)
+	Ks = range(int(p/2) - 1)
 	## 2SLS
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
 					Ks=Ks, max_iter=10000, refit=False, find_best=False)
-	LS = _2SLS(sparse_reg=None)
+	LS = _2SLS(sparse_reg=reg_model)
 	## Stage-1 fit theta
 	LS.fit_theta(LD_Z1, cov_ZX1)
+	## refine Ks after theta
+	p_valid = sum(abs(LS.theta) > valid_iv_th)
+	LS.sparse_reg.Ks = range(int(p_valid/2)-1)
 	## Stage-2 fit beta
 	LS.fit_beta(LD_Z2, cov_ZY2, n2)
 	## produce p_value and CI for beta
@@ -106,9 +110,12 @@ for folder_tmp in gene_folders:
 	PT_X1 = power_transform(gene_exp.values.reshape(-1,1), method='yeo-johnson').flatten()
 	PT_X1 = PT_X1 - PT_X1.mean()
 	PT_cor_ZX1 = np.dot(snp.values.T, PT_X1)
-	PT_LS = _2SLS(sparse_reg=None)
+	PT_LS = _2SLS(sparse_reg=reg_model)
 	## Stage-1 fit theta
 	PT_LS.fit_theta(LD_Z1, PT_cor_ZX1)
+	## refine Ks after theta
+	p_valid = sum(abs(PT_LS.theta) > valid_iv_th)
+	PT_LS.sparse_reg.Ks = range(int(p_valid/2)-1)
 	## Stage-2 fit beta
 	PT_LS.fit_beta(LD_Z2, cov_ZY2, n2)
 	## produce p-value and CI for beta
@@ -132,9 +139,12 @@ for folder_tmp in gene_folders:
 	## 2SIR
 	reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
 					Ks=Ks, max_iter=10000, refit=False, find_best=False)
-	SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
+	SIR = _2SIR(sparse_reg=reg_model, data_in_slice=0.2*n1)
 	## Stage-1 fit theta
 	SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
+	# refine Ks based on estimated theta
+	p_valid = sum(abs(SIR.theta) > valid_iv_th)
+	SIR.sparse_reg.Ks = range(int(p_valid/2)-1)
 	## Stage-2 fit beta
 	SIR.fit_beta(LD_Z2, cov_ZY2, n2)
 	## generate CI for beta
@@ -152,14 +162,17 @@ for folder_tmp in gene_folders:
 	df['R2'].append(SIR.sir.eigenvalues_[0])
 
 	## Comb-2SIR
-	data_in_slice_lst = [.1*n1, .2*n1, .3*n1, .5*n1]
+	data_in_slice_lst = [.05*n1, .1*n1, .2*n1, .3*n1, .5*n1]
 	comb_pvalue, comb_beta, comb_eigenvalue = [], [], []
 	for data_in_slice_tmp in data_in_slice_lst:
-		reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
+		reg_model = L0_IC(fit_intercept=None, alphas=10**np.arange(-3,3,.3),
 						Ks=Ks, max_iter=10000, refit=False, find_best=False)
-		SIR = _2SIR(sparse_reg=None, data_in_slice=data_in_slice_tmp)
+		SIR = _2SIR(sparse_reg=reg_model, data_in_slice=data_in_slice_tmp)
 		## Stage-1 fit theta
 		SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
+		# refine Ks based on estimated theta
+		p_valid = sum(abs(SIR.theta) > valid_iv_th)
+		SIR.sparse_reg.Ks = range(int(p_valid/2)-1)
 		## Stage-2 fit beta
 		SIR.fit_beta(LD_Z2, cov_ZY2, n2)
 		## generate CI for beta

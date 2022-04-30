@@ -19,19 +19,20 @@ import seaborn as sns
 from scipy.stats import rv_continuous
 from scipy.stats import beta
 
+vif_thresh = 2.5
 mypath = '/home/ben/dataset/GenesToAnalyze'
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
-# gene_folders = random.sample(gene_folders, 100)
+gene_folders = random.sample(gene_folders, 1000)
 
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'R2': []}
-# NMNAT3July20_2SIR
 
 ## generate a negative control dataset
 y = pd.read_csv(mypath+'/AD_outcome.csv', sep=' ', index_col=0)
 y = np.random.permutation(y['AD.outcome'].values)
 n = len(y)
+y = np.random.randn(n)
 for folder_tmp in gene_folders:
 # for folder_tmp in ['APOEJuly20_2SIR', 'TOMM40July20_2SIR']:
 # for folder_tmp in ['TOMM40July20_2SIR', 'RBFOX1July20_2SIR']:
@@ -48,24 +49,24 @@ for folder_tmp in gene_folders:
     if snp.isnull().sum().sum():
         continue
 
-    if (snp.shape[1] > 10):
-        continue
+    # if (snp.shape[1] > 10):
+    #     continue
 
-    snp, valid_cols = calculate_vif_(snp, thresh=2.5)
+    snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
 
     print('\n##### Causal inference of %s (dim: %d) #####' %(gene_code, len(valid_cols)))
     # sum_stat = sum_stat.loc[valid_cols]
-    Z1, Z2, X1, X2, y1, y2 = train_test_split(snp, gene_exp, y, test_size=.2, random_state=42)
+    Z1, Z2, X1, X2, y1, y2 = train_test_split(snp, gene_exp, y, test_size=.8, random_state=42)
     ## n1 and n2 is pre-given 
     n1, n2, p = len(Z1), len(Z2), snp.shape[1]
     LD_Z = np.dot(snp.T, snp)
     LD_Z1, cov_ZX1 = np.dot(Z1.T, Z1), np.dot(Z1.T, X1.values.flatten())
     LD_Z2, cov_ZY2 = np.dot(Z2.T, Z2), np.dot(Z2.T, y2)
 
-    Ks = range(int(p/2)-1)
+    LD_Z1 = LD_Z / n * n1
+    LD_Z2 = LD_Z / n * n2
+
     ## 2SLS
-    reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
-                    Ks=Ks, max_iter=50000, refit=False, find_best=False)
     LS = _2SLS(sparse_reg=None)
     ## Stage-1 fit theta
     LS.fit_theta(LD_Z1, cov_ZX1)
@@ -92,8 +93,6 @@ for folder_tmp in gene_folders:
     df['R2'].append(LS_R2)
 
     ## PT-2SLS
-    reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
-                    Ks=Ks, max_iter=50000, refit=False, find_best=False)
     PT_X1 = power_transform(gene_exp.values.reshape(-1,1), method='yeo-johnson').flatten()
     PT_X1 = PT_X1 - PT_X1.mean()
     PT_cor_ZX1 = np.dot(snp.values.T, PT_X1)
@@ -121,9 +120,7 @@ for folder_tmp in gene_folders:
     df['R2'].append(PT_LS_R2)
 
     ## 2SIR
-    reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
-                    Ks=Ks, max_iter=50000, refit=False, find_best=False)
-    SIR = _2SIR(sparse_reg=None, data_in_slice=0.1*n1)
+    SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
     ## Stage-1 fit theta
     SIR.fit_theta(Z1=Z1.values, X1=X1.values.flatten())
     ## Stage-2 fit beta
@@ -142,39 +139,8 @@ for folder_tmp in gene_folders:
     df['beta'].append(SIR.beta)
     df['R2'].append(SIR.sir.eigenvalues_[0])
 
-    # ## Comb-2SIR
-    # data_in_slice_lst = [.1*n1, .2*n1, .3*n1, .4*n1, .5*n1]
-    # comb_pvalue, comb_beta, comb_eigenvalue = [], [], []
-    # for data_in_slice_tmp in data_in_slice_lst:
-    #     reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
-    #                     Ks=Ks, max_iter=50000, refit=False, find_best=False)
-    #     SIR = _2SIR(sparse_reg=None, data_in_slice=data_in_slice_tmp)
-    #     ## Stage-1 fit theta
-    #     SIR.fit_theta(Z1=Z1.values, X1=X1.values.flatten())
-    #     ## Stage-2 fit beta
-    #     SIR.fit_beta(LD_Z2, cov_ZY2, n2)
-    #     ## generate CI for beta
-    #     SIR.test_effect(n2, LD_Z2, cov_ZY2)
-    #     comb_beta.append(SIR.beta)
-    #     comb_pvalue.append(SIR.p_value)
-    #     comb_eigenvalue.append(SIR.sir.eigenvalues_[0])
-    # comb_T = np.tan((0.5 - np.array(comb_pvalue))*np.pi).mean()
-    # correct_pvalue = min( max(.5 - np.arctan(comb_T)/np.pi, np.finfo(np.float64).eps), 1.0)
-    # # correct_pvalue = min(len(data_in_slice_lst)*np.min(comb_pvalue), 1.0)
-    # print('Comb-2SIR eigenvalues: %.3f' %np.mean(comb_eigenvalue))
-    # print('Comb-2SIR beta: %.3f' %np.mean(comb_beta))
-    # print('p-value based on Comb-2SIR: %.5f' %correct_pvalue)
-
-    # ## save the record
-    # df['gene'].append(gene_code)
-    # df['method'].append('Comb-2SIR')
-    # df['p-value'].append(correct_pvalue)
-    # df['beta'].append(np.mean(comb_beta))
-    # df['R2'].append(np.mean(comb_eigenvalue))
-
 df = pd.DataFrame.from_dict(df)
 # df.to_csv('Apr10_22_app_test.csv', index=False)
-
 
 ci = 0.95
 

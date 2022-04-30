@@ -52,6 +52,7 @@ postive_genes = [
 #     if isinstance(code, str):
 #         candidate_genes.extend(code.split())
 
+# candidates genes from "A comprehensive 1000 Genomes–based genome-wide association meta-analysis of coronary artery disease".
 candidate_genes = list(dt['Gene'])
 df = pd.read_csv('./Apr12_22_app_test-select.csv')
 weak_genes = []
