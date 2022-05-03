@@ -12,10 +12,11 @@ import random
 from os import listdir
 from os.path import isfile, join, isdir
 import statsmodels.api as sm
-from nl_causal.base.preprocessing import calculate_vif_
+from nl_causal.base.preprocessing import calculate_vif_, variance_threshold_selector
+from sklearn.feature_selection import VarianceThreshold
 
 valid_iv_th = 0.005
-vif_thresh = 500
+vif_thresh = 2.5
 
 mypath = '/home/ben/dataset/GenesToAnalyze'
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
@@ -66,11 +67,17 @@ for folder_tmp in gene_folders:
 		print('The cols in sum_stat is not corresponding to snp, we rename the sum_stat!')
 		sum_stat.index = snp.columns
 	
-	## remove the collinear features
+	### remove low variance features
+	# snp = variance_threshold_selector(snp, threshold=0.1)
+	# sum_stat = sum_stat.loc[snp.columns]
+
+	# remove the collinear features
 	# doi:10.1007/s11135-017-0584-6
 	snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
 	sum_stat = sum_stat.loc[valid_cols]
-	
+
+	## remove the weak IVs
+
 	## n1 and n2 is pre-given
 	n1, n2, p = len(gene_exp), 54162, snp.shape[1]
 	LD_Z1, cov_ZX1 = np.dot(snp.values.T, snp.values), np.dot(snp.values.T, gene_exp.values.flatten())
@@ -83,7 +90,9 @@ for folder_tmp in gene_folders:
 	LS = _2SLS(sparse_reg=reg_model)
 	## Stage-1 fit theta
 	LS.fit_theta(LD_Z1, cov_ZX1)
+	sigma1 = np.std(gene_exp.values.flatten() - LS.theta_norm*snp.dot(LS.theta).values)
 	## refine Ks after theta
+	valid_iv_th = 1.96*sigma1 / np.sqrt(n1)
 	p_valid = sum(abs(LS.theta) > valid_iv_th)
 	LS.sparse_reg.Ks = range(int(p_valid/2)-1)
 	## Stage-2 fit beta
@@ -91,6 +100,7 @@ for folder_tmp in gene_folders:
 	## produce p_value and CI for beta
 	LS.test_effect(n2, LD_Z2, cov_ZY2)
 	LS_R2 = np.var( snp.dot(LS.theta)*LS.theta_norm ) / np.var(np.array(gene_exp))
+	LS_F = (n1 - p - 1) / p * ( LS_R2 / (1 - LS_R2) )
 	print('-'*20)
 	print('LS stage 1 R2: %.3f' %LS_R2)
 	print('LS beta: %.3f' %LS.beta)
@@ -113,7 +123,9 @@ for folder_tmp in gene_folders:
 	PT_LS = _2SLS(sparse_reg=reg_model)
 	## Stage-1 fit theta
 	PT_LS.fit_theta(LD_Z1, PT_cor_ZX1)
+	sigma1 = np.std(PT_X1 - LS.theta_norm*snp.dot(PT_LS.theta).values)
 	## refine Ks after theta
+	valid_iv_th = 1.96*sigma1 / np.sqrt(n1)
 	p_valid = sum(abs(PT_LS.theta) > valid_iv_th)
 	PT_LS.sparse_reg.Ks = range(int(p_valid/2)-1)
 	## Stage-2 fit beta
