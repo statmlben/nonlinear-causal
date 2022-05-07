@@ -11,6 +11,7 @@ from sklearn.preprocessing import power_transform, quantile_transform
 import random
 from os import listdir
 from os.path import isfile, join, isdir
+import os
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from nl_causal.base.preprocessing import calculate_vif_
@@ -25,7 +26,7 @@ vif_thresh = 2.5
 mypath = '/home/ben/dataset/GenesToAnalyze'
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
 # gene_folders = gene_folders[:100]
-# gene_folders = random.sample(gene_folders, 100)
+# gene_folders = random.sample(gene_folders, 10)
 
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -43,15 +44,17 @@ for folder_tmp in gene_folders:
 
     ## load data
     dir_name = mypath+'/'+folder_tmp
+    if not os.path.exists(dir_name+"/snp_vif.csv"):
+        continue
     # sum_stat = pd.read_csv(dir_name+"/sum_stat.csv", sep=' ', index_col=0)
     gene_exp = -pd.read_csv(dir_name+"/gene_exp.csv", sep=' ', index_col=0)
-    snp = pd.read_csv(dir_name+"/snp.csv", sep=' ', index_col=0)
+    snp = pd.read_csv(dir_name+"/snp_vif.csv", sep=' ', index_col=0)
 
     ## remove the collinear features
-    if snp.isnull().sum().sum():
+    if snp.isnull().sum().sum() > 0:
         continue
     
-    snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
+    # snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
 
     print('\n##### Causal inference of %s (dim: %d) #####' %(gene_code, snp.shape[1]))
     # sum_stat = sum_stat.loc[valid_cols]
