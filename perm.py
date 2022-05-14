@@ -24,6 +24,8 @@ from sklearn.feature_selection import VarianceThreshold
 random.seed(0)
 vif_thresh = 2.5
 mypath = '/home/ben/dataset/GenesToAnalyze'
+colors = ['darkgoldenrod', 'royalblue', 'purple']
+
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
 # gene_folders = gene_folders[:100]
 # gene_folders = random.sample(gene_folders, 10)
@@ -169,7 +171,7 @@ ep_points = (np.arange(1,num_gene+1) - 1/2) / num_gene
 
 df = df[df['gene'].isin(interest_genes)]
 
-plt.style.use('seaborn')
+# plt.style.use('seaborn')
 fig, axs = plt.subplots(1,3)
 
 if QQ_plot_dis == "uniform":
@@ -186,6 +188,9 @@ elif QQ_plot_dis == "neg_log_uniform":
 
     for i in range(3):
         sm.qqplot(-np.log10(df[df['method'] == methods[i]]['p-value'].values), dist=NLU_rv, line="45", ax=axs[i])
+        axs[i].get_lines()[0].set_markeredgecolor(colors[i])
+        axs[i].get_lines()[0].set_markerfacecolor(colors[i])
+        axs[i].get_lines()[0].set_markerfacecoloralt(colors[i])
 
 axs[0].get_lines()[0].set_marker('o')
 axs[1].get_lines()[0].set_marker('d')
@@ -195,9 +200,9 @@ axs[0].get_lines()[0].set_markersize(4.0)
 axs[1].get_lines()[0].set_markersize(4.0)
 axs[2].get_lines()[0].set_markersize(4.0)
 
-axs[0].get_lines()[0].set_markerfacecolor('darkgoldenrod')
-axs[1].get_lines()[0].set_markerfacecolor('royalblue')
-axs[2].get_lines()[0].set_markerfacecolor('purple')
+# axs[0].get_lines()[0].set_markerfacecolor('darkgoldenrod')
+# axs[1].get_lines()[0].set_markerfacecolor('royalblue')
+# axs[2].get_lines()[0].set_markerfacecolor('purple')
 
 axs[0].get_lines()[0].set(label='2SLS')
 axs[1].get_lines()[0].set(label='PT-2SLS')

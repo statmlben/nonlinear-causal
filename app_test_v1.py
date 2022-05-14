@@ -16,8 +16,7 @@ from nl_causal.base.preprocessing import calculate_vif_, variance_threshold_sele
 from sklearn.feature_selection import VarianceThreshold
 
 valid_iv_th = 0.005
-vif_thresh = 3
-if_select = True
+vif_thresh = 2.5
 
 mypath = '/Users/ben/dataset/GenesToAnalyze'
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
@@ -26,6 +25,7 @@ gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 df = {'gene': [], 'p-value': [], 'beta': [], 'method': [], 'R2': []}
+# NMNAT3July20_2SIR
 
 interest_genes = [
                 # 'APOC1',
@@ -57,9 +57,9 @@ for folder_tmp in gene_folders:
     print('\n##### Causal inference of %s #####' %gene_code)
     ## load data
     dir_name = mypath+'/'+folder_tmp
-    sum_stat = pd.read_csv(dir_name+"/sum_stat.csv", sep=' ', index_col=0)
+    sum_stat = pd.read_csv(dir_name+"/sum_stat_vif.csv", sep=' ', index_col=0)
     gene_exp = -pd.read_csv(dir_name+"/gene_exp.csv", sep=' ', index_col=0)
-    snp = pd.read_csv(dir_name+"/snp.csv", sep=' ', index_col=0)
+    snp = pd.read_csv(dir_name+"/snp_vif.csv", sep=' ', index_col=0)
     ## exclude the gene with nan in the dataset
     if sum_stat.isnull().sum().sum() + snp.isnull().sum().sum() + gene_exp.isnull().sum().sum() > 0:
         continue
@@ -73,8 +73,10 @@ for folder_tmp in gene_folders:
 
     # remove the collinear features
     # doi:10.1007/s11135-017-0584-6
-    snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
-    sum_stat = sum_stat.loc[valid_cols]
+    # snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
+    # sum_stat = sum_stat.loc[valid_cols]
+
+    ## remove the weak IVs
 
     ## n1 and n2 is pre-given
     n1, n2, p = len(gene_exp), 54162, snp.shape[1]
@@ -85,25 +87,19 @@ for folder_tmp in gene_folders:
     ## 2SLS
     reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
                     Ks=Ks, max_iter=10000, refit=False, find_best=False)
-    if if_select:
-        LS = _2SLS(sparse_reg=reg_model)
-    else:
-        LS = _2SLS(sparse_reg=None)
+    reg_model = None
+    LS = _2SLS(sparse_reg=reg_model)
     ## Stage-1 fit theta
     LS.fit_theta(LD_Z1, cov_ZX1)
-    sigma1 = np.mean((gene_exp.values.flatten() - LS.theta_norm*snp.dot(LS.theta).values)**2)
+    sigma1 = np.std(gene_exp.values.flatten() - LS.theta_norm*snp.dot(LS.theta).values)
     ## refine Ks after theta
-    # valid_iv_th = 1.96*sigma1 / np.sqrt(n1)
-    pos_ind = abs(LS.theta) > valid_iv_th
-    LS.theta = LS.theta[pos_ind]
-    
-    if if_select:
-        LS.sparse_reg.Ks = range(int(len(LS.theta)/2)-1)
+    p_valid = sum(abs(LS.theta) > valid_iv_th)
+    # LS.sparse_reg.Ks = range(int(p_valid/2)-1)
     ## Stage-2 fit beta
-    LS.fit_beta(LD_Z2[pos_ind][:,pos_ind], cov_ZY2[pos_ind], n2)
+    LS.fit_beta(LD_Z2, cov_ZY2, n2)
     ## produce p_value and CI for beta
-    LS.test_effect(n2, LD_Z2[pos_ind][:,pos_ind], cov_ZY2[pos_ind])
-    LS_R2 = np.var( snp.values[:,pos_ind].dot(LS.theta)*LS.theta_norm ) / np.var(np.array(gene_exp))
+    LS.test_effect(n2, LD_Z2, cov_ZY2)
+    LS_R2 = np.var( snp.dot(LS.theta)*LS.theta_norm ) / np.var(np.array(gene_exp))
     LS_F = (n1 - p - 1) / p * ( LS_R2 / (1 - LS_R2) )
     print('-'*20)
     print('LS stage 1 R2: %.3f' %LS_R2)
@@ -119,25 +115,20 @@ for folder_tmp in gene_folders:
     df['R2'].append(LS_R2)
 
     ## PT-2SLS
-    reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
-                    Ks=Ks, max_iter=10000, refit=False, find_best=False)
     PT_X1 = power_transform(gene_exp.values.reshape(-1,1), method='yeo-johnson').flatten()
     PT_X1 = PT_X1 - PT_X1.mean()
     PT_cor_ZX1 = np.dot(snp.values.T, PT_X1)
     PT_LS = _2SLS(sparse_reg=reg_model)
     ## Stage-1 fit theta
     PT_LS.fit_theta(LD_Z1, PT_cor_ZX1)
-    sigma1 = np.mean((PT_X1 - PT_LS.theta_norm*snp.dot(PT_LS.theta).values)**2)
     ## refine Ks after theta
-    # valid_iv_th = 1.96*sigma1 / np.sqrt(n1)
-    pos_ind = abs(PT_LS.theta) > valid_iv_th
-    PT_LS.theta = PT_LS.theta[pos_ind]
-    PT_LS.sparse_reg.Ks = range(int(len(PT_LS.theta)/2)-1)
+    p_valid = sum(abs(PT_LS.theta) > valid_iv_th)
+    # PT_LS.sparse_reg.Ks = range(int(p_valid/2)-1)
     ## Stage-2 fit beta
-    PT_LS.fit_beta(LD_Z2[pos_ind][:,pos_ind], cov_ZY2[pos_ind], n2)
+    PT_LS.fit_beta(LD_Z2, cov_ZY2, n2)
     ## produce p-value and CI for beta
-    PT_LS.test_effect(n2, LD_Z2[pos_ind][:,pos_ind], cov_ZY2[pos_ind])
-    PT_LS_R2 = np.var( snp.values[:,pos_ind].dot(PT_LS.theta)*PT_LS.theta_norm ) / np.var(PT_X1)
+    PT_LS.test_effect(n2, LD_Z2, cov_ZY2)
+    PT_LS_R2 = np.var( snp.dot(PT_LS.theta)*PT_LS.theta_norm ) / np.var(PT_X1)
 
     # gene_exp.values.flatten()
     # PT_LS.CI_beta(n1, n2, Z1=snp.values, X1=PT_X1, LD_Z2=LD_Z2, cov_ZY2=cov_ZY2)
@@ -154,24 +145,16 @@ for folder_tmp in gene_folders:
     df['R2'].append(PT_LS_R2)
 
     ## 2SIR
-    reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
-                    Ks=Ks, max_iter=10000, refit=False, find_best=False)
     SIR = _2SIR(sparse_reg=reg_model, data_in_slice=0.2*n1)
     ## Stage-1 fit theta
     SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
-    ## Stage-1 fit link function
-    # SIR.cond_mean = KNeighborsRegressor(n_neighbors=5)
-    SIR.fit_link(Z1=snp.values, X1=gene_exp.values.flatten())
-    sigma1 = np.mean((SIR.link(gene_exp.values) - SIR.link(gene_exp.values).mean() - snp.dot(SIR.theta).values)**2)
-    ## refine Ks after theta
-    # valid_iv_th = 1.96*sigma1 / np.sqrt(n1)
-    pos_ind = abs(SIR.theta) > valid_iv_th
-    SIR.theta = SIR.theta[pos_ind]
-    SIR.sparse_reg.Ks = range(int(len(SIR.theta)/2)-1)
+    # refine Ks based on estimated theta
+    p_valid = sum(abs(SIR.theta) > valid_iv_th)
+    # SIR.sparse_reg.Ks = range(int(p_valid/2)-1)
     ## Stage-2 fit beta
-    SIR.fit_beta(LD_Z2[pos_ind][:,pos_ind], cov_ZY2[pos_ind], n2)
+    SIR.fit_beta(LD_Z2, cov_ZY2, n2)
     ## generate CI for beta
-    SIR.test_effect(n2, LD_Z2[pos_ind][:,pos_ind], cov_ZY2[pos_ind])
+    SIR.test_effect(n2, LD_Z2, cov_ZY2)
     print('-'*20)
     print('2SIR eigenvalues: %.3f' %SIR.sir.eigenvalues_)
     print('2SIR beta: %.3f' %SIR.beta)
@@ -185,33 +168,26 @@ for folder_tmp in gene_folders:
     df['R2'].append(SIR.sir.eigenvalues_[0])
 
     ## Comb-2SIR
-    data_in_slice_lst = [.02*n1, .05*n1, .1*n1, .2*n1, .3*n1, .5*n1]
+    data_in_slice_lst = [.05*n1, .1*n1, .2*n1, .3*n1, .5*n1]
     comb_pvalue, comb_beta, comb_eigenvalue = [], [], []
     for data_in_slice_tmp in data_in_slice_lst:
-        reg_model = L0_IC(fit_intercept=None, alphas=10**np.arange(-3,3,.3),
-                        Ks=Ks, max_iter=10000, refit=False, find_best=False)
+        # reg_model = L0_IC(fit_intercept=None, alphas=10**np.arange(-3,3,.3),
+        #                 Ks=Ks, max_iter=10000, refit=False, find_best=False)
         SIR = _2SIR(sparse_reg=reg_model, data_in_slice=data_in_slice_tmp)
         ## Stage-1 fit theta
         SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
-        ## Stage-1 fit link function
-        # SIR.cond_mean = KNeighborsRegressor(n_neighbors=5)
-        SIR.fit_link(Z1=snp.values, X1=gene_exp.values.flatten())
-        sigma1 = np.std(SIR.link(gene_exp.values) - snp.dot(SIR.theta).values)
-        ## refine Ks after theta
-        # valid_iv_th = 1.96*sigma1 / np.sqrt(n1)
-        pos_ind = abs(SIR.theta) > valid_iv_th
-        SIR.theta = SIR.theta[pos_ind]
-        SIR.sparse_reg.Ks = range(int(len(SIR.theta)/2)-1)
+        # refine Ks based on estimated theta
+        p_valid = sum(abs(SIR.theta) > valid_iv_th)
+        # SIR.sparse_reg.Ks = range(int(p_valid/2)-1)
         ## Stage-2 fit beta
-        SIR.fit_beta(LD_Z2[pos_ind][:,pos_ind], cov_ZY2[pos_ind], n2)
+        SIR.fit_beta(LD_Z2, cov_ZY2, n2)
         ## generate CI for beta
-        SIR.test_effect(n2, LD_Z2[pos_ind][:,pos_ind], cov_ZY2[pos_ind])
+        SIR.test_effect(n2, LD_Z2, cov_ZY2)
         comb_beta.append(SIR.beta)
         comb_pvalue.append(SIR.p_value)
         comb_eigenvalue.append(SIR.sir.eigenvalues_[0])
     comb_T = np.tan((0.5 - np.array(comb_pvalue))*np.pi).mean()
     correct_pvalue = min( max(.5 - np.arctan(comb_T)/np.pi, np.finfo(np.float64).eps), 1.0)
-    # correct_pvalue = min(len(data_in_slice_lst)*np.min(comb_pvalue), 1.0)
     print('Comb-2SIR eigenvalues: %.3f' %np.mean(comb_eigenvalue))
     print('Comb-2SIR beta: %.3f' %np.mean(comb_beta))
     print('p-value based on Comb-2SIR: %.5f' %correct_pvalue)
