@@ -71,7 +71,7 @@ for beta0 in [.05]:
     for case in ['linear', 'log', 'cube-root', 'inverse', 'piecewise_linear', 'quad']:
         print('case: %s; beta0: %.3f, n: %d, p: %d' %(case, beta0, n, p))
         tmp = df[df['case'] ==case]['pred_K']
-        print('pred_K: mean(std) %.3f(%.3f); (Q1, Q2, Q3): %s' %(tmp.mean(), tmp.std()/np.sqrt(len(df)), tmp.quantile([.25, .50, .75]).values))
+        print('pred_K: mean(std) %.3f(%.3f); (Q1, Q2, Q3): %s' %(tmp.mean(), tmp.std(), tmp.quantile([.25, .50, .75]).values))
 
 # import pandas as pd
 # import seaborn as sns
