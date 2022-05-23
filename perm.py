@@ -23,8 +23,9 @@ from sklearn.feature_selection import VarianceThreshold
 
 random.seed(0)
 vif_thresh = 2.5
-mypath = '/home/ben/dataset/GenesToAnalyze'
-colors = ['darkgoldenrod', 'royalblue', 'purple']
+mypath = '/Users/ben/dataset/GenesToAnalyze'
+# colors = ['darkgoldenrod', 'royalblue', 'purple']
+colors = [sns.color_palette("dark")[2], sns.color_palette("dark")[0], sns.color_palette("dark")[1]]
 
 gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name))]
 # gene_folders = gene_folders[:100]
@@ -135,7 +136,7 @@ for folder_tmp in gene_folders:
     df['R2'].append(PT_LS_R2)
 
     ## 2SIR
-    SIR = _2SIR(sparse_reg=None, data_in_slice=0.2*n1)
+    SIR = _2SIR(sparse_reg=None, data_in_slice=0.1*n1)
     ## Stage-1 fit theta
     SIR.fit_theta(Z1=Z1, X1=X1.values.flatten())
     ## Stage-2 fit beta
@@ -156,7 +157,6 @@ for folder_tmp in gene_folders:
 
 df = pd.DataFrame.from_dict(df)
 # df.to_csv('Apr10_22_app_test.csv', index=False)
-
 ci = 0.95
 
 methods = ['2SLS', 'PT-2SLS', '2SIR']
@@ -196,9 +196,9 @@ axs[0].get_lines()[0].set_marker('o')
 axs[1].get_lines()[0].set_marker('d')
 axs[2].get_lines()[0].set_marker('*')
 
-axs[0].get_lines()[0].set_markersize(4.0)
-axs[1].get_lines()[0].set_markersize(4.0)
-axs[2].get_lines()[0].set_markersize(4.0)
+axs[0].get_lines()[0].set_markersize(2.0)
+axs[1].get_lines()[0].set_markersize(2.0)
+axs[2].get_lines()[0].set_markersize(2.0)
 
 # axs[0].get_lines()[0].set_markerfacecolor('darkgoldenrod')
 # axs[1].get_lines()[0].set_markerfacecolor('royalblue')

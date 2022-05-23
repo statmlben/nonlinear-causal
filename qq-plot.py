@@ -12,7 +12,8 @@ from nl_causal.base.rv import neg_log_uniform
 ci = 0.95
 
 methods = ['2SLS', 'PT-2SLS', '2SIR']
-colors = ['darkgoldenrod', 'royalblue', 'purple']
+# colors = ['darkgoldenrod', 'royalblue', 'purple']
+colors = [sns.color_palette("dark")[2], sns.color_palette("dark")[0], sns.color_palette("dark")[1]]
 QQ_plot_dis = "neg_log_uniform"
 lam_correct = False
 if_ci = False
@@ -46,7 +47,7 @@ elif QQ_plot_dis == "neg_log_uniform":
             axs[i].get_lines()[0].set_markerfacecolor(colors[i])
         else:
             sm.qqplot(-np.log10(df[df['method'] == methods[i]]['p-value'].values), dist=neg_log_uniform(), line="45", ax=axs[i])
-            axs[i].set_xlim([0,4.5])
+            axs[i].set_xlim([0,4.0])
             axs[i].set_ylim([0,15])
             axs[i].get_lines()[0].set_markersize(3.0)
             axs[i].get_lines()[0].set_markeredgecolor(colors[i])

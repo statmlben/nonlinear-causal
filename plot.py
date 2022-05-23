@@ -32,13 +32,16 @@ plt.rcParams["figure.figsize"] = (16,6)
 
 g = sns.catplot(
     data=df, kind="bar", order=gene_set,
-    x="gene", y="log-p-value", hue="method", palette="dark",
+    x="gene", y="log-p-value", hue="method",
 	alpha=.5, height=8, legend=False, aspect=3,
+    # palette='deep'
+    # palette=sns.color_palette(['green', 'blue', 'orange'])
+    palette = [sns.color_palette("dark")[2], sns.color_palette("dark")[0], sns.color_palette("dark")[1]]
 )
 plt.axhline(-np.log10(level), ls='--', color='r', alpha=.8)
 g.despine(left=True)
 g.set_axis_labels("gene", "-log(p-value)")
 plt.legend(loc='upper right')
 # plt.savefig('result.png', bbox_inches='tight')
-# plt.savefig('./figs/'+'oct04_ben_app_test.png', dpi=500)
+plt.savefig('./figs/'+'may23_app_test-select.png', dpi=500)
 plt.show()
