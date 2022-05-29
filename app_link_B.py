@@ -21,7 +21,10 @@ from sklearn.metrics import pairwise_distances
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 
-df = pd.read_csv("oct04_ben_test_refined_genes.csv")
+## precision 
+
+# df = pd.read_csv("./results/oct04_ben_test_refined_genes.csv")
+df = pd.read_csv("./results/Apr12_22_app_test-select.csv")
 df['log-p-value'] = - np.log10( df['p-value'] )
 
 mse_air, mse_mean, ue_air, ue_mean = [], [], [], []
@@ -69,10 +72,10 @@ interest_genes = [
 				# 'MTCH2',
 				# 'NKPD1',
 				'TOMM40',
-				'ZNF296'
+				# 'ZNF296'
 				]
 
-mypath = '/home/ben/dataset/GenesToAnalyze'
+mypath = '/Users/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -82,9 +85,9 @@ for gene_code in interest_genes:
 	print('\n##### Link Estimation of %s #####' %gene_code)
 	## load data
 	dir_name = mypath+'/'+folder_tmp
-	sum_stat = pd.read_csv(dir_name+"/sum_stat.csv", sep=' ', index_col=0)
+	sum_stat = pd.read_csv(dir_name+"/sum_stat_vif.csv", sep=' ', index_col=0)
 	gene_exp = -pd.read_csv(dir_name+"/gene_exp.csv", sep=' ', index_col=0)
-	snp = pd.read_csv(dir_name+"/snp.csv", sep=' ', index_col=0)
+	snp = pd.read_csv(dir_name+"/snp_vif.csv", sep=' ', index_col=0)
 	# define interval of interests
 	a = np.quantile(gene_exp.values, 0.1)
 	b = np.quantile(gene_exp.values, 0.9)
@@ -229,6 +232,8 @@ link_plot = pd.DataFrame(link_plot)
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+float_formatter = "{:.2f}".format
+np.set_printoptions(formatter={'float_kind':float_formatter})
 
 for gene_code in interest_genes:
 	test_tmp = df[df['gene']==gene_code]
@@ -243,5 +248,5 @@ for gene_code in interest_genes:
 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
 				x="gene-exp", y="phi", hue="method", legend = True,
 	style="method", alpha=.7).set_title(title_tmp)
-	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
+	# plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
 	plt.show()

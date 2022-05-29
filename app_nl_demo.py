@@ -20,7 +20,7 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.metrics import pairwise_distances
 from sklearn.model_selection import GridSearchCV
 
-df = pd.read_csv("oct04_ben_test_refined_genes.csv")
+df = pd.read_csv("./results/oct04_ben_test_refined_genes.csv")
 df['log-p-value'] = - np.log10( df['p-value'] )
 
 mse_air, mse_mean, ue_air, ue_mean = [], [], [], []
@@ -72,7 +72,7 @@ interest_genes = [
 				# 'ZNF296'
 				]
 
-mypath = '/home/ben/dataset/GenesToAnalyze'
+mypath = '/Users/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
@@ -256,53 +256,53 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # link curve plot
-# for gene_code in interest_genes:
-# 	test_tmp = df[df['gene']==gene_code]
-# 	title_tmp = gene_code+" ( Method:-log_10(p-value) )"+ '\n' + \
-# 				'2SLS: '+str(test_tmp[test_tmp['method']=='2SLS']['log-p-value'].values)+'; '+\
-# 				'PT-2SLS: '+str(test_tmp[test_tmp['method']=='PT-2SLS']['log-p-value'].values)+'; '+\
-# 				'2SIR: '+str(test_tmp[test_tmp['method']=='2SIR']['log-p-value'].values)+'; '+\
-# 				'Comb-2SIR: '+str(test_tmp[test_tmp['method']=='Comb-2SIR']['log-p-value'].values)
-
-# 	plt.rcParams["figure.figsize"] = (10,6)
-# 	sns.set_theme(style="whitegrid")
-# 	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
-# 				x="gene-exp", y="phi", hue="method", legend = True,
-# 	style="method", alpha=.7).set_title(title_tmp)
-# 	plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
-# 	plt.show()
-
-# scatter plot
 for gene_code in interest_genes:
 	test_tmp = df[df['gene']==gene_code]
-	r_tmp = link_r[link_r['gene-code']==gene_code]
-
-	# title_tmp = gene_code+" ( Method:-log_10(p-value) )"+ '\n' + \
-	# 			'2SLS: '+str(test_tmp[test_tmp['method']=='2SLS']['log-p-value'].values)+'; '+\
-	# 			'PT-2SLS: '+str(test_tmp[test_tmp['method']=='PT-2SLS']['log-p-value'].values)+'; '+\
-	# 			'2SIR: '+str(test_tmp[test_tmp['method']=='2SIR']['log-p-value'].values)+'; '+\
-	# 			'Comb-2SIR: '+str(test_tmp[test_tmp['method']=='Comb-2SIR']['log-p-value'].values)
-	title_tmp = gene_code+" ( Method: R2-value for the Estimated Stage 1 Eqaution )"+ '\n' + \
-				'2SLS: '+str(r_tmp[r_tmp['method']=='2SLS']['r2'].values)+'; '+\
-				'PT-2SLS: '+str(r_tmp[r_tmp['method']=='PT-2SLS']['r2'].values)+'; '+\
-				'2SIR: '+str(r_tmp[r_tmp['method']=='2SIR+AIR']['r2'].values)
+	title_tmp = gene_code+" ( Method:-log_10(p-value) )"+ '\n' + \
+				'2SLS: '+str(test_tmp[test_tmp['method']=='2SLS']['log-p-value'].values)+'; '+\
+				'PT-2SLS: '+str(test_tmp[test_tmp['method']=='PT-2SLS']['log-p-value'].values)+'; '+\
+				'2SIR: '+str(test_tmp[test_tmp['method']=='2SIR']['log-p-value'].values)+'; '+\
+				'Comb-2SIR: '+str(test_tmp[test_tmp['method']=='Comb-2SIR']['log-p-value'].values)
 
 	plt.rcParams["figure.figsize"] = (10,6)
 	sns.set_theme(style="whitegrid")
-	## plot R2 for the first equation
-	lm = sns.lmplot(data=link_plot[link_plot['gene-code'] == gene_code], legend = True, 
-				scatter_kws={"s": 5},
-				x="snp_idx", y="phi", hue='method', col="method", sharex=False,sharey=False)
-
-	## plot for True pattern 
-	# lm = sns.lmplot(data=link_plot[link_plot['gene-code'] == gene_code], legend=True, scatter_kws={"s": 5},
-	# 		x="snp_idx", y="gene-exp", hue='method', col="method", fit_reg=False, sharex=False,sharey=False)
-			# .fig.suptitle(title_tmp)
-	axes = lm.axes
-	axes[0,0].set_ylim(-.75, .75)
-	axes[0,1].set_ylim(-.75, .75)
-	axes[0,2].set_ylim(-.75, .75)
-	plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.8)
-	plt.suptitle(title_tmp)
-	# plt.savefig('./figs/'+gene_code+"-S1_r2.png", dpi=500)
+	sns.lineplot(data=link_plot[link_plot['gene-code'] == gene_code], 
+				x="gene-exp", y="phi", hue="method", legend = True,
+	style="method", alpha=.7).set_title(title_tmp)
+	# plt.savefig('./figs/'+gene_code+"-link.png", dpi=500)
 	plt.show()
+
+# scatter plot
+# for gene_code in interest_genes:
+# 	test_tmp = df[df['gene']==gene_code]
+# 	r_tmp = link_r[link_r['gene-code']==gene_code]
+
+# 	# title_tmp = gene_code+" ( Method:-log_10(p-value) )"+ '\n' + \
+# 	# 			'2SLS: '+str(test_tmp[test_tmp['method']=='2SLS']['log-p-value'].values)+'; '+\
+# 	# 			'PT-2SLS: '+str(test_tmp[test_tmp['method']=='PT-2SLS']['log-p-value'].values)+'; '+\
+# 	# 			'2SIR: '+str(test_tmp[test_tmp['method']=='2SIR']['log-p-value'].values)+'; '+\
+# 	# 			'Comb-2SIR: '+str(test_tmp[test_tmp['method']=='Comb-2SIR']['log-p-value'].values)
+# 	title_tmp = gene_code+" ( Method: R2-value for the Estimated Stage 1 Eqaution )"+ '\n' + \
+# 				'2SLS: '+str(r_tmp[r_tmp['method']=='2SLS']['r2'].values)+'; '+\
+# 				'PT-2SLS: '+str(r_tmp[r_tmp['method']=='PT-2SLS']['r2'].values)+'; '+\
+# 				'2SIR: '+str(r_tmp[r_tmp['method']=='2SIR+AIR']['r2'].values)
+
+# 	plt.rcParams["figure.figsize"] = (10,6)
+# 	sns.set_theme(style="whitegrid")
+# 	## plot R2 for the first equation
+# 	lm = sns.lmplot(data=link_plot[link_plot['gene-code'] == gene_code], legend = True, 
+# 				scatter_kws={"s": 5},
+# 				x="snp_idx", y="phi", hue='method', col="method", sharex=False,sharey=False)
+
+# 	## plot for True pattern 
+# 	# lm = sns.lmplot(data=link_plot[link_plot['gene-code'] == gene_code], legend=True, scatter_kws={"s": 5},
+# 	# 		x="snp_idx", y="gene-exp", hue='method', col="method", fit_reg=False, sharex=False,sharey=False)
+# 			# .fig.suptitle(title_tmp)
+# 	axes = lm.axes
+# 	axes[0,0].set_ylim(-.75, .75)
+# 	axes[0,1].set_ylim(-.75, .75)
+# 	axes[0,2].set_ylim(-.75, .75)
+# 	plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.8)
+# 	plt.suptitle(title_tmp)
+# 	# plt.savefig('./figs/'+gene_code+"-S1_r2.png", dpi=500)
+# 	plt.show()

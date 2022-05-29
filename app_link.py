@@ -17,7 +17,7 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.preprocessing import PowerTransformer, QuantileTransformer
 from sklearn.neighbors import KNeighborsRegressor
 
-df = pd.read_csv("oct04_ben_test_refined_genes.csv")
+df = pd.read_csv("./results/oct04_ben_test_refined_genes.csv")
 df['log-p-value'] = - np.log10( df['p-value'] )
 
 mse_air, mse_mean, ue_air, ue_mean = [], [], [], []
@@ -68,7 +68,7 @@ interest_genes = [
 				# 'ZNF296'
 				]
 
-mypath = '/home/statmlben/dataset/GenesToAnalyze'
+mypath = '/Users/ben/dataset/GenesToAnalyze'
 # gene_folders = [name for name in listdir(mypath) if isdir(join(mypath, name)) ]
 np.random.seed(0)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
