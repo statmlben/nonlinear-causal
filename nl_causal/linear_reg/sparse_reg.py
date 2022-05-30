@@ -1,5 +1,4 @@
 ## Partial functions and docs are adapted from sklearn.linear_model._base.LinearModel
-## Author: Ben Dai
 
 from sklearn.base import RegressorMixin
 from sklearn.linear_model import Lasso, LinearRegression, LassoLarsIC, LassoCV

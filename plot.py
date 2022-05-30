@@ -5,7 +5,7 @@ import pandas as pd
 # df = pd.read_csv("aug24_ben_test.csv")
 # df = pd.read_csv("oct04_ben_test_refined_genes.csv")
 # df = pd.read_csv("Apr12_22_app_test+select.csv")
-df = pd.read_csv("./results/Apr12_22_app_test-select.csv")
+df = pd.read_csv("./results/Apr12_22_app_test+select.csv")
 
 gene_set = list(set(df['gene']))
 num_gen = len(gene_set)

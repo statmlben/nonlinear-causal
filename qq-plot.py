@@ -10,7 +10,6 @@ from scipy.stats import beta, chi2
 from nl_causal.base.rv import neg_log_uniform
 
 ci = 0.95
-
 methods = ['2SLS', 'PT-2SLS', '2SIR']
 # colors = ['darkgoldenrod', 'royalblue', 'purple']
 colors = [sns.color_palette("dark")[2], sns.color_palette("dark")[0], sns.color_palette("dark")[1]]

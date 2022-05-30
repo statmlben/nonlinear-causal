@@ -16,7 +16,6 @@ from nl_causal.base.preprocessing import calculate_vif_, variance_threshold_sele
 from sklearn.feature_selection import VarianceThreshold
 
 valid_iv_th = 0.005
-vif_thresh = 3
 if_select = True
 
 mypath = '/Users/ben/dataset/GenesToAnalyze'
@@ -57,9 +56,9 @@ for folder_tmp in gene_folders:
     print('\n##### Causal inference of %s #####' %gene_code)
     ## load data
     dir_name = mypath+'/'+folder_tmp
-    sum_stat = pd.read_csv(dir_name+"/sum_stat.csv", sep=' ', index_col=0)
+    sum_stat = pd.read_csv(dir_name+"/sum_stat_vif.csv", sep=' ', index_col=0)
     gene_exp = -pd.read_csv(dir_name+"/gene_exp.csv", sep=' ', index_col=0)
-    snp = pd.read_csv(dir_name+"/snp.csv", sep=' ', index_col=0)
+    snp = pd.read_csv(dir_name+"/snp_vif.csv", sep=' ', index_col=0)
     ## exclude the gene with nan in the dataset
     if sum_stat.isnull().sum().sum() + snp.isnull().sum().sum() + gene_exp.isnull().sum().sum() > 0:
         continue
@@ -73,8 +72,8 @@ for folder_tmp in gene_folders:
 
     # remove the collinear features
     # doi:10.1007/s11135-017-0584-6
-    snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
-    sum_stat = sum_stat.loc[valid_cols]
+    # snp, valid_cols = calculate_vif_(snp, thresh=vif_thresh)
+    # sum_stat = sum_stat.loc[valid_cols]
 
     ## n1 and n2 is pre-given
     n1, n2, p = len(gene_exp), 54162, snp.shape[1]

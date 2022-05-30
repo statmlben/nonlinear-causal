@@ -11,6 +11,7 @@ from sklearn.preprocessing import power_transform, quantile_transform
 import random
 from os import listdir
 from os.path import isfile, join, isdir
+from os import path
 import statsmodels.api as sm
 from nl_causal.base.preprocessing import calculate_vif_, variance_threshold_selector
 from sklearn.feature_selection import VarianceThreshold
@@ -87,7 +88,6 @@ for folder_tmp in gene_folders:
     ## 2SLS
     reg_model = L0_IC(fit_intercept=False, alphas=10**np.arange(-3,3,.3),
                     Ks=Ks, max_iter=10000, refit=False, find_best=False)
-    reg_model = None
     LS = _2SLS(sparse_reg=reg_model)
     ## Stage-1 fit theta
     LS.fit_theta(LD_Z1, cov_ZX1)
