@@ -36,6 +36,8 @@ def calculate_cor_(X, thresh=0.8, verbose=0):
     Returns
     -------
     X: return feature matrix by removing low-correlated features.
+
+    col: return the remaining columns.
     """
     cols = X.columns
     variables = np.array(range(X.shape[1]))
@@ -66,6 +68,8 @@ def calculate_vif_(X, thresh=2.5, verbose=0):
     Returns
     -------
     X: return feature matrix by removing multicollinearity features.
+
+    col: return the remaining columns.
     """
     cols = X.columns
     variables = list(range(X.shape[1]))
