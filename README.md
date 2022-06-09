@@ -83,9 +83,3 @@ git clone https://github.com/statmlben/nonlinear-causal.git
 - Notebook 2: [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
 - Notebook 3: [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
 - Notebook 4: [Real application]()
-
-
-## Contributors
-<a href = "https://github.com/statmlben/nonlinear-causal/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo=statmlben/nonlinear-causal"/>
-</a>
