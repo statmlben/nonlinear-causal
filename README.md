@@ -17,7 +17,7 @@
 
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
 
-- GitHub repo: [https://github.com/statmlben/nonlinear-causal](https://github.com/statmlben/nonlinear-causal)
+- GitHub repo: [https://github.com/nl-causal/nonlinear-causal](https://github.com/nl-causal/nonlinear-causal)
 - Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/)
 - PyPi: [https://pypi.org/project/nl-causal](https://pypi.org/project/nonlinear-causal)
 - Open Source: [MIT license](https://opensource.org/licenses/MIT)
@@ -30,23 +30,23 @@ https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 
 The proposed model is:
 <p align="center">
-<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
+<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RedOrange}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
 </p>
 
 <!-- $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
 $$ -->
 
-- <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\beta" title="\color{Gray} \beta" />: marginal causal effect from X -> Y;
-- <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\phi(\cdot)" tilte="\phi"/>: nonlinear causal link;
+- <img src="https://latex.codecogs.com/svg.image?\color{RedOrange}&space;\beta" title="\color{RedOrange} \beta" />: marginal causal effect from X -> Y;
+- <img src="https://latex.codecogs.com/svg.image?\color{RedOrange}&space;\phi(\cdot)" tilte="\phi"/>: nonlinear causal link;
 
 <!-- ![logo](./logo/model_black.gif) -->
 
 
 ## What We Can Do:
-- Estimate <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\theta" title="\color{Gray} \theta" /> and <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\beta" title="\color{Gray} \beta" />.
+- Estimate <img src="https://latex.codecogs.com/svg.image?\color{RedOrange}&space;\theta" title="\color{RedOrange} \theta" /> and <img src="https://latex.codecogs.com/svg.image?\color{RedOrange}&space;\beta" title="\color{RedOrange} \beta" />.
 - Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
-- Estimate nonlinear causal link <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\phi(\cdot)" tilte="\phi"/>.
+- Estimate nonlinear causal link <img src="https://latex.codecogs.com/svg.image?\color{RedOrange}&space;\phi(\cdot)" tilte="\phi"/>.
 
 
 ## Installation
