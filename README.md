@@ -1,8 +1,6 @@
 ![Pypi](https://badge.fury.io/py/nl-causal.svg)
 [![Python](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<a href="https://bendai.org"><img src="https://img.shields.io/badge/Powered%20by-cuhk%40dAI-purple.svg"/></a>
-
 
 <!-- [![Youtube](https://img.shields.io/badge/YouTube-Channel-red)]()
 ![Downloads](https://static.pepy.tech/badge/nl-causal)
