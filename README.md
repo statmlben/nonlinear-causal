@@ -29,6 +29,8 @@ src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLor
 https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 
 The proposed model is:
+![model](.figs/../logo/nl_causal.png)
+
 <p align="center">
 <img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RedOrange}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
 </p>
@@ -65,14 +67,14 @@ Install `nonlinear-causal` using ``pip``
 
 ```bash
 pip install nl_causal
-pip install git+https://github.com/statmlben/nonlinear-causal.git
+pip install git+https://github.com/nl-causal/nonlinear-causal
 ```
 ### Source code
 
 You can check the latest sources with the command::
 
 ```bash
-git clone https://github.com/statmlben/nonlinear-causal.git
+git clone https://github.com/nl-causal/nonlinear-causal
 ```
 
 ## Examples and notebooks
