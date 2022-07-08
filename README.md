@@ -83,3 +83,4 @@ git clone https://github.com/nl-causal/nonlinear-causal
 - Notebook 2: [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
 - Notebook 3: [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
 - Notebook 4: [Real application]()
+- Notebook 5: [Pipeline for plink data]()
