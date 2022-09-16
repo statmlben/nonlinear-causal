@@ -1,3 +1,6 @@
+"""Sparse regression"""
+# Author: Ben Dai <bendai@cuhk.edu.hk>
+
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import Lasso, ElasticNet, LinearRegression, LassoLarsIC, LassoCV
 from sklearn.linear_model._base import LinearModel

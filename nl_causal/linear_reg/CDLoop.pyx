@@ -1,3 +1,6 @@
+"""Coordinate Descent C Loop"""
+# Author: Ben Dai <bendai@cuhk.edu.hk>
+
 import  numpy as np
 cimport numpy as np
 cimport cython

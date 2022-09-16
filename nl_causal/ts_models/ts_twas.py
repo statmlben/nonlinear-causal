@@ -1,3 +1,6 @@
+"""Two Stage Methods based GWAS dataset"""
+# Author: Ben Dai <bendai@cuhk.edu.hk>
+
 import numpy as np
 # from sklearn.base import BaseEstimator
 import sklearn.preprocessing as pps

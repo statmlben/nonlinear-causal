@@ -1,3 +1,6 @@
+"""Sparse regression"""
+# Author: Ben Dai <bendai@cuhk.edu.hk>
+
 ## Partial functions and docs are adapted from sklearn.linear_model._base.LinearModel
 
 from sklearn.base import RegressorMixin
