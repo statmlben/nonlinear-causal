@@ -18,10 +18,10 @@
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
 
 - GitHub repo: [https://github.com/nl-causal/nonlinear-causal](https://github.com/nl-causal/nonlinear-causal)
-- Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/)
+<!-- - Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/) -->
 - PyPi: [https://pypi.org/project/nl-causal](https://pypi.org/project/nonlinear-causal)
 - Open Source: [MIT license](https://opensource.org/licenses/MIT)
-- Paper: [pdf]()
+<!-- - Paper: [pdf]() -->
 
 
 <!-- <script type="text/javascript" charset="utf-8" 
@@ -79,8 +79,10 @@ git clone https://github.com/nl-causal/nonlinear-causal
 
 ## Examples and notebooks
 
-- Notebook 1: [Simulation for HT and CI with standard setup](sim_main.ipynb)
-- Notebook 2: [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
-- Notebook 3: [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
-- Notebook 4: [Real application]()
-- Notebook 5: [Pipeline for plink data]()
+- [User Guide](user_guide.md)
+
+- [Simulation for HT and CI with standard setup](sim_main.ipynb)
+- [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
+- [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
+- [Real application](app_test.ipynb)
+<!-- - [Pipeline for plink data](user_guide.md) -->
