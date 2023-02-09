@@ -18,14 +18,13 @@ from sklearn.exceptions import ConvergenceWarning
 warnings.simplefilter("ignore", category=ConvergenceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-
 np.random.seed(1)
 
 if __name__=='__main__':
     # PARSE THE ARGS
     parser = argparse.ArgumentParser(description='nl-causal')
-    parser.add_argument('-f', '--file', default='data/both.CTSS.3181.50.2',type=str,
-                        help='Path to the data file (default: cis.MSMB.10620.21.3)')
+    parser.add_argument('-f', '--file', default='dataset/IL21.7124.18.3',type=str,
+                        help='Path to the data file (default: IL21.7124.18.3)')
     # parser.add_argument('-e', '--eps', default=1e-4, type=float,
     #                     help='Diag-eps to make LD matrix to be PD.')
     # both.ATF6.11277.23.3; both.CTSS.3181.50.2
