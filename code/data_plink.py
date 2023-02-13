@@ -57,7 +57,7 @@ if __name__=='__main__':
 
     ## Load Stage 1 data
     (bim, fam, bed) = read_plink(os.path.join(data_folder, bed_file), verbose=False)
-    snp_data = bed.compute()
+    snp_data = 2. - bed.compute()
 
     ## impute missing values by snp-wise mean
     ind_miss = np.isnan(snp_data)
