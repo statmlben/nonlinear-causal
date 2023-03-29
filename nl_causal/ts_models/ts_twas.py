@@ -21,7 +21,7 @@ class _2SLS(object):
     Parameters
     -----------
     normalize: bool, default=True
-        Whether to normalize the resulting `theta` in Stage 1.
+        Whether to normalize the resulting `theta` in Stage 1.nl_causal/ts_models/ts_twas.py
     
     fit_flag: bool, default=False
         A flag to indicate if the estimation is done.
@@ -195,16 +195,16 @@ class _2SLS(object):
                     ## when mse is negative, we tend to believe the model is wrong
                     continue
                 # print('mse_tmp: %.3f' %mse_tmp)
-                if criterion == 'bic':
-                    var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
-                    criterion_tmp = mse_tmp / (var_res + eps64) + len(model_tmp) * np.log(n2) / n2
-                elif criterion == 'aic':
-                    var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
-                    criterion_tmp = mse_tmp / (var_res + eps64) + len(model_tmp) * 2 / n2
-                elif criterion == 'ebic':
+                # if criterion == 'bic':
+                #     var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
+                #     criterion_tmp = mse_tmp / (var_res + eps64) + len(model_tmp) * np.log(n2) / n2
+                # elif criterion == 'aic':
+                #     var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
+                #     criterion_tmp = mse_tmp / (var_res + eps64) + len(model_tmp) * 2 / n2
+                if criterion == 'ebic':
                     criterion_tmp = np.log(mse_tmp) + len(model_tmp) * np.log(n2) / n2
                 else:
-                    raise NameError('criteria should be aic or bic')
+                    raise NameError('criteria should be ebic')
                 candidate_model_lst.append(model_tmp)
                 criterion_lst.append(criterion_tmp)
                 mse_lst.append(mse_tmp)
@@ -659,16 +659,16 @@ class _2SIR(object):
                 mse_tmp = 1. - 2 * np.dot(coef_aug_tmp, cov_aug_tmp) / n2 + coef_aug_tmp.T.dot(LD_Z_aug_tmp).dot(coef_aug_tmp) / n2
                 if mse_tmp < 0:
                     continue
-                if criterion == 'bic':
-                    var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
-                    criterion_tmp = mse_tmp / (var_res + eps64) + len(model_tmp) * np.log(n2) / n2
-                elif criterion == 'aic':
-                    var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
-                    criterion_tmp = mse_tmp / (var_res + eps64) + len(model_tmp) * 2 / n2
-                elif criterion == 'ebic':
+                # if criterion == 'bic':
+                #     var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
+                #     criterion_tmp = mse_tmp / (var_res + eps64) + len(model_tmp) * np.log(n2) / n2
+                # elif criterion == 'aic':
+                #     var_res = self.est_var_res(n2, LD_Z2, cov_ZY2)
+                #     criterion_tmp = mse_tmp / (var_res + eps64) + len(model_tmp) * 2 / n2
+                if criterion == 'ebic':
                     criterion_tmp = np.log(mse_tmp) + len(model_tmp) * np.log(n2) / n2
                 else:
-                    raise NameError('criteria should be aic or bic')
+                    raise NameError('criteria should be ebic')
                 
                 candidate_model_lst.append(model_tmp)
                 criterion_lst.append(criterion_tmp)
@@ -831,11 +831,12 @@ class _2SIR(object):
         if self.sparse_reg == None:
             alpha = np.dot(np.linalg.inv(LD_Z2), cov_ZY2)
             sigma_res_y = 1 - 2 * np.dot(alpha, cov_ZY2) / n2 + alpha.T.dot(LD_Z2).dot(alpha) / n2
-            if sigma_res_y < 0:
-                raise Exception("Sorry, we get a negative est variance, the inference is suspended.") 
-                # print('We get negative variance for eps: %.3f, and we correct it as eps.' %sigma_res_y)
         else:
             sigma_res_y = self.best_mse_
+        
+        if sigma_res_y < 0:
+                raise Exception("Sorry, we get a negative est variance, the inference is suspended.") 
+                # print('We get negative variance for eps: %.3f, and we correct it as eps.' %sigma_res_y)
         return max(sigma_res_y, 0.) + np.finfo('float64').eps
         
 
