@@ -23,8 +23,8 @@ np.random.seed(1)
 if __name__=='__main__':
     # PARSE THE ARGS
     parser = argparse.ArgumentParser(description='nl-causal')
-    parser.add_argument('-f', '--file', default='dataset/IL21.7124.18.3',type=str,
-                        help='Path to the data file (default: IL21.7124.18.3)')
+    parser.add_argument('-f', '--file', default='./dataset/both.ABO.9253.52.3',type=str,
+                        help='Path to the data file (default: both.ABO.9253.52.3)')
     # parser.add_argument('-e', '--eps', default=1e-4, type=float,
     #                     help='Diag-eps to make LD matrix to be PD.')
     # both.ATF6.11277.23.3; both.CTSS.3181.50.2
@@ -131,7 +131,7 @@ if __name__=='__main__':
     ## 2SLS
     try:
         reg_model = L0_IC(fit_intercept=False, alphas=5**np.arange(-2,3,.3),
-                        Ks=Ks, max_iter=10000, find_best=False, refit=False, var_res=1.)
+                        Ks=Ks, max_iter=1000, find_best=False, refit=False, var_res=1.)
         LS = _2SLS(sparse_reg=reg_model)
         ## if you do not want a selection
         ## LS = _2SLS(sparse_reg=None)
@@ -146,7 +146,7 @@ if __name__=='__main__':
         print('p-value based on 2SLS with selection: %.5f' %LS.p_value)
     except:
         print('-'*20)
-        print('LS (with selection) failed, since the est variance is negative')
+        print('LS (with selection) failed, please use `verbose = 1` show more messages')
         pass
 
     ## 2SLS without selection
@@ -163,13 +163,13 @@ if __name__=='__main__':
         print('p-value based on 2SLS without selection: %.5f' %LS_no_select.p_value)
     except:
         print('-'*20)
-        print('LS (without selection) failed, since the est variance is negative')
+        print('LS (without selection) failed, please use `verbose = 1` show more messages')
         pass
 
     ## 2SIR
     try:
         reg_model = L0_IC(fit_intercept=False, alphas=5**np.arange(-2,3,.3),
-                        Ks=Ks, max_iter=10000, find_best=False, refit=False)
+                        Ks=Ks, max_iter=1000, find_best=False, refit=False)
         SIR = _2SIR(sparse_reg=reg_model, data_in_slice=0.1*n1)
         ## Stage-1 fit theta
         SIR.fit_theta(Z1=Z1, X1=X1)
@@ -188,7 +188,7 @@ if __name__=='__main__':
         link_IoR = SIR.link(X = IoR[:,None])
     except:
         print('-'*20)
-        print('SIR (without selection) failed, since the est variance is negative')
+        print('SIR (without selection) failed, please use `verbose = 1` show more messages')
         pass
 
 
@@ -206,7 +206,7 @@ if __name__=='__main__':
         print('p-value based on 2SIR without selection: %.5f' %SIR_no_select.p_value)
     except:
         print('-'*20)
-        print('SIR (without selection) failed, since the est variance is negative')
+        print('SIR (without selection) failed, please use `verbose = 1` show more messages')
         pass
 
     ## Comb-2SIR
@@ -216,7 +216,7 @@ if __name__=='__main__':
         for data_in_slice_tmp in data_in_slice_lst:
             # print('data_in_slice: %.3f' %data_in_slice_tmp)
             reg_model = L0_IC(fit_intercept=False, alphas=5**np.arange(-2,3,.3),
-                            Ks=Ks, max_iter=10000, find_best=False, refit=False, var_res=1.)
+                            Ks=Ks, max_iter=1000, find_best=False, refit=False, var_res=1.)
             SIR = _2SIR(sparse_reg=reg_model, data_in_slice=data_in_slice_tmp)
             ## Stage-1 fit theta
             SIR.fit_theta(Z1=Z1, X1=X1)
@@ -234,7 +234,7 @@ if __name__=='__main__':
         print('p-value based on Comb-2SIR with selection: %.5f' %correct_pvalue)
     except:
         print('-'*20)
-        print('Comb-SIR (with selection) failed, since the est variance is negative')
+        print('Comb-SIR (with selection) failed, please use `verbose = 1` show more messages')
         pass
 
 
@@ -261,5 +261,5 @@ if __name__=='__main__':
         print('p-value based on Comb-2SIR without selection: %.5f' %correct_pvalue)
     except:
         print('-'*20)
-        print('Comb-SIR (without selection) failed, since the est variance is negative')
+        print('Comb-SIR (without selection) failed, please use `verbose = 1` show more messages')
         pass
