@@ -5,6 +5,7 @@ __pycache__/
 
 # dataset
 dataset/
+code/data_plink.py
 
 # C extensions
 *.so

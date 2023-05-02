@@ -17,6 +17,9 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.simplefilter("ignore", category=ConvergenceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
+from sklearn.neighbors import KNeighborsRegressor
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 np.random.seed(1)
 
@@ -25,6 +28,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description='nl-causal')
     parser.add_argument('-f', '--file', default='./dataset/both.ABO.9253.52.3',type=str,
                         help='Path to the data file (default: both.ABO.9253.52.3)')
+    parser.add_argument('-p', '--plot', default=False,type=bool,
+                        help='if you want to plot the nonlinear curve')
     # parser.add_argument('-e', '--eps', default=1e-4, type=float,
     #                     help='Diag-eps to make LD matrix to be PD.')
     # both.ATF6.11277.23.3; both.CTSS.3181.50.2
@@ -182,10 +187,18 @@ if __name__=='__main__':
         print('p-value based on 2SIR with selection: %.5f' %SIR.p_value)
         
         ## (Optional) fit the nonlinear link function
-        SIR.fit_link(Z1=Z1, X1=X1)
-        # predict for fitted link
-        IoR = np.arange(0, 1, 1./100)
-        link_IoR = SIR.link(X = IoR[:,None])
+        if args.plot:
+            gene_name = target.split("/")[-1]
+            SIR.cond_mean = KNeighborsRegressor(n_neighbors=int(0.1*n1))
+            SIR.fit_link(Z1=Z1, X1=X1)
+            # predict for fitted link
+            IoR = np.arange(0, 1, 1./100)
+            link_IoR = SIR.link(X = IoR[:,None])
+            sns.lineplot(x=IoR, y=link_IoR)
+            plt.xlabel('x')
+            plt.ylabel('phi(x)')
+            plt.title('nonlinear causal link: {}'.format(gene_name))
+            plt.savefig('nl_link_{}.png'.format(gene_name))
     except:
         print('-'*20)
         print('SIR (without selection) failed, please use `verbose = 1` show more messages')
