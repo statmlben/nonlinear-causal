@@ -13,20 +13,20 @@
 .. |dAI| image:: https://img.shields.io/badge/Powered%20by-cuhk%40dAI-purple.svg
 .. _dAI: https://www.bendai.org
 
-.. |PyPi| image:: https://badge.fury.io/py/nonlinear_causal.svg
+.. |PyPi| image:: https://badge.fury.io/py/nonlinear-causal.svg
 .. _PyPi: https://badge.fury.io/py/nonlinear-causal
 
-.. |MIT| image:: https://img.shields.io/pypi/l/nonlinear_causal.svg
+.. |MIT| image:: https://img.shields.io/pypi/l/nonlinear-causal.svg
 .. _MIT: https://opensource.org/licenses/MIT
 
 .. |Python3| image:: https://img.shields.io/badge/python-3-green.svg
 .. _Python3: www.python.org
 
-.. |downloads| image:: https://pepy.tech/badge/nonlinear_causal
-.. _downloads: https://pepy.tech/project/nonlinear_causal
+.. |downloads| image:: https://pepy.tech/badge/nonlinear-causal
+.. _downloads: https://pepy.tech/project/nonlinear-causal
 
-.. |downloads_month| image:: https://pepy.tech/badge/nonlinear_causal/month
-.. _downloads_month: https://pepy.tech/project/nonlinear_causal
+.. |downloads_month| image:: https://pepy.tech/badge/nonlinear-causal/month
+.. _downloads_month: https://pepy.tech/project/nonlinear-causal
 
 .. image:: ./logo/logo_cover.png
   :width: 1030

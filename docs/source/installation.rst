@@ -25,7 +25,7 @@ Install ``nonlinear-causal`` using ``pip``
 
 .. code:: bash
 
-	pip install nl_causal
+	pip install nonlinear-causal
 	pip install git+https://github.com/statmlben/nonlinear-causal.git
 
 
