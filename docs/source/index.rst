@@ -41,6 +41,9 @@
 
 The proposed model is:
 
+.. image:: ./logo/nl_causal.png
+  :width: 1030
+
 .. math::
 
    \text{(Stage 1)} \quad \phi(x) = \mathbf{z}^\prime \boldsymbol{\theta} + w, \qquad \text{(Stage 2)} \quad y = \beta \phi(x) + \mathbf{z}^\prime \boldsymbol{\alpha} + \epsilon
