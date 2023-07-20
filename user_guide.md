@@ -1,22 +1,10 @@
 # 🧬 nonlinear-causal: **User Guide**
 
 The proposed model is:
-<p align="center">
-<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
-</p>
+$$
+\phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
+$$
 
-- <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\beta" title="\color{Gray} \beta" />: marginal causal effect from X -> Y;
-- <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\phi(\cdot)" tilte="\phi"/>: nonlinear causal link;
-
-<!-- ![logo](./logo/model_black.gif) -->
-
-
-## What We Can Do:
-- Estimate <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\theta" title="\color{Gray} \theta" /> and <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\beta" title="\color{Gray} \beta" />.
-- Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
-- Estimate nonlinear causal link <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\phi(\cdot)" tilte="\phi"/>.
-
----
 ## Real data analysis in **ADNI** and **IGAP** dataset
 
 ### Data required

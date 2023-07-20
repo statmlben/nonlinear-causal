@@ -21,7 +21,7 @@
 - PyPi: [https://pypi.org/project/nonlinear-causal/](https://pypi.org/project/nonlinear-causal/)
 - Open Source: [MIT license](https://opensource.org/licenses/MIT)
 - Paper: [arXiv:2209.08889](https://arxiv.org/pdf/2209.08889.pdf)
-<!-- - Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/) -->
+- **Documentation**: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/index.html)
 
 
 <!-- <script type="text/javascript" charset="utf-8" 
