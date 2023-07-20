@@ -1,5 +1,5 @@
-API Reference
-=============
+🔗 API Reference
+================
 
 .. contents::
 	:depth: 3

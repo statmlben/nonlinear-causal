@@ -82,5 +82,6 @@ If you use this code please star 🌟 the repository and cite the following pape
    :maxdepth: 1
 
    installation
+   tutorial
    example
    api

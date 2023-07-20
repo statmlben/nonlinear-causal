@@ -51,7 +51,7 @@ Note that we compute LD matrix by the reference panel for **BOTH** stages 1 and 
 
 ---
 
-### Train `nl_causal`
+### Train `nl_causal` for inference
 
 * Define the method
 
@@ -70,6 +70,36 @@ SIR = _2SIR(sparse_reg=reg_model, data_in_slice=0.2*n1)
 ```python
 ## Stage-1 fit theta
 SIR.fit_theta(Z1=snp.values, X1=gene_exp.values.flatten())
+```
+```python
+
+    print('\n##### Causal Model of %s #####' %gene_code)
+    print('-'*20)
+    print('Estimated 2SIR Stage 1 model: \n theta: \n %s; \n link: \n %s' %(SIR.theta, 'SIR.link'))
+
+
+    ##### Causal Model of ACTN4 #####
+    --------------------
+    Estimated 2SIR Stage 1 model: 
+    theta: 
+    [0.6257 -0.0177 0.1491 -0.0347 0.0795 -0.0730 -0.2680 0.0991 0.1083 0.3236
+    -0.0579 -0.1197 -0.0384 -0.0614 -0.0104 -0.0327 0.2072 0.2560 -0.1272
+    0.2486 -0.2207 -0.0973 0.0885 0.1211 -0.1582 -0.1811 0.1612]; 
+    link: 
+    SIR.link
+    
+* Save the stage 1 model for **Pre-train** usage.
+
+```python
+## save stage 1 theta:
+np.save(gene_code+'stage1_theta', SIR.theta)
+# This is how to load
+# np.load(gene_code+'stage1_theta.npy')
+## save stage 1 link function:
+import pickle
+pickle.dump(SIR.link, gene_code+'stage1_link')
+# This is how to load
+# SIR.link = pickle.load(gene_code+'stage1_link')
 ```
 
 * Fit the sparse regression for the stage 2 model
@@ -94,3 +124,51 @@ SIR.CI_beta(n1, n2, Z1=snp.values, X1=gene_exp.values.flatten(),
                     boot_over='theta',
                     level=CI_level)
 ```
+
+### Train `nl_causal` for model estimation
+
+* Note that there is no need to estimate the nonlinear transformation when conducting hypothesis testing using `nl_causal`, yet if we are still interested in the model, we can further fit the nonlinear link function.
+
+```python
+SIR.fit_link(Z1=snp.values, X1=gene_exp.values.flatten())
+```
+
+* After estimated the link function, we can use it to provide an estimation of any `gene_exp`
+
+```python
+    IoR = np.arange(0, 1, 1./100)
+    link_IoR = SIR.link(X = IoR[:,None])
+```
+
+Then we can summarize the whole estimated models:
+
+```python
+    print('\n##### Causal Model of %s #####' %gene_code)
+    print('-'*20)
+    print('Estimated 2SIR Stage 1 model: \n theta: \n %s; \n link: \n %s' %(SIR.theta, 'SIR.link'))
+    print('-'*20)
+    print('Estimated 2SIR Stage 2 model: \n beta: %.3f; \n alpha: \n %s' %(SIR.beta, SIR.alpha))
+    print('-'*20)
+    print('p-value for causal inference: %.4f' %(SIR.p_value))
+```
+
+* Following is the demo outcome for gene `ACTN4`:
+
+      ##### Causal Model of ACTN4 #####
+      --------------------
+      Estimated 2SIR Stage 1 model: 
+      theta: 
+      [0.6257 -0.0177 0.1491 -0.0347 0.0795 -0.0730 -0.2680 0.0991 0.1083 0.3236
+      -0.0579 -0.1197 -0.0384 -0.0614 -0.0104 -0.0327 0.2072 0.2560 -0.1272
+      0.2486 -0.2207 -0.0973 0.0885 0.1211 -0.1582 -0.1811 0.1612]; 
+      link: 
+      SIR.link
+      --------------------
+      Estimated 2SIR Stage 2 model: 
+      beta: 0.009; 
+      alpha: 
+      [0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+      0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+      0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000]
+      --------------------
+      p-value for causal inference: 0.5701

@@ -1,5 +1,5 @@
-Example
-=======
+🗳️ Example
+==========
 
 Simulation
 ----------
