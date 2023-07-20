@@ -1,5 +1,5 @@
 Cython>=0.29.32
-matplotlib>=3.7.1
+matplotlib
 numpy>=1.22.3
 pandas>=1.4.2
 pandas_plink>=2.2.9
