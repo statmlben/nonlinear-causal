@@ -14,29 +14,39 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-import hachibee_sphinx_theme
-# -- Project information -----------------------------------------------------
-
 project = 'nonlinear-causal'
-copyright = '2021, Ben Dai, Chunlin Li, Haoran Xue'
-author = 'Ben Dai, Chunlin Li, Haoran Xue'
-master_doc = 'index'
+copyright = 'Ben Dai'
+author = 'Ben Dai'
 
+# -- Project information -----------------------------------------------------
 import sys, os
+# import numpydoc
+sys.path.append('.')
+sys.path.append('..')
+sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../..'))
 # sys.path.append(os.path.abspath('../nl_causal'))
 # sys.path.append(os.path.abspath('../../nonlinear-causal/nl_causal'))
 # sys.path.append('../..')
-sys.path.append('..')
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+master_doc = 'index'
 extensions = [
 	'sphinx.ext.autodoc',
-	'numpydoc'
+	'sphinx.ext.autosummary',
+	'numpydoc',
+	'nbsphinx'
 	]
 
+autosummary_generate = True
+numpydoc_show_class_members = False
+nbsphinx_execute = 'never'
+nbsphinx_allow_errors = True
+# autodoc_mock_imports = ['numpy']
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -45,7 +55,6 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -53,10 +62,10 @@ exclude_patterns = []
 #
 
 # html_theme = 'alabaster'
-html_theme = 'hachibee'
-html_theme_path = [hachibee_sphinx_theme.get_html_themes_path()]
+html_theme = 'furo'
+# html_theme_path = [hachibee_sphinx_theme.get_html_themes_path()]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']

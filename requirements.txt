@@ -1,0 +1,13 @@
+Cython==0.29.32
+matplotlib==3.7.1
+numpy==1.22.3
+numpydoc==1.5.0
+pandas==1.4.2
+pandas_plink==2.2.9
+pycasso==0.1.2.2
+scikit_learn==1.0.2
+scipy==1.8.0
+seaborn==0.11.2
+setuptools==59.6.0
+sliced==0.7.0
+statsmodels==0.13.2

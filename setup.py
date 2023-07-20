@@ -13,7 +13,7 @@ if __name__ == "__main__":
         # Needed to actually package something
         packages=['nl_causal'],
         # Needed for dependencies
-        install_requires=['numpy', 'pandas', 'sliced', 'scipy', 'sklearn', 'hachibee-sphinx-theme'],
+        install_requires=['numpy', 'pandas', 'sliced', 'scipy', 'sklearn'],
         # *strongly* suggested for sharing
         version='0.1',
         # The license can be anything you like

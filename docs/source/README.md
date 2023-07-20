@@ -1,8 +1,6 @@
-![Pypi](https://badge.fury.io/py/nl-causal.svg)
+![Pypi](https://badge.fury.io/py/nonlinear-causal.svg)
 [![Python](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<a href="https://bendai.org"><img src="https://img.shields.io/badge/Powered%20by-cuhk%40dAI-purple.svg"/></a>
-
 
 <!-- [![Youtube](https://img.shields.io/badge/YouTube-Channel-red)]()
 ![Downloads](https://static.pepy.tech/badge/nl-causal)
@@ -19,11 +17,11 @@
 
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
 
-- GitHub repo: [https://github.com/statmlben/nonlinear-causal](https://github.com/statmlben/nonlinear-causal)
-- Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/)
-- PyPi: [https://pypi.org/project/nl-causal](https://pypi.org/project/nonlinear-causal)
+- GitHub repo: [https://github.com/nl-causal/nonlinear-causal](https://github.com/nl-causal/nonlinear-causal)
+- PyPi: [https://pypi.org/project/nonlinear-causal/](https://pypi.org/project/nonlinear-causal/)
 - Open Source: [MIT license](https://opensource.org/licenses/MIT)
-- Paper: [pdf]()
+- Paper: [arXiv:2209.08889](https://arxiv.org/pdf/2209.08889.pdf)
+<!-- - Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/) -->
 
 
 <!-- <script type="text/javascript" charset="utf-8" 
@@ -31,61 +29,62 @@ src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLor
 https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 
 The proposed model is:
-<p align="center">
-<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RoyalBlue}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
-</p>
+![model](.figs/../logo/nl_causal.png)
 
-<!-- $$
+<!-- <p align="center">
+<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RedOrange}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
+</p> -->
+
+$$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
-$$ -->
+$$
 
-- <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\beta" title="\color{Gray} \beta" />: marginal causal effect from X -> Y;
-- <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\phi(\cdot)" tilte="\phi"/>: nonlinear causal link;
+- $\beta$: marginal causal effect from X -> Y;
+- $\phi(\cdot)$: nonlinear causal link;
 
 <!-- ![logo](./logo/model_black.gif) -->
 
 
 ## What We Can Do:
-- Estimate <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\theta" title="\color{Gray} \theta" /> and <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\beta" title="\color{Gray} \beta" />.
+- Estimate $\theta$ and $\beta$.
 - Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
-- Estimate nonlinear causal link <img src="https://latex.codecogs.com/svg.image?\color{RoyalBlue}&space;\phi(\cdot)" tilte="\phi"/>.
+- Estimate nonlinear causal link $\phi(\cdot)$.
 
 
 ## Installation
 
-### Dependencies
-
-`nonlinear-causal` requires:
-
-| | | | | | |
-|-|-|-|-|-|-|
-| Python>=3.8 | numpy | pandas | sklearn | scipy | sliced |
-
-### User installation
-
 Install `nonlinear-causal` using ``pip``
 
 ```bash
-pip install nl_causal
-pip install git+https://github.com/statmlben/nonlinear-causal.git
+pip install nonlinear-causal
 ```
-### Source code
 
-You can check the latest sources with the command::
-
+Install the latest version in Github:
 ```bash
-git clone https://github.com/statmlben/nonlinear-causal.git
+pip install git+https://github.com/nl-causal/nonlinear-causal
 ```
 
 ## Examples and notebooks
 
-- Notebook 1: [Simulation for HT and CI with standard setup](sim_main.ipynb)
-- Notebook 2: [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
-- Notebook 3: [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
-- Notebook 4: [Real application]()
+- [User Guide](user_guide.md)
 
+- [Simulation for HT and CI with standard setup](sim_main.ipynb)
+- [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
+- [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
+- [Real application](app_test.ipynb)
+<!-- - [Pipeline for plink data](user_guide.md) -->
 
-## Contributors
-<a href = "https://github.com/statmlben/nonlinear-causal/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo=statmlben/nonlinear-causal"/>
-</a>
+## Reference
+
+If you use this code please star 🌟 the repository and cite the following paper:
+
+- Dai, B., Li, C., Xue, H., Pan, W., & Shen, X. (2022). Inference of nonlinear causal effects with GWAS summary data. *arXiv preprint* arXiv:2209.08889.
+
+```latex
+@article{dai2022inference,
+  title={Inference of nonlinear causal effects with GWAS summary data},
+  author={Dai, Ben and Li, Chunlin and Xue, Haoran and Pan, Wei and Shen, Xiaotong},
+  journal={arXiv preprint arXiv:2209.08889},
+  year={2022}
+}
+```

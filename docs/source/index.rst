@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-🧬 nonlinear-causal
-===================
+🧬 **nonlinear-causal**
+=======================
 
 .. -*- mode: rst -*-
 
@@ -28,7 +28,7 @@
 .. |downloads_month| image:: https://pepy.tech/badge/nonlinear-causal/month
 .. _downloads_month: https://pepy.tech/project/nonlinear-causal
 
-.. image:: ./logo/logo_cover.png
+.. image:: ./logo/logo_cover_transparent.png
   :width: 1030
 
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
@@ -58,19 +58,29 @@ The proposed model is:
 .. <img src="https://latex.codecogs.com/svg.image?{\centering \color{RoyalBlue} \phi(x) = \mathbf{z}^\prime \boldsymbol{\theta} &plus; w, \quad y = \beta \phi(x) &plus; \mathbf{z}^\prime \boldsymbol{\alpha} &plus; \epsilon}"" width="350">
 .. </p>
 
+#️⃣ Reference
+-------------
+
+If you use this code please star 🌟 the repository and cite the following paper:
+
+- Dai, B., Li, C., Xue, H., Pan, W., & Shen, X. (2022). Inference of nonlinear causal effects with GWAS summary data. *arXiv preprint* arXiv:2209.08889.
+
+.. code:: bib
+
+   @article{dai2022inference,
+      title={Inference of nonlinear causal effects with GWAS summary data},
+      author={Dai, Ben and Li, Chunlin and Xue, Haoran and Pan, Wei and Shen, Xiaotong},
+      journal={arXiv preprint arXiv:2209.08889},
+      year={2022}
+   }
+
+
 📒 Contents
 -----------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    installation
-   quickstart
+   example
    api
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-.. * :ref:`modindex`
-* :ref:`search`
