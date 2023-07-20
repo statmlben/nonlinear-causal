@@ -31,13 +31,13 @@ https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
 The proposed model is:
 ![model](.figs/../logo/nl_causal.png)
 
-<p align="center">
+<!-- <p align="center">
 <img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RedOrange}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
-</p>
+</p> -->
 
-<!-- $$
+$$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
-$$ -->
+$$
 
 - $\beta$: marginal causal effect from X -> Y;
 - $\phi(\cdot)$: nonlinear causal link;
