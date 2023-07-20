@@ -9,7 +9,7 @@ Simulation
 
     ./nb/sim_main.ipynb
 
-AD datasets
+Genes -> AD
 -----------
 
 .. toctree::
