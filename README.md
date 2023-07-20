@@ -53,28 +53,15 @@ $$
 
 ## Installation
 
-### Dependencies
-
-`nonlinear-causal` requires:
-
-| | | | | | |
-|-|-|-|-|-|-|
-| Python>=3.8 | numpy | pandas | sklearn | scipy | sliced |
-
-### User installation
-
 Install `nonlinear-causal` using ``pip``
 
 ```bash
 pip install nonlinear-causal
-pip install git+https://github.com/nl-causal/nonlinear-causal
 ```
-### Source code
 
-You can check the latest sources with the command::
-
+Install the latest version in Github:
 ```bash
-git clone https://github.com/nl-causal/nonlinear-causal
+pip install git+https://github.com/nl-causal/nonlinear-causal
 ```
 
 ## Examples and notebooks
@@ -86,3 +73,18 @@ git clone https://github.com/nl-causal/nonlinear-causal
 - [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
 - [Real application](app_test.ipynb)
 <!-- - [Pipeline for plink data](user_guide.md) -->
+
+## Reference
+
+If you use this code please star 🌟 the repository and cite the following paper:
+
+- Dai, B., Li, C., Xue, H., Pan, W., & Shen, X. (2022). Inference of nonlinear causal effects with GWAS summary data. *arXiv preprint* arXiv:2209.08889.
+
+```latex
+@article{dai2022inference,
+  title={Inference of nonlinear causal effects with GWAS summary data},
+  author={Dai, Ben and Li, Chunlin and Xue, Haoran and Pan, Wei and Shen, Xiaotong},
+  journal={arXiv preprint arXiv:2209.08889},
+  year={2022}
+}
+```
