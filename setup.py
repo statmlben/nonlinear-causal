@@ -11,11 +11,11 @@ if __name__ == "__main__":
         author='Ben Dai',
         author_email='bendai@cuhk.edu.hk',
         # Needed to actually package something
-        packages=['nl_causal'],
+        packages=find_packages(),
         # Needed for dependencies
         install_requires=['numpy', 'pandas', 'sliced', 'scipy', 'sklearn'],
         # *strongly* suggested for sharing
-        version='0.1',
+        version='0.3',
         # The license can be anything you like
         license='MIT',
         description='nonlinear-causal is a Python module for nonlinear causal inference built on top of Two-stage methods.',
