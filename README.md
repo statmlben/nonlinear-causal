@@ -1,4 +1,4 @@
-![Pypi](https://badge.fury.io/py/nonlinear-causal.svg)
+ ![Pypi](https://badge.fury.io/py/nonlinear-causal.svg)
 [![Python](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -85,6 +85,6 @@ If you use this code please star 🌟 the repository and cite the following pape
   title={Inference of nonlinear causal effects with GWAS summary data},
   author={Dai, Ben and Li, Chunlin and Xue, Haoran and Pan, Wei and Shen, Xiaotong},
   journal={arXiv preprint arXiv:2209.08889},
-  year={2022}
+  year={2023}
 }
 ```
