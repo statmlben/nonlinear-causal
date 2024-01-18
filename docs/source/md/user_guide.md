@@ -1,13 +1,8 @@
-# 🧬 nonlinear-causal: **User Guide**
+# 🧬 nonlinear-causal **user guide**
 
-The proposed model is:
-$$
-\phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
-$$
+> Real data analysis in **ADNI** and **IGAP** dataset
 
-## Real data analysis in **ADNI** and **IGAP** dataset
-
-### Data required
+## Data required
 
 * Please check Section 4 in the manuscript for our data pre-processing.
 
@@ -39,7 +34,7 @@ Note that we compute LD matrix by the reference panel for **BOTH** stages 1 and 
 
 ---
 
-### Train `nl_causal` for inference
+## Train `nl_causal` for inference
 
 * Define the method
 
@@ -113,7 +108,7 @@ SIR.CI_beta(n1, n2, Z1=snp.values, X1=gene_exp.values.flatten(),
                     level=CI_level)
 ```
 
-### Train `nl_causal` for model estimation
+## Train `nl_causal` for model estimation
 
 * Note that there is no need to estimate the nonlinear transformation when conducting hypothesis testing using `nl_causal`, yet if we are still interested in the model, we can further fit the nonlinear link function.
 
