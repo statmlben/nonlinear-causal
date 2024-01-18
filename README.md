@@ -9,49 +9,46 @@
 <!-- [![image](https://pepy.tech/badge/leafmap)](https://pepy.tech/project/leafmap) -->
 <!-- [![image](https://github.com/giswqs/leafmap/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild) -->
 
-# 🧬 nonlinear-causal
+# 🧬 nonlinear-causal <a href="https://github.com/statmlben/nonlinear-causal"><img src="logo/logo_c.png" align="right" height="138" /></a>
 
-<!-- <img style="float: left; max-width: 10%" src="./logo/logo_transparent.png"> -->
-
-![logo](./logo/logo_cover_transparent.png)
-
-**nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of two-stage methods. 
+**nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of instrument variables and Two-Stage least squares ([2SLS](https://en.wikipedia.org/wiki/Instrumental_variables_estimation)). 
 
 - GitHub repo: [https://github.com/nl-causal/nonlinear-causal](https://github.com/nl-causal/nonlinear-causal)
 - PyPi: [https://pypi.org/project/nonlinear-causal/](https://pypi.org/project/nonlinear-causal/)
 - Open Source: [MIT license](https://opensource.org/licenses/MIT)
 - Paper: [arXiv:2209.08889](https://arxiv.org/pdf/2209.08889.pdf)
-- **Documentation**: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/index.html)
-
-
-<!-- <script type="text/javascript" charset="utf-8" 
-src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML,
-https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script> -->
+- Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/index.html)
 
 The proposed model is:
-![model](.figs/../logo/nl_causal.png)
-
-<!-- <p align="center">
-<img src="https://latex.codecogs.com/svg.image?{\centering&space;\color{RedOrange}&space;\phi(x)&space;=&space;\mathbf{z}^\prime&space;\boldsymbol{\theta}&space;&plus;&space;w,&space;\quad&space;y&space;=&space;\beta&space;\phi(x)&space;&plus;&space;\mathbf{z}^\prime&space;\boldsymbol{\alpha}&space;&plus;&space;\epsilon}"" width="350">
-</p> -->
+![model](./logo/nl_causal.png)
 
 $$
-\phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon
+\phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon,
 $$
+where $(w,\varepsilon)$ are the error terms independent of the instruments $\mathbf{z}$, however, $w$ and $\varepsilon$ may be correlated due to underlying *confounders*, and $\beta\in\mathbb{R}$, $\mathbf{\alpha}\in\mathbb{R}^p$, $\mathbf{\theta}\in\mathbb{R}^p$ are unknown parameters. In the above image example, $\mathbf{z}$ is the valid/invalid instrument variables (such as SNPs), $x$ is the exposure (such as gene expression), and $y$ is the outcome (such as AD). 
 
-- $\beta$: marginal causal effect from X -> Y;
-- $\phi(\cdot)$: nonlinear causal link;
+**Remarks**
+- $\mathbf{\alpha} \neq \mathbf{0}$ indicates the violation of the second and/or third IV assumptions. 
+- Generally, the effect $\beta\phi(\cdot)$ may not be identifiable with the presence of invalid IVs. In the literature, additional structural constraints are imposed to avoid this issue, such as $\|\mathbf{\alpha}\|_0 < p/2$.
+- $\beta$ and $\phi$ are identifiable by fixing $\|\mathbf{\theta}\|_2 = 1$ and $\beta \geq 0$.
 
-<!-- ![logo](./logo/model_black.gif) -->
-
+**Strengths**
+- Model assumptions are weaker than the classical 2SLS: the model admits an *arbitrary* nonlinear transformation $\phi(\cdot)$ across $\mathbf{z}$, $x$ and $y$, relaxing the linearity assumption in the standard TWAS/2SLS.
+- The model includes 2SLS and Yeo-Johnson power transformation 2SLS (PT-2SLS) as special cases. It is worth mentioning that the proposed method remains competitive against 2SLS/PT-2SLS even if the linear assumption holds.
+- The implicit linear structure in the proposed model allows the *use of GWAS summary data* of our method, in contrast to requiring individual-level data by the other non-linear models.
 
 ## What We Can Do:
-- Estimate $\theta$ and $\beta$.
+- Estimate $\beta$: marginal causal effect from $X \to Y$
 - Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
 - Estimate nonlinear causal link $\phi(\cdot)$.
 
 
 ## Installation
+
+Install the latest version `nonlinear-causal` in Github:
+```bash
+pip install git+https://github.com/nl-causal/nonlinear-causal
+```
 
 Install `nonlinear-causal` using ``pip``
 
@@ -59,32 +56,40 @@ Install `nonlinear-causal` using ``pip``
 pip install nonlinear-causal
 ```
 
-Install the latest version in Github:
-```bash
-pip install git+https://github.com/nl-causal/nonlinear-causal
-```
-
 ## Examples and notebooks
 
 - [User Guide](user_guide.md)
-
-- [Simulation for HT and CI with standard setup](sim_main.ipynb)
-- [Simulation for HT and CI with invalid IVs](sim_invalid_IVS.ipynb)
-- [Simulation for HT and CI with categorical IVs](sim_cate.ipynb)
+- [Simulation for HT and CI with standard setup](./nb/sim_main.ipynb)
+- [Simulation for HT and CI with invalid IVs](./nb/sim_invalid_IVS.ipynb)
+- [Simulation for HT and CI with categorical IVs](./nb/sim_cate.ipynb)
 - [Real application](app_test.ipynb)
-<!-- - [Pipeline for plink data](user_guide.md) -->
+
+## Simulation Performance
+- We examine four cases: (i) $\beta = 0$, (ii) $\beta = .05$, (iii) $\beta = .10$, (iv) $\beta = .15$. Note that case (i) is for Type I error analysis, while $\beta > 0$ in (ii) - (iv), suggests power analysis. 
+
+- Six transformations are considered: (1) linear: $\phi(x) = x$; (2) logarithm: $\phi(x) = \log(x)$; (3) cube root: $\phi(x) = x^{1/3}$; (4) inverse: $\phi(x) = 1/x$; (5) piecewise linear: $\phi(x) = xI(x\leq 0) + 0.5 x I(x > 0)$; (6) quadratic: $\phi(x) = x^2$.  
+
+![result](./figs/sim_test_n5p10.png)
+
+For more information, please check [our paper](https://openreview.net/pdf?id=cylRvJYxYI) (Section 3) or the [Jupyer Notebook](./nb/sim_main.ipynb) for the simulation examples.
 
 ## Reference
 
 If you use this code please star 🌟 the repository and cite the following paper:
 
-- Dai, B., Li, C., Xue, H., Pan, W., & Shen, X. (2022). Inference of nonlinear causal effects with GWAS summary data. *arXiv preprint* arXiv:2209.08889.
+- Dai, B., Li, C., Xue, H., Pan, W., & Shen, X. (2024). Inference of nonlinear causal effects with GWAS summary data. In *Conference on Causal Learning and Reasoning*. PMLR.
 
 ```latex
-@article{dai2022inference,
+@inproceedings{dai2022inference,
   title={Inference of nonlinear causal effects with GWAS summary data},
   author={Dai, Ben and Li, Chunlin and Xue, Haoran and Pan, Wei and Shen, Xiaotong},
-  journal={arXiv preprint arXiv:2209.08889},
-  year={2023}
+  booktitle={Conference on Causal Learning and Reasoning},
+  pages={},
+  year={2024},
+  rganization={PMLR}
 }
 ```
+
+⚖️ License
+
+**nonlinear-causal** is open source under the MIT license.
