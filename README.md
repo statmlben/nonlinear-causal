@@ -18,27 +18,49 @@
 - Paper: [PMLR@CLeaR2024](https://openreview.net/pdf?id=cylRvJYxYI)
 - Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/index.html)
 
-The proposed model is:
+## Models
+
+**nonlinear-causal** considers two instrument variable causal models:
 
 <a href="https://openreview.net/pdf?id=cylRvJYxYI"><img src="./logo/nl_causal.png" class="center" height="250" /></a>
+
+Illustrated by the above image example, let's denote $\mathbf{z}$ as the valid/invalid instrument variables (such as SNPs), $x$ as the exposure (such as gene expression), and $y$ as the outcome (such as AD). 
+
+### **Two-Stage least squares (2SLS)**
+
+$$
+\phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta x + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon,
+$$
+
+where $(w,\varepsilon)$ are the error terms independent of the instruments $\mathbf{z}$, however, $w$ and $\varepsilon$ may be correlated due to underlying *confounders*, and $\beta\in\mathbb{R}$, $\mathbf{\alpha}\in\mathbb{R}^p$, $\mathbf{\theta}\in\mathbb{R}^p$ are unknown parameters.
+
+### **Two-Stage Sliced Inverse Regression (2SIR)** (a nonlinear extension of 2SLS, see [our paper](https://openreview.net/pdf?id=cylRvJYxYI))
 
 $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon,
 $$
 
-where $(w,\varepsilon)$ are the error terms independent of the instruments $\mathbf{z}$, however, $w$ and $\varepsilon$ may be correlated due to underlying *confounders*, and $\beta\in\mathbb{R}$, $\mathbf{\alpha}\in\mathbb{R}^p$, $\mathbf{\theta}\in\mathbb{R}^p$ are unknown parameters. In the above image example, $\mathbf{z}$ is the valid/invalid instrument variables (such as SNPs), $x$ is the exposure (such as gene expression), and $y$ is the outcome (such as AD). 
+where $(w,\varepsilon)$ are the error terms independent of the instruments $\mathbf{z}$, however, $w$ and $\varepsilon$ may be correlated due to underlying *confounders*, and $\beta\in\mathbb{R}$, $\mathbf{\alpha}\in\mathbb{R}^p$, $\mathbf{\theta}\in\mathbb{R}^p$ are unknown parameters.
 
 **Remarks**
-- $\mathbf{\alpha} \neq \mathbf{0}$ indicates the violation of the second and/or third IV assumptions. 
-- Generally, the effect $\beta\phi(\cdot)$ may not be identifiable with the presence of invalid IVs. In the literature, additional structural constraints are imposed to avoid this issue, such as $\|\mathbf{\alpha}\|_0 < p/2$.
-- $\beta$ and $\phi$ are identifiable by fixing $\|\mathbf{\theta}\|_2 = 1$ and $\beta \geq 0$.
+- **2SLS / 2SIR.** $\mathbf{\alpha} \neq \mathbf{0}$ indicates the violation of the second and/or third IV assumptions. 
+- **2SIR.** Generally, the effect $\beta\phi(\cdot)$ may not be identifiable with the presence of invalid IVs. In the literature, additional structural constraints are imposed to avoid this issue, such as $\|\mathbf{\alpha}\|_0 < p/2$.
+- **2SIR.** $\beta$ and $\phi$ are identifiable by fixing $\|\mathbf{\theta}\|_2 = 1$ and $\beta \geq 0$.
 
-**Strengths**
-- Model assumptions are weaker than the classical 2SLS: the model admits an *arbitrary* nonlinear transformation $\phi(\cdot)$ across $\mathbf{z}$, $x$ and $y$, relaxing the linearity assumption in the standard TWAS/2SLS.
-- The model includes 2SLS and Yeo-Johnson power transformation 2SLS (PT-2SLS) as special cases. It is worth mentioning that the proposed method remains competitive against 2SLS/PT-2SLS even if the linear assumption holds.
-- The implicit linear structure in the proposed model allows the *use of GWAS summary data* of our method, in contrast to requiring individual-level data by the other non-linear models.
+**Strengths** of **2SIR**
+- Model assumptions of 2SIR are weaker than the classical 2SLS: the model admits an *arbitrary* nonlinear transformation $\phi(\cdot)$ across $\mathbf{z}$, $x$ and $y$, relaxing the linearity assumption in the standard TWAS/2SLS.
+- 2SIR includes 2SLS and Yeo-Johnson power transformation 2SLS (PT-2SLS) as special cases. It is worth mentioning that the proposed method remains competitive against 2SLS/PT-2SLS even if the linear assumption holds.
+- The implicit linear structure in both 2SLS and 2SIR allows the *use of GWAS summary data* of our method, in contrast to requiring individual-level data by the other (non-linear) models.
 
 ## What We Can Do:
+
+**2SLS**
+
+- Estimate $\beta$: marginal causal effect from $X \to Y$
+- Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
+
+**2SIR**
+
 - Estimate $\beta$: marginal causal effect from $X \to Y$
 - Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
 - Estimate nonlinear causal link $\phi(\cdot)$.
@@ -55,7 +77,7 @@ pip install nonlinear-causal
 
 ## Examples and notebooks
 
-- [User Guide](user_guide.md)
+- [User Guide](./docs/source/md/user_guide.md)
 - [Simulation for HT and CI with standard setup](./nb/sim_main.ipynb)
 - [Simulation for HT and CI with invalid IVs](./nb/sim_invalid_IVS.ipynb)
 - [Simulation for HT and CI with categorical IVs](./nb/sim_cate.ipynb)
