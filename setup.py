@@ -13,7 +13,7 @@ if __name__ == "__main__":
         # Needed to actually package something
         packages=find_packages(),
         # Needed for dependencies
-        install_requires=['numpy', 'pandas', 'sliced', 'scipy', 'sklearn'],
+        install_requires=['numpy', 'pandas', 'sliced', 'scipy', 'scikit-learn'],
         # *strongly* suggested for sharing
         version='0.3',
         # The license can be anything you like
