@@ -20,7 +20,7 @@
 
 The proposed model is:
 
-<a href="https://openreview.net/pdf?id=cylRvJYxYI"><img src="./logo/nl_causal.png" class="center" height="300" /></a>
+<a href="https://openreview.net/pdf?id=cylRvJYxYI"><img src="./logo/nl_causal.png" class="center" height="250" /></a>
 
 $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon,
@@ -46,14 +46,10 @@ where $(w,\varepsilon)$ are the error terms independent of the instruments $\mat
 
 ## Installation
 
-Install the latest version `nonlinear-causal` in Github:
 ```bash
+# Install the latest version `nonlinear-causal` in Github:
 pip install git+https://github.com/nl-causal/nonlinear-causal
-```
-
-Install `nonlinear-causal` using ``pip``
-
-```bash
+# or Install `nonlinear-causal` lib from `pypi`
 pip install nonlinear-causal
 ```
 
