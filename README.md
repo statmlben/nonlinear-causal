@@ -9,22 +9,23 @@
 <!-- [![image](https://pepy.tech/badge/leafmap)](https://pepy.tech/project/leafmap) -->
 <!-- [![image](https://github.com/giswqs/leafmap/workflows/build/badge.svg)](https://github.com/giswqs/leafmap/actions?query=workflow%3Abuild) -->
 
-# 🧬 nonlinear-causal <a href="https://github.com/statmlben/nonlinear-causal"><img src="logo/logo_c.png" align="right" height="138" /></a>
+# 🧬 nonlinear-causal <a href="https://github.com/statmlben/nonlinear-causal"><img src="logo/logo_c.png" align="right" height="150" /></a>
 
 **nonlinear-causal** is a Python module for nonlinear causal inference, including **hypothesis testing** and **confidence interval** for causal effect, built on top of instrument variables and Two-Stage least squares ([2SLS](https://en.wikipedia.org/wiki/Instrumental_variables_estimation)). 
 
 - GitHub repo: [https://github.com/nl-causal/nonlinear-causal](https://github.com/nl-causal/nonlinear-causal)
 - PyPi: [https://pypi.org/project/nonlinear-causal/](https://pypi.org/project/nonlinear-causal/)
-- Open Source: [MIT license](https://opensource.org/licenses/MIT)
-- Paper: [arXiv:2209.08889](https://arxiv.org/pdf/2209.08889.pdf)
+- Paper: [PMLR@CLeaR2024](https://openreview.net/pdf?id=cylRvJYxYI)
 - Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/index.html)
 
 The proposed model is:
-![model](./logo/nl_causal.png)
+
+<a href="https://openreview.net/pdf?id=cylRvJYxYI"><img src="./logo/nl_causal.png" class="center" height="300" /></a>
 
 $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon,
 $$
+
 where $(w,\varepsilon)$ are the error terms independent of the instruments $\mathbf{z}$, however, $w$ and $\varepsilon$ may be correlated due to underlying *confounders*, and $\beta\in\mathbb{R}$, $\mathbf{\alpha}\in\mathbb{R}^p$, $\mathbf{\theta}\in\mathbb{R}^p$ are unknown parameters. In the above image example, $\mathbf{z}$ is the valid/invalid instrument variables (such as SNPs), $x$ is the exposure (such as gene expression), and $y$ is the outcome (such as AD). 
 
 **Remarks**
