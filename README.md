@@ -26,15 +26,15 @@
 
 Illustrated by the above image example, let's denote $\mathbf{z}$ as the valid/invalid instrument variables (such as SNPs), $x$ as the exposure (such as gene expression), and $y$ as the outcome (such as AD). 
 
-### **Two-Stage least squares (2SLS)**
+### **Two-Stage least squares ([2SLS](https://doi.org/10.1080/01621459.2014.994705))**
 
 $$
-\phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta x + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon,
+x = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta x + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon,
 $$
 
 where $(w,\varepsilon)$ are the error terms independent of the instruments $\mathbf{z}$, however, $w$ and $\varepsilon$ may be correlated due to underlying *confounders*, and $\beta\in\mathbb{R}$, $\mathbf{\alpha}\in\mathbb{R}^p$, $\mathbf{\theta}\in\mathbb{R}^p$ are unknown parameters.
 
-### **Two-Stage Sliced Inverse Regression (2SIR)** (a nonlinear extension of 2SLS, see [our paper](https://openreview.net/pdf?id=cylRvJYxYI))
+### **Two-Stage Sliced Inverse Regression ([2SIR](https://openreview.net/pdf?id=cylRvJYxYI))** 
 
 $$
 \phi(x) = \mathbf{z}^\prime \mathbf{\theta} + w, \quad y = \beta \phi(x) + \mathbf{z}^\prime \mathbf{\alpha} + \epsilon,
@@ -43,8 +43,7 @@ $$
 where $(w,\varepsilon)$ are the error terms independent of the instruments $\mathbf{z}$, however, $w$ and $\varepsilon$ may be correlated due to underlying *confounders*, and $\beta\in\mathbb{R}$, $\mathbf{\alpha}\in\mathbb{R}^p$, $\mathbf{\theta}\in\mathbb{R}^p$ are unknown parameters.
 
 **Remarks**
-- **2SLS / 2SIR.** $\mathbf{\alpha} \neq \mathbf{0}$ indicates the violation of the second and/or third IV assumptions. 
-- **2SIR.** Generally, the effect $\beta\phi(\cdot)$ may not be identifiable with the presence of invalid IVs. In the literature, additional structural constraints are imposed to avoid this issue, such as $\|\mathbf{\alpha}\|_0 < p/2$.
+- **2SLS / 2SIR.** $\mathbf{\alpha} \neq \mathbf{0}$ indicates the violation of the second and/or third IV assumptions. The models may not be identifiable with the presence of invalid IVs. In the literature, additional structural constraints are imposed to avoid this issue, such as $\|\mathbf{\alpha}\|_0 < p/2$.
 - **2SIR.** $\beta$ and $\phi$ are identifiable by fixing $\|\mathbf{\theta}\|_2 = 1$ and $\beta \geq 0$.
 
 **Strengths** of **2SIR**
@@ -65,6 +64,7 @@ where $(w,\varepsilon)$ are the error terms independent of the instruments $\mat
 - Hypothesis testing (HT) and confidence interval (CI) for marginal causal effect $\beta$.
 - Estimate nonlinear causal link $\phi(\cdot)$.
 
+For implementation usage of **nonlinear_causal**, kindly refer to the provided examples and notebooks.
 
 ## Installation
 
