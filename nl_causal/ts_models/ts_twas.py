@@ -9,7 +9,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from scipy.stats import norm
 from scipy.linalg import sqrtm
 import pandas as pd
-from .base import print_inf_res
+from ._base import print_inf_res
 
 class _2SLS(object):
     """
