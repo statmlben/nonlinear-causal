@@ -191,7 +191,7 @@ class SCAD(RegressorMixin, LinearModel):
 		Given this, you should use the :class:`LinearRegression` object.
 	
 	ada_weight: ndarray of shape (n_features,)
-		Weight that multiplies the L1 term for each coefficient. Defaults to 1.0.
+		Weight that multiplies the SCAD term for each coefficient. Defaults to 1.0.
 	
 	fit_intercept: bool, default=True
 		Whether to calculate the intercept for this model. If set
@@ -340,7 +340,7 @@ class SCAD(RegressorMixin, LinearModel):
 		abs_coef = abs(self.coef_)
 		return self.alpha*(abs_coef <= self.alpha) + np.maximum(a*self.alpha - abs_coef, 0.) / (a - 1) * (abs_coef > self.alpha)
 
-class SCAD_IC(RegressorMixin, LinearModelCV):
+class SCAD_IC(LassoLarsIC):
 	"""
 	Linear Model Selection trained with SCAD as regularizer
 	The optimization objective for Lasso is::
@@ -803,6 +803,8 @@ class L0_IC(LassoLarsIC):
 		"""
 		d = {'model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
 		df = pd.DataFrame(data=d)
+		df = df.sort_values('mse', ascending=False).reset_index(drop=True)
+		
 		# print(df)
 		return df
 		
