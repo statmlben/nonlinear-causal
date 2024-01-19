@@ -1,4 +1,4 @@
-"""Two Stage Methods based GWAS dataset"""
+"""Two Stage IV Causal Methods based GWAS Dataset"""
 # Author: Ben Dai <bendai@cuhk.edu.hk>
 
 import numpy as np

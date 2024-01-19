@@ -6,7 +6,7 @@
 # from nl_causal import base, linear_reg, ts_models
 
 __all__ = [
-	"linear_reg", 
+	"sparse_reg", 
 	"ts_models",
 	"base",
 	]
