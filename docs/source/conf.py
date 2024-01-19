@@ -13,20 +13,18 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import renku_sphinx_theme
 
 project = 'nonlinear-causal'
-copyright = 'Ben Dai'
+copyright = '2024, Ben Dai'
 author = 'Ben Dai'
 
 # -- Project information -----------------------------------------------------
 import sys, os
 # import numpydoc
 sys.path.append('.')
-sys.path.append('..')
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('../..'))
-# sys.path.append(os.path.abspath('../nl_causal'))
+sys.path.append(os.path.abspath('../nl_causal'))
 # sys.path.append(os.path.abspath('../../nonlinear-causal/nl_causal'))
 # sys.path.append('../..')
 # -- General configuration ---------------------------------------------------
@@ -37,10 +35,30 @@ sys.path.insert(0, os.path.abspath('../..'))
 master_doc = 'index'
 extensions = [
 	'sphinx.ext.autodoc',
+	'autoapi.extension',
+	"sphinx_autodoc_typehints",
 	'sphinx.ext.autosummary',
 	'numpydoc',
-	'nbsphinx'
+	'nbsphinx',
+	'myst_parser'
 	]
+
+myst_enable_extensions = [
+    "amsmath",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    "linkify",
+    "replacements",
+    "smartquotes",
+    "substitution",
+    "tasklist",
+]
+
+autoapi_dirs = ['../../nl_causal']
 
 autosummary_generate = True
 numpydoc_show_class_members = False
@@ -62,10 +80,29 @@ exclude_patterns = []
 #
 
 # html_theme = 'alabaster'
-html_theme = 'furo'
+html_theme = 'renku'
+# html_logo = "logo.png"
 # html_theme_path = [hachibee_sphinx_theme.get_html_themes_path()]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
+
+html_static_path = ['_static']
+
+# html_css_files = [
+#     'css/custom.css',
+# ]
+
+def skip_submodules(app, what, name, obj, skip, options):
+    if what == "module":
+        skip = True
+    return skip
+
+
+def setup(sphinx):
+    sphinx.connect("autoapi-skip-member", skip_submodules)
+
+autoapi_template_dir = "_templates/autoapi"
+# autoapi_add_toctree_entry = False

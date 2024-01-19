@@ -15,10 +15,10 @@ if __name__ == "__main__":
         # Needed for dependencies
         install_requires=['numpy', 'pandas', 'sliced', 'scipy', 'scikit-learn'],
         # *strongly* suggested for sharing
-        version='0.3',
+        version='1.0',
         # The license can be anything you like
         license='MIT',
-        description='nonlinear-causal is a Python module for nonlinear causal inference built on top of Two-stage methods.',
+        description='nonlinear-causal is a Python module for nonlinear causal inference built on top of Two-stage IV methods.',
         #cmdclass={"build_ext": build_ext},
         # We will also need a readme eventually (there will be a warning)
         long_description_content_type='text/markdown',

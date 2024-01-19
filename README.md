@@ -22,7 +22,7 @@
 
 **nonlinear-causal** considers two instrument variable causal models:
 
-<a href="https://openreview.net/pdf?id=cylRvJYxYI"><img src="./logo/nl_causal.png" class="center" height="250" /></a>
+<a href="https://openreview.net/pdf?id=cylRvJYxYI"><img src="./logo/nl_causal.png" class="center" style="height:80%;" /></a>
 
 Illustrated by the above image example, let's denote $\mathbf{z}$ as the valid/invalid instrument variables (such as SNPs), $x$ as the exposure (such as gene expression), and $y$ as the outcome (such as AD). 
 
@@ -77,7 +77,7 @@ pip install nonlinear-causal
 
 ## Examples and notebooks
 
-- [User Guide](./docs/source/md/user_guide.md)
+- [User guide](./md/user_guide.md)
 - [Simulation for HT and CI with standard setup](./nb/sim_main.ipynb)
 - [Simulation for HT and CI with invalid IVs](./nb/sim_invalid_IVS.ipynb)
 - [Simulation for HT and CI with categorical IVs](./nb/sim_cate.ipynb)
@@ -108,7 +108,3 @@ If you use this code please star 🌟 the repository and cite the following pape
   rganization={PMLR}
 }
 ```
-
-⚖️ License
-
-**nonlinear-causal** is open source under the MIT license.

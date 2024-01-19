@@ -14,7 +14,7 @@ Dependencies
      - **numpy**
      - **sklearn**
      - **pandas**
-     - **scipy**
+     - **scikit-learn**
      - **sliced**
 
 

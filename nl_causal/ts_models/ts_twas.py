@@ -19,7 +19,7 @@ class _2SLS(object):
     Note that data is expected to be centered, and y is normarlized as sd(y) = 1.
 
     Parameters
-    -----------
+    ----------
     normalize: bool, default=True
         Whether to normalize the resulting `theta` in Stage 1.nl_causal/ts_models/ts_twas.py
     
@@ -30,7 +30,7 @@ class _2SLS(object):
         A sparse regression used in the Stage 2. If set to None, we will use OLS in for the Stage 2.
     
     Attributes
-    -----------
+    ----------
     p_value: float
         P-value for hypothesis testing:: 
             H_0: `beta` = 0;		 H_a: `beta` neq 0.
@@ -310,9 +310,6 @@ class _2SLS(object):
     def fit(self, LD_Z1, cov_ZX1, LD_Z2, cov_ZY2, n2):
         """
         Fit the linear model in Stage 2 based on **GWAS** data.
-
-        Parameters
-        ----------
 
         Parameters
         ----------

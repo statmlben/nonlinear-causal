@@ -20,7 +20,7 @@ class WLasso(RegressorMixin, LinearModel):
 	the Lasso with X = X / ada_weight[None,:].
 
 	Parameters
-	===========
+	==========
 	alpha: float, default=1.0
 		Constant that multiplies the L1 term. Defaults to 1.0.
 		``alpha = 0`` is equivalent to an ordinary least square, solved
@@ -84,7 +84,7 @@ class WLasso(RegressorMixin, LinearModel):
 		especially when tol is higher than 1e-4.
 
 	Attributes
-	===========
+	==========
 	coef_: ndarray of shape (n_features,) or (n_targets, n_features)
 		Parameter vector (w in the cost function formula).
 
@@ -104,7 +104,7 @@ class WLasso(RegressorMixin, LinearModel):
 		the specified tolerance.
 
 	Examples
-	==========
+	========
 	>>> from nl_causal import sparse_reg
 	>>> clf = sparse_reg.WLasso(alpha=0.1, ada_weight=[1.,0.])
 	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
@@ -142,7 +142,7 @@ class WLasso(RegressorMixin, LinearModel):
 		Fit linear model.
 
 		Parameters
-		-----------
+		----------
 		X: {array-like, sparse matrix} of shape (n_samples, n_features)
 			Training data
 		y: array-like of shape (n_samples,) or (n_samples, n_targets)
@@ -151,7 +151,7 @@ class WLasso(RegressorMixin, LinearModel):
 			Individual weights for each sample
 
 		Returns
-		--------
+		-------
 		self: returns an instance of self.
 		"""
 		X, y = np.array(X), np.array(y)
@@ -182,7 +182,7 @@ class SCAD(RegressorMixin, LinearModel):
 		(1 / (2 * n_samples)) * ||y - Xw||^2_2 + alpha * sum_{j=1}^d weight_j * SCAD(|w_j|)
 	
 	Parameters
-	-----------
+	----------
 	alpha: float, default=1.0
 		Constant that multiplies the SCAD penalty. Defaults to 1.0.
 		``alpha = 0`` is equivalent to an ordinary least square, solved
@@ -246,7 +246,7 @@ class SCAD(RegressorMixin, LinearModel):
 		especially when tol is higher than 1e-4.
 
 	Attributes
-	-----------
+	----------
 	coef_: ndarray of shape (n_features,) or (n_targets, n_features)
 		Parameter vector (w in the cost function formula).
 	
@@ -266,7 +266,7 @@ class SCAD(RegressorMixin, LinearModel):
 		the specified tolerance.
 	
 	Examples
-	---------
+	--------
 	>>> from nl_causal import sparse_reg
 	>>> clf = sparse_reg.SCAD(alpha=0.1)
 	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
@@ -299,7 +299,7 @@ class SCAD(RegressorMixin, LinearModel):
 		Fit linear model.
 
 		Parameters
-		-----------
+		----------
 		X: {array-like, sparse matrix} of shape (n_samples, n_features)
 			Training data
 		y: array-like of shape (n_samples,) or (n_samples, n_targets)
@@ -308,7 +308,7 @@ class SCAD(RegressorMixin, LinearModel):
 			Individual weights for each sample
 
 		Returns
-		--------
+		-------ss
 		self: returns an instance of self.
 		"""
 		Wlasso_tmp = WLasso(alpha=self.alpha, ada_weight=self.ada_weight, fit_intercept=self.fit_intercept, 
@@ -342,15 +342,18 @@ class SCAD(RegressorMixin, LinearModel):
 
 class SCAD_IC(RegressorMixin, LinearModelCV):
 	"""
-	Linear Model Selection trained with L0 prior as regularizer
+	Linear Model Selection trained with SCAD as regularizer
 	The optimization objective for Lasso is::
 		(1 / (2 * n_samples)) * ||y - Xw||^2_2 + alpha * sum_{j=1}^d weight_j * SCAD(|w_j|)
 	
 	Parameters
-	-----------
+	----------
 	alphas: float, default=1.0
 		List of alphas where to compute the SCAD. default=np.arange(-3,3,.1)
 	
+	criterion: {'bic', 'aic'}, default='bic'
+		Selection criterion of model selection.
+
 	mask: ndarray of shape (n_features,); dtype = bool
 		Indicator to count the variable in L0 term. default = 'full'
 	
@@ -407,7 +410,7 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		especially when tol is higher than 1e-4.
 	
 	Attributes
-	-----------
+	----------
 	
 	coef_: ndarray of shape (n_features,) or (n_targets, n_features)
 		Parameter vector (w in the cost function formula).
@@ -428,7 +431,7 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		the specified tolerance.
 	
 	Examples
-	---------
+	--------
 	>>> from nl_causal import sparse_reg
 	>>> clf = sparse_reg.SCAD_IC(alphas=[.001, .01, .1, 1.])
 	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
@@ -470,7 +473,7 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		Fit linear model.
 
 		Parameters
-		-----------
+		----------
 
 		X: {array-like, sparse matrix} of shape (n_samples, n_features)
 			Training data
@@ -480,7 +483,7 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 			Individual weights for each sample
 
 		Returns
-		--------
+		-------
 		self: returns an instance of self.
 		"""
 		X, y = np.array(X), np.array(y)
@@ -539,7 +542,7 @@ class SCAD_IC(RegressorMixin, LinearModelCV):
 		A summary for the result of model selection of the sparse regression in Stage 2.
 
 		Returns
-		--------
+		-------
 		df: dataframe
 			dataframe with columns: "candidate_model", "criteria", and "mse".
 		"""
@@ -563,6 +566,9 @@ class L0_IC(LassoLarsIC):
 	alphas: float, default=1.0
 		List of alphas where to compute the SCAD. default=np.arange(-3,3,.1)
 	
+	criterion: {'bic', 'aic'}, default='bic'
+		Selection criterion of model selection.
+
 	mask: ndarray of shape (n_features,); dtype = bool
 		Indicator to count the variable in L0 term. default = 'full'
 	
@@ -789,7 +795,7 @@ class L0_IC(LassoLarsIC):
 		A summary for the result of model selection of the sparse regression in Stage 2.
 
 		Returns
-		--------
+		-------
 
 		df: dataframe
 			dataframe with columns: "candidate_model", "criteria", and "mse".
