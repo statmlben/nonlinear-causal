@@ -624,6 +624,9 @@ class L0_IC(LassoLarsIC):
 		(setting to 'random') often leads to significantly faster convergence
 		especially when tol is higher than 1e-4.
 	
+	refit : bool, default=True
+		refit the best selected model by OLS.
+
 	Attributes
 	----------
 	
@@ -648,7 +651,7 @@ class L0_IC(LassoLarsIC):
 	Examples
 	--------
 	>>> from nl_causal import sparse_reg
-	>>> clf = sparse_reg.L0_IC(Ks=[1,2])
+	>>> clf = sparse_reg.L0_IC(alphas=[.001, .01, .1, 1.], Ks=[1,2])
 	>>> clf.fit([[0,0], [1, 1], [2, 2]], [0, 1, 2])
 	>>> print(clf.coef_)
 	[1. 0.]
