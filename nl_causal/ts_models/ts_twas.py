@@ -9,6 +9,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from scipy.stats import norm
 from scipy.linalg import sqrtm
 import pandas as pd
+from .base import print_inf_res
 
 class _2SLS(object):
     """
@@ -442,6 +443,9 @@ class _2SLS(object):
             self.var_beta_ = var_beta
         else:
             raise NameError('Testing can only be conducted after fit!')
+    
+    def summary(self, precision=4):
+        print_inf_res(beta=self.beta, p_value=self.p_value, beta_CI=self.CI, name='2SLS', precision=precision)
 
 class _2SIR(object):
     """Two-stage instrumental regression (2SIR): sliced inverse regression + least sqaure
@@ -988,3 +992,5 @@ class _2SIR(object):
         else:
             raise NameError('Testing can only be conducted after fit!')
 
+    def summary(self, precision=4):
+        print_inf_res(beta=self.beta, p_value=self.p_value, beta_CI=self.CI, name='2SIR', precision=precision)

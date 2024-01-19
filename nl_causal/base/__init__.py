@@ -10,4 +10,5 @@ __all__ = [
 	"calculate_vif_",
 	"neg_log_uniform",
 	"sim",
+	"print_inf_res"
 	]

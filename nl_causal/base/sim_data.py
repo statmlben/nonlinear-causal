@@ -125,6 +125,13 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
             phi_ior = 1.*(IoR<=0.)*IoR + 2*IoR*(IoR>0.)
         y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
     
+    elif case == 'quad':
+        X = np.sign(np.random.rand()) * np.sqrt(np.dot(Z, theta0) + U + 5.0 + eps) # ensure the phi is positive
+        phi = X**2
+        if IoR is not None:
+            phi_ior = IoR**2
+        y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
+
     else:
         raise NameError('Sorry, no build-in case.')
     
