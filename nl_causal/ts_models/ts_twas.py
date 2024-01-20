@@ -247,11 +247,15 @@ class _2SLS(object):
             dataframe with columns: ``candidate_model``, ``criteria``, and ``mse``.
 
         """
-        d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
-        df = pd.DataFrame(data=d)
-        df = df.sort_values('mse', ascending=False).reset_index(drop=True)
-        # print(df)
-        return df
+        if self.sparse_reg is None:
+            print('All IVs are assumed be valid, and no model selection is conducted in the estimation.')
+            pass
+        else:
+            d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
+            df = pd.DataFrame(data=d)
+            df = df.sort_values('criteria', ascending=False).reset_index(drop=True)
+            # print(df)
+            return df
 
     # def bic(self, n2, LD_Z2, cov_ZY2, var_eps):
     # 	"""
@@ -704,11 +708,15 @@ class _2SIR(object):
             dataframe with columns: ``candidate_model``, ``criteria``, and ``mse``.
 
         """
-        d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
-        df = pd.DataFrame(data=d)
-        df = df.sort_values('mse', ascending=False).reset_index(drop=True)
-        # print(df)
-        return df
+        if self.sparse_reg is None:
+            print('All IVs are assumed be valid, and no model selection is conducted in the estimation.')
+            pass
+        else:
+            d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
+            df = pd.DataFrame(data=d)
+            df = df.sort_values('criteria', ascending=False).reset_index(drop=True)
+            # print(df)
+            return df
 
     # def bic(self, n2, LD_Z2, cov_ZY2, var_eps):
     # 	bic = []

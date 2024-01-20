@@ -548,7 +548,7 @@ class SCAD_IC(LassoLarsIC):
         """
         d = {'alpha': self.alphas, 'model': self.model_lst_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
         df = pd.DataFrame(data=d)
-        df = df.sort_values('mse', ascending=False).reset_index(drop=True)
+        df = df.sort_values('criteria', ascending=False).reset_index(drop=True)
         # print(df)
         return df
         
@@ -807,7 +807,7 @@ class L0_IC(LassoLarsIC):
         """
         d = {'model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
         df = pd.DataFrame(data=d)
-        df = df.sort_values('mse', ascending=False).reset_index(drop=True)
+        df = df.sort_values('criteria', ascending=False).reset_index(drop=True)
         
         # print(df)
         return df
