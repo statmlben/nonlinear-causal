@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import lambertw
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from random import choices
 
 def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
@@ -84,6 +84,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     # simulate X and Y
     if case == 'linear':
         X = np.dot(Z, theta0) + U + eps
+        X = X - np.mean(X)
         phi = X
         if IoR is not None:
             phi_ior = IoR
@@ -91,6 +92,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
 
     elif case == 'log':
         X = np.exp( np.dot(Z, theta0) + U + eps )
+        X = X - np.mean(X)
         phi = np.log(X)
         if IoR is not None:
             phi_ior = np.log(IoR)
@@ -98,6 +100,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
 
     elif case == 'cube-root':
         X = (np.dot(Z, theta0) + U + eps)**3
+        X = X - np.mean(X)
         phi = np.sign(X)*(abs(X)**(1./3))
         if IoR is not None:
             phi_ior = np.sign(IoR)*(abs(IoR)**(1./3))
@@ -105,6 +108,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
 
     elif case == 'inverse':
         X = 1. / (np.dot(Z, theta0) + U + eps)
+        X = X - np.mean(X)
         phi = 1. / X
         if IoR is not None:
             phi_ior = 1. / IoR
@@ -112,6 +116,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     
     elif case == 'sigmoid':
         X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U - eps ))
+        X = X - np.mean(X)
         phi = np.log( X / (1 - X) )
         if IoR is not None:
             phi_ior = np.log( IoR / (1 - IoR) )
@@ -120,6 +125,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     elif case == 'piecewise_linear':
         tmp = np.dot(Z, theta0) + U + eps
         X = 1.*(tmp<=0.)*tmp + 2.*tmp*(tmp>0.)
+        X = X - np.mean(X)
         phi = 1.*X*(X<=0) + .5*X*(X>0)
         if IoR is not None:
             phi_ior = 1.*(IoR<=0.)*IoR + 2*IoR*(IoR>0.)
@@ -143,6 +149,27 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     else:
         raise NameError('Sorry, no build-in case.')
     
+    ## normalize the dataset
+    center = StandardScaler(with_std=False)
+    mean_y = np.mean(y)
+    Z, y = center.fit_transform(Z), y - mean_y
+
+    y_scale = y.std()
+    y = y / y_scale
+    Z = Z / y_scale
+    phi = phi / y_scale
+
+    m = "ψ(x) = z^T θ + ω; \n" "y = β ψ(x) + z^T α + ε. \n"
+    msg = m + \
+         "--- \n" \
+         "β: causal effect from x to y. \n" \
+         "ψ(x): causal link among (z, x, y). \n" \
+         "--- \n" \
+         "True β : %.3f \n" \
+         "True ψ(x) : %s" %(beta0, case)
+
+    print_msg_box(msg, indent=1, title='True Model')
+
     if IoR is None:
         return Z, X, y, phi
     else:
@@ -182,4 +209,16 @@ def sim_phi(X, case='linear'):
     else:
         raise NameError('Sorry, no build-in case.')
 
-        
+def print_msg_box(msg, indent=1, width=None, title=None):
+    """Print message-box with optional title."""
+    lines = msg.split('\n')
+    space = " " * indent
+    if not width:
+        width = max(map(len, lines))
+    box = f'╔{"═" * (width + indent * 2)}╗\n'  # upper_border
+    if title:
+        box += f'║{space}{title:<{width}}{space}║\n'  # title
+        box += f'║{space}{"-" * len(title):<{width}}{space}║\n'  # underscore
+    box += ''.join([f'║{space}{line:<{width}}{space}║\n' for line in lines])
+    box += f'╚{"═" * (width + indent * 2)}╝'  # lower_border
+    print(box)
