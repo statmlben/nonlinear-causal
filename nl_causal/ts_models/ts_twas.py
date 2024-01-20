@@ -249,6 +249,7 @@ class _2SLS(object):
         """
         d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
         df = pd.DataFrame(data=d)
+        df = df.sort_values('mse', ascending=False).reset_index(drop=True)
         # print(df)
         return df
 
@@ -705,6 +706,7 @@ class _2SIR(object):
         """
         d = {'candidate_model': self.candidate_model_, 'criteria': self.criterion_lst_, 'mse': self.mse_lst_}
         df = pd.DataFrame(data=d)
+        df = df.sort_values('mse', ascending=False).reset_index(drop=True)
         # print(df)
         return df
 
