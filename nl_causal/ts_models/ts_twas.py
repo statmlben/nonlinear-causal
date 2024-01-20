@@ -750,8 +750,8 @@ class _2SIR(object):
 
         """
         # X_sir = self.sir.transform(Z1).flatten()
-        X_sir = Z.dot(self.theta)
-        self.cond_mean.fit(X=X1[:,None], y=X_sir)
+        X1_sir = Z1.dot(self.theta)
+        self.cond_mean.fit(X=X1[:,None], y=X1_sir)
         pred_mean = self.cond_mean.predict(X1[:,None])
         LD_Z_sum = np.sum(Z1[:, :, np.newaxis] * Z1[:, np.newaxis, :], axis=0)
         cross_mean_Z = np.sum(Z1 * pred_mean[:,None], axis=0)
