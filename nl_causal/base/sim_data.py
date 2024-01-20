@@ -133,7 +133,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
         gamma = gamma[tmp>0]
         tmp = tmp[tmp>0]
 
-        X = np.sign(np.random.rand(len(tmp))) * np.sqrt(tmp)
+        X = np.sign(np.random.randn(len(tmp))) * np.sqrt(tmp)
         X = X - np.mean(X)
         phi = X**2
         if IoR is not None:
