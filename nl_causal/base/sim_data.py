@@ -126,14 +126,15 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
         y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
     
     elif case == 'quad':
-        tmp = np.dot(Z, theta0) + U + 10.0 + eps
+        tmp = np.dot(Z, theta0) + U + 2.0 + eps
         # ensure the phi is positive
         Z = Z[tmp>0]
         U = U[tmp>0]
         gamma = gamma[tmp>0]
         tmp = tmp[tmp>0]
 
-        X = np.sign(np.random.rand(len(tmp))) * np.sqrt(tmp) 
+        X = np.sign(np.random.rand(len(tmp))) * np.sqrt(tmp)
+        X = X - np.mean(X)
         phi = X**2
         if IoR is not None:
             phi_ior = IoR**2
