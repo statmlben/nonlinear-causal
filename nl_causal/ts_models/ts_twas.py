@@ -749,7 +749,8 @@ class _2SIR(object):
             Return estimated correction ratio of conditional mean. 
 
         """
-        X_sir = self.sir.transform(Z1).flatten()
+        # X_sir = self.sir.transform(Z1).flatten()
+        X_sir = Z.dot(self.theta)
         self.cond_mean.fit(X=X1[:,None], y=X_sir)
         pred_mean = self.cond_mean.predict(X1[:,None])
         LD_Z_sum = np.sum(Z1[:, :, np.newaxis] * Z1[:, np.newaxis, :], axis=0)

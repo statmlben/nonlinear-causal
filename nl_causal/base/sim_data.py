@@ -153,6 +153,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     center = StandardScaler(with_std=False)
     mean_y = np.mean(y)
     Z, y = center.fit_transform(Z), y - mean_y
+    phi = phi - np.mean(phi)
 
     y_scale = y.std()
     y = y / y_scale
