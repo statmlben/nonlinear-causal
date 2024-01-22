@@ -78,9 +78,8 @@ pip install nonlinear-causal
 ## Examples and notebooks
 
 - [User guide](./md/user_guide.md)
-- [Simulation for HT and CI with standard setup](./nb/sim_main.ipynb)
-- [Simulation for HT and CI with invalid IVs](./nb/sim_invalid_IVS.ipynb)
-- [Simulation for HT and CI with categorical IVs](./nb/sim_cate.ipynb)
+- [Simulated examples](./nb/sim.ipynb)
+- [Simulated examples with invalid IVs](./nb/sim_invalid_IVS.ipynb)
 - [Real application](app_test.ipynb)
 
 ## Simulation Performance
