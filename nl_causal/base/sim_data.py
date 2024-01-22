@@ -2,6 +2,8 @@ import numpy as np
 from scipy.special import lambertw
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from random import choices
+from scipy.stats import norm
+
 
 def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     r"""Simulate data for the nonlinear causal IV model (see [1]).
@@ -69,7 +71,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     elif feat == 'laplace':
         Z = np.random.laplace(size = (n, p))
     elif feat == 'uniform':
-        Z = np.random.uniform(low=-1.0, high=1.0, size=(n,p))
+        Z = np.random.uniform(low=0.0, high=1.0, size=(n,p))
     elif feat == 'cate':
         Z = np.random.choice(2, size=(n, p), p=[0.7, 0.3]) + np.random.choice(2, size=(n, p), p=[0.7, 0.3])
     else:
@@ -118,23 +120,26 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
         y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
 
     elif case == 'piecewise_linear':
-        tmp = np.dot(Z, theta0) + U + eps
-        X = 1.*(tmp<=0.)*tmp + 2.*tmp*(tmp>0.)
-        phi = 1.*X*(X<=0) + .5*X*(X>0)
+        phi = np.dot(Z, theta0) + U + eps
+        X = 1.*(phi<=0.)*phi + 2.*phi*(phi>0.)
         if IoR is not None:
             phi_ior = 1.*(IoR<=0.)*IoR + 2*IoR*(IoR>0.)
         y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
     
     elif case == 'quad':
-        tmp = np.dot(Z, theta0) + U + 2.0 + eps
-        # ensure the phi is positive
-        Z = Z[tmp>0]
-        U = U[tmp>0]
-        gamma = gamma[tmp>0]
-        tmp = tmp[tmp>0]
+        phi = np.dot(Z, theta0) + norm.cdf(U) + np.cdf(eps)
+        raise Warning("To better satisfy the <quad> causal link, both U and eps are currently configured as a uniform distribution.")
+        
+        # ensure the phi is positive: but it will introduce an bias
+        if any(phi<0):
+            raise Warning("To satisfy the <quad> causal link, we only take `X^2 < 0` instances. \
+                            It will introduce a bias, and true beta will not be beta0.")
+        Z = Z[phi>0]
+        U = U[phi>0]
+        gamma = gamma[phi>0]
+        phi = phi[phi>0]
 
-        X = np.sign(np.random.randn(len(tmp))) * np.sqrt(tmp)
-        phi = X**2
+        X = np.sign(np.random.randn(len(phi))) * np.sqrt(phi)
         if IoR is not None:
             phi_ior = IoR**2
         y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
