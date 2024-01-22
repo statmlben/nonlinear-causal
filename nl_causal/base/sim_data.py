@@ -84,7 +84,6 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     # simulate X and Y
     if case == 'linear':
         X = np.dot(Z, theta0) + U + eps
-        X = X - np.mean(X)
         phi = X
         if IoR is not None:
             phi_ior = IoR
@@ -92,7 +91,6 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
 
     elif case == 'log':
         X = np.exp( np.dot(Z, theta0) + U + eps )
-        X = X - np.mean(X)
         phi = np.log(X)
         if IoR is not None:
             phi_ior = np.log(IoR)
@@ -100,7 +98,6 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
 
     elif case == 'cube-root':
         X = (np.dot(Z, theta0) + U + eps)**3
-        X = X - np.mean(X)
         phi = np.sign(X)*(abs(X)**(1./3))
         if IoR is not None:
             phi_ior = np.sign(IoR)*(abs(IoR)**(1./3))
@@ -108,7 +105,6 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
 
     elif case == 'inverse':
         X = 1. / (np.dot(Z, theta0) + U + eps)
-        X = X - np.mean(X)
         phi = 1. / X
         if IoR is not None:
             phi_ior = 1. / IoR
@@ -116,7 +112,6 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     
     elif case == 'sigmoid':
         X = 1 / (1 + np.exp( - np.dot(Z, theta0) - U - eps ))
-        X = X - np.mean(X)
         phi = np.log( X / (1 - X) )
         if IoR is not None:
             phi_ior = np.log( IoR / (1 - IoR) )
@@ -125,7 +120,6 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     elif case == 'piecewise_linear':
         tmp = np.dot(Z, theta0) + U + eps
         X = 1.*(tmp<=0.)*tmp + 2.*tmp*(tmp>0.)
-        X = X - np.mean(X)
         phi = 1.*X*(X<=0) + .5*X*(X>0)
         if IoR is not None:
             phi_ior = 1.*(IoR<=0.)*IoR + 2*IoR*(IoR>0.)
@@ -140,7 +134,6 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
         tmp = tmp[tmp>0]
 
         X = np.sign(np.random.randn(len(tmp))) * np.sqrt(tmp)
-        X = X - np.mean(X)
         phi = X**2
         if IoR is not None:
             phi_ior = IoR**2
