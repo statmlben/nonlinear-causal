@@ -3,7 +3,7 @@ from scipy.special import lambertw
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from random import choices
 from scipy.stats import norm
-
+import warnings
 
 def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     r"""Simulate data for the nonlinear causal IV model (see [1]).
@@ -128,11 +128,11 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     
     elif case == 'quad':
         phi = np.dot(Z, theta0) + norm.cdf(U) + norm.cdf(eps)
-        raise Warning("To better satisfy the <quad> causal link, both U and eps are currently configured as a uniform distribution.")
+        warnings.warn("To better satisfy the <quad> causal link, both U and eps are currently configured as a uniform distribution.")
         
         # ensure the phi is positive: but it will introduce an bias
         if any(phi<0):
-            raise Warning("To satisfy the <quad> causal link, we only take `X^2 < 0` instances. \
+            warnings.warn("To satisfy the <quad> causal link, we only take `X^2 < 0` instances. \
                             It will introduce a bias, and true beta will not be beta0.")
         Z = Z[phi>0]
         U = U[phi>0]
@@ -152,6 +152,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
     mean_y = np.mean(y)
     Z, y = center.fit_transform(Z), y - mean_y
     phi = phi - np.mean(phi)
+    X = X - np.mean(X)
 
     y_scale = y.std()
     y = y / y_scale
