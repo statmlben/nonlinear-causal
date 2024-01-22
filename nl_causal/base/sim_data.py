@@ -127,7 +127,7 @@ def sim(n, p, theta0, beta0, alpha0=0., case='log', feat='normal', IoR=None):
         y = beta0 * phi + np.dot(Z, alpha0) + U + gamma
     
     elif case == 'quad':
-        phi = np.dot(Z, theta0) + norm.cdf(U) + np.cdf(eps)
+        phi = np.dot(Z, theta0) + norm.cdf(U) + norm.cdf(eps)
         raise Warning("To better satisfy the <quad> causal link, both U and eps are currently configured as a uniform distribution.")
         
         # ensure the phi is positive: but it will introduce an bias
