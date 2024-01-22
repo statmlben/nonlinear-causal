@@ -109,4 +109,4 @@ yarg==0.1.9
 zipp==3.17.0
 renku_sphinx_theme
 myst-parser
-linkify
+linkify-it-py
