@@ -15,7 +15,7 @@
 
 - GitHub repo: [https://github.com/nl-causal/nonlinear-causal](https://github.com/nl-causal/nonlinear-causal)
 - PyPi: [https://pypi.org/project/nonlinear-causal/](https://pypi.org/project/nonlinear-causal/)
-- Paper: [PMLR@CLeaR2024](https://openreview.net/pdf?id=cylRvJYxYI)
+- Paper: [PMLR@CLeaR2024](https://proceedings.mlr.press/v236/dai24a/dai24a.pdf)
 - Documentation: [https://nonlinear-causal.readthedocs.io](https://nonlinear-causal.readthedocs.io/en/latest/index.html)
 
 ## Models
